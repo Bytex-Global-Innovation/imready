@@ -2,21 +2,21 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1d27;
+  --foreground: #0a2540;
   --muted: #64748b;
   --border: #e2e8f0;
   --surface: #f5f7ff;
   --surface-alt: #f3f4ff;
-  --brand-50: #f0f4ff;
-  --brand-100: #dbe4ff;
-  --brand-500: #5c7cfa;
-  --brand-600: #4c6ef5;
-  --brand-700: #4263eb;
+  --brand-50: #f0f4f8;
+  --brand-100: #dce4ec;
+  --brand-500: #0a2540;
+  --brand-600: #0a2540;
+  --brand-700: #081e34;
   --accent: #f472b6;
   --hero-bg: #f9f9ff;
   --hero-heading: #1d2144;
   --hero-body: #959cb1;
-  --hero-accent: #4a6cf7;
+  --hero-accent: #0a2540;
 }
 
 @theme inline {
