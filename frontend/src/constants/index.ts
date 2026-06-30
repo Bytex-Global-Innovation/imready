@@ -1,3 +1,5 @@
 export * from "./routes";
 export * from "./site";
 export * from "./landing";
+export * from "./bytex";
+export * from "./product-comparison";
