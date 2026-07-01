@@ -75,3 +75,42 @@ export interface DashboardSummary {
     status: "PENDING" | "APPROVED" | "REJECTED";
   }[];
 }
+
+// ─── Students ────────────────────────────────────────────────────────────────
+
+export interface Student {
+  id: string;
+  studentName: string;
+  college: string;
+  domain: string;
+  status: "VERIFIED" | "PENDING" | "FLAGGED";
+}
+
+export interface StudentsResponse {
+  students: Student[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+const MOCK_STUDENTS: Student[] = [
+  { id: "001", studentName: "Alex Rivera",   college: "Tech Central Inst.", domain: "Cyber Security",  status: "VERIFIED" },
+  { id: "002", studentName: "Morgan Chen",   college: "Bio Labs Univ.",      domain: "Data Science",    status: "PENDING"  },
+  { id: "003", studentName: "Jordan Smith",  college: "Global Arts Acad.",   domain: "UX Architecture", status: "FLAGGED"  },
+  { id: "004", studentName: "Samira Vane",   college: "Tech Central Inst.",  domain: "Quantum Comp",    status: "VERIFIED" },
+];
+
+export const studentsApi = {
+  getStudents: async (page = 1): Promise<StudentsResponse> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        students: MOCK_STUDENTS,
+        total: 1284,
+        page,
+        totalPages: 321,
+      };
+    }
+    return request<StudentsResponse>(`/admin/students?page=${page}`);
+  },
+};

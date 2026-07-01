@@ -27,7 +27,7 @@ export default function Sidebar() {
     <aside className="flex h-[calc(100vh-3.5rem)] w-60 flex-col justify-between border-r border-gray-200 bg-white px-4 py-5">
       <div>
         <div className="mb-6 flex items-center gap-2 px-2">
-          <div className="h-8 w-8 rounded-md bg-violet-600" />
+          <div className="h-8 w-8 rounded-md bg-[#153a75]" />
           <div className="leading-tight">
             <p className="text-sm font-semibold text-gray-900">Admin Portal</p>
             <p className="text-[10px] text-gray-400">IMREADY PLATFORM</p>
@@ -43,7 +43,7 @@ export default function Sidebar() {
                 href={href}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-violet-50 text-violet-700"
+                    ? "bg-[#153a75] text-white"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
