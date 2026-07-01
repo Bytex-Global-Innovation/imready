@@ -33,7 +33,7 @@ export function ProductImagePreviewModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="presentation">
       <button
         type="button"
-        className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
+        className="absolute inset-0 cursor-pointer bg-foreground/60 backdrop-blur-sm"
         aria-label="Close dialog"
         onClick={onClose}
       />
@@ -49,7 +49,7 @@ export function ProductImagePreviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+            className="cursor-pointer rounded-full p-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
             aria-label="Close"
           >
             <X className="h-5 w-5" strokeWidth={2.5} />

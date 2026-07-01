@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BYTEX_HERO } from "@/constants";
+import { BYTEX_HERO, BYTEX_PAGE_CTA_CLASSES } from "@/constants";
 import { Button } from "@/components/ui";
 import { ArrowRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,10 @@ export function BytexHeroSection() {
             {BYTEX_HERO.description}
           </p>
           <div className="pt-2 lg:pt-4">
-            <Button href={BYTEX_HERO.primaryAction.href} className="h-11 px-6 shadow-sm">
+            <Button
+              href={BYTEX_HERO.primaryAction.href}
+              className={cn("h-11 px-6 shadow-sm", BYTEX_PAGE_CTA_CLASSES.primaryButton)}
+            >
               {BYTEX_HERO.primaryAction.label}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>

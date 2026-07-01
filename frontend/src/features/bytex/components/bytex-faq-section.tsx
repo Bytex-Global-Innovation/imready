@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BYTEX_FAQ } from "@/constants";
+import { BYTEX_FAQ, BYTEX_PAGE_CTA_CLASSES } from "@/constants";
 import { Button } from "@/components/ui";
 import { Plus } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export function BytexFaqSection() {
               <button
                 id={buttonId}
                 type="button"
-                className="flex w-full items-center justify-between gap-4 px-3 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-inset"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 px-3 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-inset"
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 onClick={() => setOpenIndex(isOpen ? null : index)}
@@ -60,7 +60,11 @@ export function BytexFaqSection() {
       </div>
 
       <div className="flex justify-center pt-6 pb-12">
-        <Button href={BYTEX_FAQ.primaryAction.href} size="lg" className="px-12 shadow-md">
+        <Button
+          href={BYTEX_FAQ.primaryAction.href}
+          size="lg"
+          className={cn("px-12 shadow-md", BYTEX_PAGE_CTA_CLASSES.primaryButton)}
+        >
           {BYTEX_FAQ.primaryAction.label}
         </Button>
       </div>

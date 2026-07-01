@@ -52,7 +52,7 @@ export const PRODUCTS_INVENTORY: Product[] = [
     processor: "Ryzen™ 3 7520U Processor",
     cores: "6",
     threads: "12",
-    memory: "8 G",
+    memory: "8 GB",
     storage: "512 GB",
     operatingSystem: "Windows 11 Home",
     graphics: "Integrated AMD Graphics",
@@ -158,3 +158,5 @@ export const COMPARE_PRICING_CTA = {
   unlockButtonLabel: "Unlock Student Discount",
   verificationHint: "Get up to 20% off with verification",
 } as const;
+
+export const COMPARE_MOBILE_SCROLL_HINT = "Scroll right to see more";
