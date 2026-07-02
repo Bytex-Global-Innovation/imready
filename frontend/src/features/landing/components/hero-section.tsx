@@ -21,8 +21,7 @@ export function HeroSection() {
             <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Button
                 size="lg"
-                href={ROUTES.signup}
-                className="bg-hero-accent hover:bg-brand-700 focus-visible:ring-hero-accent"
+                href={ROUTES.signupStep(1)}
               >
                 Start Your Industry Journey
               </Button>

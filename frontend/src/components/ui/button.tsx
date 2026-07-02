@@ -14,11 +14,11 @@ export interface ButtonProps
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-700 focus-visible:ring-brand-500",
+    "bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary/40",
   secondary:
-    "border border-border bg-white text-foreground hover:bg-surface focus-visible:ring-brand-500",
+    "border border-border bg-white text-foreground hover:bg-surface focus-visible:ring-primary/40",
   ghost:
-    "text-muted hover:text-foreground hover:bg-surface focus-visible:ring-brand-500",
+    "text-muted hover:text-foreground hover:bg-surface focus-visible:ring-primary/40",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -42,7 +42,7 @@ export function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={cn(classes, "cursor-pointer")}>
         {children}
       </Link>
     );
