@@ -21,18 +21,19 @@ export const PRODUCT_DETAIL_CLASSES = {
   priceGstMobile: "ml-1 text-sm font-semibold text-gray-500",
   priceSubMobile: "mt-1 text-xs font-medium text-gray-500",
   toast: "fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg lg:bottom-6",
-  desktopShell: "mx-auto hidden min-h-[70vh] max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block",
-  desktopCard: "flex flex-col gap-8 overflow-visible border border-gray-200 bg-white p-4 lg:flex-row",
+  desktopShell: "mx-auto hidden max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block",
+  desktopCard:
+    "flex flex-col gap-8 overflow-visible border border-gray-200 bg-white p-4 lg:flex-row lg:items-start",
   galleryColumn:
     "relative flex min-w-[340px] flex-col border-r border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 md:min-w-[390px] lg:min-w-[420px]",
   shareBtnDesktop:
-    "cursor-pointer rounded-full bg-white p-2 text-blue-600 backdrop-blur-md transition-all duration-200 ease-in-out hover:bg-blue-300 hover:text-white hover:shadow-lg focus:outline-none",
+    "cursor-pointer rounded-full bg-white p-2 backdrop-blur-md transition-all duration-200 ease-in-out hover:bg-gray-100 focus:outline-none",
   favBtnDesktop:
     "mb-1 flex cursor-pointer items-center justify-center rounded-full bg-white p-2 backdrop-blur-md transition-all hover:bg-red-100 focus:outline-none",
   favActive: "fill-red-500 text-red-500",
   favIdle: "text-gray-400",
   mainImageFrame: "relative rounded-lg border border-gray-200 bg-white/70 p-3 shadow-sm",
-  infoColumn: "flex flex-1 flex-col justify-between py-8 pl-6 pr-2",
+  infoColumn: "flex flex-1 flex-col py-8 pl-6 pr-2 lg:self-start",
   titleDesktop: "mb-2 text-2xl font-semibold capitalize text-gray-900 lg:text-3xl",
   accessoryDesc: "w-full text-sm font-semibold text-gray-700",
   specPill:
@@ -55,9 +56,9 @@ export const PRODUCT_DETAIL_CLASSES = {
   serviceLabelDesktop: "min-h-[28px] text-[10px]",
   serviceLabelPartMobile: "text-[11px]",
   serviceLabelPartDesktop: "text-[10px]",
-  mobileShell: "mt-4 block min-h-[70vh] w-full bg-white pb-28 lg:hidden",
+  mobileShell: "mt-4 block w-full bg-white pb-28 lg:hidden",
   mobileShareBtn:
-    "cursor-pointer rounded-full bg-white p-2 text-blue-600 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none",
+    "cursor-pointer rounded-full bg-white p-2 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none",
   carouselTrack:
     "scrollbar-hide h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
   dotActive: "bg-gray-800",
@@ -83,7 +84,7 @@ export const PRODUCT_DETAIL_CLASSES = {
 } as const;
 
 export const PRODUCT_DETAIL_SPEC_CLASSES = {
-  mobileDescription: "mb-4 ml-[-17px] mr-[-17px] whitespace-pre-wrap text-[12px] text-gray-700 md:hidden",
+  mobileDescription: "mb-4 ml-[-17px] mr-[-17px] whitespace-pre-wrap text-[12px] text-gray-700 lg:hidden",
   tableWrap: "ml-[-17px] mr-[-17px] overflow-hidden rounded-2xl border border-gray-200 bg-white",
   th: "select-none border-b border-gray-300 py-5 px-8 text-left font-extrabold tracking-wide text-gray-800",
   emptyCell: "border-b py-7 px-6 text-center italic text-gray-400",

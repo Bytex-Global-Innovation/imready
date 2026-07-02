@@ -30,12 +30,12 @@ export function ProductDetailsPage({ productId }: ProductDetailsPageProps) {
     <div className="bg-white">
       <ProductDetails productDetails={productDetails} />
 
-      <div className="container mx-auto hidden p-4 sm:block">
-        <div>
-          <p className={cn("pl-4 pt-4 text-2xl font-semibold", "text-foreground")}>
+      <div className="container mx-auto hidden px-4 pb-4 pt-0 lg:block">
+        <div className="border-t border-border pt-4">
+          <p className={cn("text-2xl font-semibold", "text-foreground")}>
             {PRODUCT_DETAIL_COPY.detailsHeading}
           </p>
-          <p className="pl-4 leading-relaxed text-muted">{productDetails.description}</p>
+          <p className="mt-2 leading-relaxed text-muted">{productDetails.description}</p>
         </div>
 
         {productDetails.specs ? (

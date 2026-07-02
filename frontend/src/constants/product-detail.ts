@@ -225,6 +225,12 @@ export const PRODUCT_DETAIL_SERVICE_COPY = {
 - Ensures safety of personal and financial data.
 - Supports secure options: UPI, credit/debit cards, net banking, and more.`,
   },
+  corporateBenefits: {
+    name: "Corporate Benefits",
+    details: `Exclusive discounts for professional businesses and professionals.
+- Flexible payment options including EMI and bulk purchase plans.
+- Priority customer support and dedicated account managers`,
+  },
   warrantyCarryIn:
     "Bring-in service at an authorized service center. Required to deliver the device to the service location for diagnosis and repair. Service timelines, parts replacement and any shipping reimbursements are governed by the OEM policy.",
   warrantyDoorstep:

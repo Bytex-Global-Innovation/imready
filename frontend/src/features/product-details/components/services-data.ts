@@ -1,4 +1,4 @@
-import { Lock, RefreshCw, Shield, Truck } from "lucide-react";
+import { Briefcase, Lock, RefreshCw, Shield, Truck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
   PRODUCT_DETAIL_SERVICE_COPY,
@@ -62,6 +62,11 @@ export function buildServices(specs: ProductSpecs | null | undefined): ProductSe
       name: PRODUCT_DETAIL_SERVICE_COPY.secureTransaction.name,
       details: PRODUCT_DETAIL_SERVICE_COPY.secureTransaction.details,
       icon: Lock,
+    },
+    {
+      name: PRODUCT_DETAIL_SERVICE_COPY.corporateBenefits.name,
+      details: PRODUCT_DETAIL_SERVICE_COPY.corporateBenefits.details,
+      icon: Briefcase,
     },
   ];
 }

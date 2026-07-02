@@ -229,8 +229,8 @@ export function Specifications({
   if (!specifications) return null;
 
   return (
-    <div className="mx-auto my-[-4px] max-w-7xl md:my-8">
-      <h2 className="mb-1 ml-[-17px] mr-[-17px] text-left text-md font-semibold text-foreground md:hidden">
+    <div className="mx-auto max-w-7xl lg:mt-2 lg:mb-6">
+      <h2 className="mb-1 ml-[-17px] mr-[-17px] text-left text-md font-semibold text-foreground lg:hidden">
         {PRODUCT_DETAIL_COPY.allDetails}
       </h2>
 
@@ -239,7 +239,7 @@ export function Specifications({
       ) : null}
 
       <div className={PRODUCT_DETAIL_SPEC_CLASSES.tableWrap}>
-        <table className="hidden min-w-full table-fixed border-collapse text-base md:table">
+        <table className="hidden min-w-full table-fixed border-collapse text-base lg:table">
           <thead>
             <tr>
               <th className={cn("w-1/3 min-w-[130px]", PRODUCT_DETAIL_SPEC_CLASSES.th)}>
@@ -276,7 +276,7 @@ export function Specifications({
           </tbody>
         </table>
 
-        <div className="px-4 py-4 md:hidden">
+        <div className="px-4 py-4 lg:hidden">
           {specificationGroups.every((g) => (g.mobileContent || []).length === 0) ? (
             <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileEmpty}>
               {PRODUCT_DETAIL_COPY.noSpecsAvailable}
@@ -381,7 +381,7 @@ export function Specifications({
       </div>
 
       {hasExtraGroups ? (
-        <div className="mt-6 hidden justify-center md:flex">
+        <div className="mt-6 hidden justify-center lg:flex">
           <button
             type="button"
             onClick={() => setExpanded((s) => !s)}

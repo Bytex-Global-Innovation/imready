@@ -438,7 +438,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                 aria-label={PRODUCT_DETAIL_COPY.share}
                 type="button"
               >
-                <Share2 className="h-5 w-5" />
+                <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
               </button>
               <button
                 className={PRODUCT_DETAIL_CLASSES.favBtnDesktop}
@@ -515,7 +515,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                   onUnlock={handleUnlock}
                   onNotify={handleNotify}
                 />
-                <div className="mt-8">{servicesRow(false)}</div>
+                <div className="mt-6">{servicesRow(false)}</div>
               </div>
             </div>
           </div>
@@ -545,7 +545,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               type="button"
               aria-label={PRODUCT_DETAIL_COPY.shareProduct}
             >
-              <Share2 className="h-5 w-5" />
+              <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
             </button>
           </div>
           <div
@@ -649,14 +649,12 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
           {servicesRow(true)}
         </div>
 
-        <div className="gap-2 px-4 pt-3">
-          <div ref={specsRef} className="gap-2 px-4 pt-3">
-            <Specifications
-              specifications={qs}
-              selectedSubVariant={selectedSubVariants}
-              description={productDetails.description || productDetails.shortDescription}
-            />
-          </div>
+        <div ref={specsRef} className="px-4 pt-2">
+          <Specifications
+            specifications={qs}
+            selectedSubVariant={selectedSubVariants}
+            description={productDetails.description || productDetails.shortDescription}
+          />
         </div>
       </div>
 
