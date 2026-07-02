@@ -11,6 +11,7 @@ export const ROUTES = {
   forColleges: "/for-colleges",
   domainExplorer: "/domain-explorer",
   bytex: "/bytex",
+  productComparison: "/product-comparison",
   privacy: "/privacy",
   terms: "/terms",
   cookies: "/cookies",
