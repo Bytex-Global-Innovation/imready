@@ -89,7 +89,7 @@ export function EligibleDevicesSection() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  href={ROUTES.productComparison}
+                  href={ROUTES.product(product.id)}
                   className={cn(BYTEX_PAGE_CTA_CLASSES.ghostButton)}
                   aria-label={`View details for ${product.name}`}
                 >
