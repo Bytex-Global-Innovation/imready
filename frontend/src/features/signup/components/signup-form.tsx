@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Card } from "@/components/ui";
-import { ROUTES } from "@/constants";
+import { ROUTES, type SignupStep } from "@/constants";
 import { RegistrationStepper } from "./registration-stepper";
 import { PersonalInfoStep } from "./personal-info-step";
 import { AcademicDetailsStep } from "./academic-details-step";
@@ -28,6 +29,7 @@ const defaultValues: SignupFormValues = {
   graduationYear: "",
   targetDomain: "",
   careerDoor: "",
+  agreedToTerms: false,
 };
 
 function ArrowForwardIcon() {
@@ -68,8 +70,12 @@ function ArrowBackIcon() {
   );
 }
 
-export function SignupForm() {
-  const [currentStep, setCurrentStep] = useState(1);
+interface SignupFormProps {
+  step: SignupStep;
+}
+
+export function SignupForm({ step: currentStep }: SignupFormProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -77,6 +83,7 @@ export function SignupForm() {
     handleSubmit,
     trigger,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema) as Resolver<SignupFormValues>,
@@ -86,26 +93,31 @@ export function SignupForm() {
 
   const selectedDoor = watch("careerDoor");
   const selectedDomain = watch("targetDomain");
-  const isLastStep = currentStep === 3;
+  const agreedToTerms = watch("agreedToTerms");
+
+  function goToStep(step: SignupStep) {
+    router.push(ROUTES.signupStep(step), { scroll: false });
+  }
 
   async function handleContinue() {
     const fields = STEP_FIELDS[currentStep];
     const isValid = await trigger(fields);
 
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+    if (isValid && currentStep < 3) {
+      goToStep((currentStep + 1) as SignupStep);
     }
   }
 
   function handleBack() {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    if (currentStep > 1) {
+      goToStep((currentStep - 1) as SignupStep);
+    }
   }
 
   async function onSubmit(data: SignupFormValues) {
     setIsSubmitting(true);
 
     try {
-      // Placeholder for API integration
       console.log("Signup data:", data);
       await new Promise((resolve) => setTimeout(resolve, 800));
     } finally {
@@ -145,43 +157,39 @@ export function SignupForm() {
               register={register}
               errors={errors}
               selectedDoor={selectedDoor}
+              agreedToTerms={agreedToTerms}
+              setValue={setValue}
+              isSubmitting={isSubmitting}
+              onBack={handleBack}
             />
           )}
 
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {currentStep > 1 ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleBack}
-                className="w-full sm:w-auto"
-              >
-                <ArrowBackIcon />
-                Back
-              </Button>
-            ) : (
-              <span className="hidden sm:block" />
-            )}
+          {currentStep !== 3 && (
+            <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {currentStep > 1 ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleBack}
+                  className="w-full cursor-pointer sm:w-auto"
+                >
+                  <ArrowBackIcon />
+                  Back
+                </Button>
+              ) : (
+                <span className="hidden sm:block" />
+              )}
 
-            {isLastStep ? (
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:ml-auto sm:w-auto"
-              >
-                {isSubmitting ? "Submitting..." : "Complete Registration"}
-              </Button>
-            ) : (
               <Button
                 type="button"
                 onClick={handleContinue}
-                className="w-full sm:ml-auto sm:w-auto"
+                className="w-full cursor-pointer sm:ml-auto bg-[#153a75] hover:bg-[#102b55]  sm:w-auto"
               >
                 Continue
                 <ArrowForwardIcon />
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </form>
       </Card>
 
@@ -189,7 +197,7 @@ export function SignupForm() {
         Already have an account?{" "}
         <Link
           href={ROUTES.login}
-          className="font-medium text-foreground transition-colors hover:text-brand-700"
+          className="cursor-pointer font-medium text-[#153a75] transition-colors hover:text-primary-hover"
         >
           Log In
         </Link>

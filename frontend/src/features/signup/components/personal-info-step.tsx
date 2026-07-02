@@ -49,11 +49,11 @@ export function PersonalInfoStep({ register, errors }: PersonalInfoStepProps) {
           <Label htmlFor="phone" required>
             Phone Number
           </Label>
-          <div className="flex gap-2">
-            <div className="relative w-[7.5rem] shrink-0 sm:w-28">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative w-full shrink-0 sm:w-28">
               <select
                 id="countryCode"
-                className="h-11 w-full appearance-none rounded-[var(--radius-button)] border border-border bg-white px-2.5 pr-7 text-sm text-foreground focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                className="h-11 w-full min-w-0 cursor-pointer appearance-none rounded-[var(--radius-button)] border border-border bg-white px-2.5 pr-7 text-sm text-foreground focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
                 aria-label="Country code"
                 {...register("countryCode")}
               >

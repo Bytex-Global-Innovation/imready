@@ -14,11 +14,11 @@ export interface ButtonProps
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-foreground text-white hover:bg-brand-700 focus-visible:ring-brand-500",
+    "bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary/40",
   secondary:
-    "border border-border bg-white text-foreground hover:bg-surface focus-visible:ring-brand-500",
+    "border border-border bg-white text-foreground hover:bg-surface focus-visible:ring-primary/40",
   ghost:
-    "text-muted hover:text-foreground hover:bg-surface focus-visible:ring-brand-500",
+    "text-muted hover:text-foreground hover:bg-surface focus-visible:ring-primary/40",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -28,7 +28,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 const baseStyles =
-  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-button)] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-button)] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50";
 
 export function Button({
   variant = "primary",
@@ -42,7 +42,7 @@ export function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={cn(classes, "cursor-pointer")}>
         {children}
       </Link>
     );

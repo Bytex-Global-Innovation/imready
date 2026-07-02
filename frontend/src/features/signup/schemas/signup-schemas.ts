@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { CAREER_DOORS } from "../constants/career-doors";
 
 export const COUNTRY_CODES = [
   { code: "+1", label: "US +1" },
@@ -36,24 +37,6 @@ export const TARGET_DOMAINS = [
   { id: "web-dev", label: "Web Dev" },
   { id: "finance", label: "Finance" },
   { id: "product", label: "Product" },
-] as const;
-
-export const CAREER_DOORS = [
-  {
-    id: "internship",
-    title: "Internship Track",
-    description: "Start with guided internships and mentor-led projects.",
-  },
-  {
-    id: "project",
-    title: "Project Track",
-    description: "Build portfolio projects with industry mentors.",
-  },
-  {
-    id: "mentorship",
-    title: "Mentorship Track",
-    description: "Get 1:1 mentorship before your first placement season.",
-  },
 ] as const;
 
 const phoneRegex = /^[\d\s()-]{10,}$/;
@@ -112,6 +95,9 @@ export const chooseDoorSchema = yup.object({
       CAREER_DOORS.map((door) => door.id),
       "Please choose a valid door",
     ),
+  agreedToTerms: yup
+    .boolean()
+    .oneOf([true], "You must agree to the Terms of Service and Privacy Policy"),
 });
 
 export const signupSchema = personalInfoSchema
@@ -130,12 +116,13 @@ export type SignupFormValues = {
   graduationYear: string;
   targetDomain: string;
   careerDoor: string;
+  agreedToTerms: boolean;
 };
 
 export const SIGNUP_STEPS = [
   { id: 1, label: "Personal Info" },
   { id: 2, label: "Academic Details" },
-  { id: 3, label: "Choose Door" },
+  { id: 3, label: "Choose Your Door" },
 ] as const;
 
 export const STEP_FIELDS: Record<number, (keyof SignupFormValues)[]> = {
@@ -148,5 +135,5 @@ export const STEP_FIELDS: Record<number, (keyof SignupFormValues)[]> = {
     "confirmPassword",
   ],
   2: ["college", "streamMajor", "graduationYear", "targetDomain"],
-  3: ["careerDoor"],
+  3: ["careerDoor", "agreedToTerms"],
 };

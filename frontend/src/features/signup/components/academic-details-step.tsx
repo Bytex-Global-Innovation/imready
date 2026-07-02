@@ -56,7 +56,7 @@ function ChevronDownIcon() {
 }
 
 const fieldBaseClass =
-  "h-11 w-full rounded-[var(--radius-button)] border bg-white px-3.5 text-sm text-foreground transition-colors placeholder:text-muted/70 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20";
+  "h-11 w-full min-w-0 cursor-pointer rounded-[var(--radius-button)] border bg-white px-3.5 text-sm text-foreground transition-colors placeholder:text-muted/70 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20";
 
 const fieldErrorClass = "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20";
 
@@ -92,7 +92,7 @@ export function AcademicDetailsStep({
               autoComplete="organization"
               className={cn(
                 fieldBaseClass,
-                "pl-10 pr-10",
+                "cursor-text pl-10 pr-10",
                 errors.college ? fieldErrorClass : "border-border",
               )}
               aria-invalid={errors.college ? true : undefined}
@@ -110,18 +110,18 @@ export function AcademicDetailsStep({
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor="streamMajor" required>
               Stream / Major
             </Label>
-            <div className="relative">
+            <div className="relative min-w-0">
               <select
                 id="streamMajor"
                 defaultValue=""
                 className={cn(
                   fieldBaseClass,
-                  "appearance-none pr-10",
+                  "appearance-none truncate pr-10",
                   errors.streamMajor ? fieldErrorClass : "border-border",
                 )}
                 aria-invalid={errors.streamMajor ? true : undefined}
@@ -150,11 +150,11 @@ export function AcademicDetailsStep({
             )}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor="graduationYear" required>
               Year of Graduation
             </Label>
-            <div className="relative">
+            <div className="relative min-w-0">
               <select
                 id="graduationYear"
                 defaultValue=""
@@ -205,15 +205,15 @@ export function AcademicDetailsStep({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
           {TARGET_DOMAINS.map((domain) => (
             <label
               key={domain.id}
               className={cn(
                 "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius-card)] border px-3 py-5 text-center transition-colors",
-                "hover:border-foreground/40 hover:bg-brand-50/50",
+                "hover:border-[#153a75]/40 hover:bg-brand-50/50",
                 selectedDomain === domain.id
-                  ? "border-foreground bg-brand-50 ring-1 ring-foreground/20"
+                  ? "border-[#153a75] bg-brand-50 ring-1 ring-[#153a75]/20"
                   : "border-border bg-white",
               )}
             >

@@ -26,7 +26,7 @@ export function RegistrationStepper({ currentStep }: RegistrationStepperProps) {
                 <span
                   className={cn(
                     "absolute left-[calc(50%+1rem)] top-4 hidden h-0.5 w-[calc(100%-2rem)] sm:block",
-                    isCompleted ? "bg-foreground" : "bg-border",
+                    isCompleted ? "bg-[#153a75]" : "bg-border",
                   )}
                   aria-hidden="true"
                 />
@@ -36,8 +36,8 @@ export function RegistrationStepper({ currentStep }: RegistrationStepperProps) {
                 className={cn(
                   "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors sm:h-9 sm:w-9",
                   isActive || isCompleted
-                    ? "bg-foreground text-white"
-                    : "border border-border bg-gray-100 text-foreground",
+                    ? "bg-[#153a75] text-white hover:bg-[#102b55]"
+                    : "border border-border bg-gray-100 text-[#153a75]",
                 )}
                 aria-current={isActive ? "step" : undefined}
               >
@@ -47,7 +47,7 @@ export function RegistrationStepper({ currentStep }: RegistrationStepperProps) {
               <span
                 className={cn(
                   "mt-2 text-center text-[0.65rem] font-medium leading-tight sm:text-xs",
-                  isActive ? "text-foreground" : "text-muted",
+                  isActive || isCompleted ? "text-[#153a75]" : "text-muted",
                 )}
               >
                 {step.label}

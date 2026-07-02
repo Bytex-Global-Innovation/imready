@@ -7,16 +7,25 @@
   --border: #e2e8f0;
   --surface: #f5f7ff;
   --surface-alt: #f3f4ff;
+  --primary: #153a75;
+  --primary-hover: #102b55;
   --brand-50: #f0f4f8;
   --brand-100: #dce4ec;
-  --brand-500: #0a2540;
-  --brand-600: #0a2540;
-  --brand-700: #081e34;
+  --brand-500: #153a75;
+  --brand-600: #153a75;
+  --brand-700: #102b55;
   --accent: #f472b6;
   --hero-bg: #f9f9ff;
   --hero-heading: #1d2144;
   --hero-body: #959cb1;
-  --hero-accent: #0a2540;
+  --hero-accent: #153a75;
+}
+
+.auth-shell {
+  --foreground: #153a75;
+  --brand-500: #153a75;
+  --brand-600: #153a75;
+  --brand-700: #102b55;
 }
 
 @theme inline {
@@ -31,6 +40,8 @@
   --color-brand-500: var(--brand-500);
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-accent: var(--accent);
   --color-hero: var(--hero-bg);
   --color-hero-heading: var(--hero-heading);

@@ -52,7 +52,7 @@ export function Navbar() {
           <Button variant="ghost" size="sm" href={ROUTES.login}>
             Log In
           </Button>
-          <Button size="sm" href={ROUTES.signup}>
+          <Button size="sm" href={ROUTES.signupStep(1)}>
             Apply Now
           </Button>
         </div>
@@ -101,7 +101,7 @@ export function Navbar() {
           <Button variant="secondary" href={ROUTES.login} className="w-full">
             Log In
           </Button>
-          <Button href={ROUTES.signup} className="w-full">
+          <Button href={ROUTES.signupStep(1)} className="w-full">
             Apply Now
           </Button>
         </div>
