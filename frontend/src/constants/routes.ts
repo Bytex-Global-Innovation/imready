@@ -10,4 +10,6 @@ export const ROUTES = {
   terms: "/terms",
   cookies: "/cookies",
   faq: "/faq",
+  dashboard: "/dashboard",
+  dashboardProject: (id: string) => `/dashboard/projects/${id}`,
 } as const;
