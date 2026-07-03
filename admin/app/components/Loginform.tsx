@@ -35,6 +35,7 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="w-full">
+      {/* Email */}
       <div className="mb-4">
         <label
           htmlFor="email"
@@ -50,7 +51,7 @@ export default function LoginForm() {
             placeholder="admin@imready.io"
             autoComplete="email"
             {...register("email")}
-            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-800 placeholder-gray-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-md border border-gray-300 py-2.5 pl-9 pr-3 text-sm text-gray-800 placeholder-gray-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 sm:py-2"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
           />
@@ -62,6 +63,7 @@ export default function LoginForm() {
         )}
       </div>
 
+      {/* Password */}
       <div className="mb-6">
         <label
           htmlFor="password"
@@ -77,7 +79,7 @@ export default function LoginForm() {
             placeholder="••••••••"
             autoComplete="current-password"
             {...register("password")}
-            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-800 placeholder-gray-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-md border border-gray-300 py-2.5 pl-9 pr-3 text-sm text-gray-800 placeholder-gray-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 sm:py-2"
             aria-invalid={!!errors.password}
             aria-describedby={errors.password ? "password-error" : undefined}
           />
@@ -98,7 +100,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-md bg-violet-600 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-md bg-violet-600 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2.5"
       >
         {isSubmitting ? "Signing In..." : "Sign In"}
       </button>
