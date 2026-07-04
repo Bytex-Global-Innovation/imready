@@ -1,3 +1,4 @@
+import { toAbsoluteProductImageUrl } from "@/constants/product-detail";
 import { cn } from "@/lib/utils";
 
 const classes = {
@@ -42,7 +43,7 @@ export function ImageList({ images, selectedImage, onSelect }: ImageListProps) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={img}
+                src={toAbsoluteProductImageUrl(img)}
                 alt={`Product thumbnail ${index + 1}`}
                 className={cn(
                   classes.thumbImgBase,

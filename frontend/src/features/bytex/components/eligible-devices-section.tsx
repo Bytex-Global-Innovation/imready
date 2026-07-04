@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BYTEX_DEVICES,
-  BYTEX_PAGE_CTA_CLASSES,
   PRODUCTS_INVENTORY,
   ROUTES,
   getProcessorLogoUrl,
@@ -10,7 +9,6 @@ import {
 import { ArrowRight } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { getDisplayPrice, getFirstComment } from "@/lib/product-utils";
-import { cn } from "@/lib/utils";
 
 export function EligibleDevicesSection() {
   return (
@@ -24,10 +22,7 @@ export function EligibleDevicesSection() {
         </div>
         <Link
           href={BYTEX_DEVICES.viewAllLink.href}
-          className={cn(
-            "inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#153a75] focus-visible:ring-offset-2",
-            BYTEX_PAGE_CTA_CLASSES.link,
-          )}
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-[#153a75] transition-colors hover:text-[#153a75]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#153a75] focus-visible:ring-offset-2"
         >
           {BYTEX_DEVICES.viewAllLink.label}
           <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -90,7 +85,7 @@ export function EligibleDevicesSection() {
                   variant="ghost"
                   size="sm"
                   href={ROUTES.product(product.id)}
-                  className={cn(BYTEX_PAGE_CTA_CLASSES.ghostButton)}
+                  className="text-[#153a75] hover:bg-surface-alt focus-visible:ring-[#153a75]"
                   aria-label={`View details for ${product.name}`}
                 >
                   Details

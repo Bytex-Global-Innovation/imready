@@ -1,17 +1,5 @@
 import { ROUTES } from "./routes";
 
-/** Dark blue for buttons and CTAs on Bytex and product comparison pages only */
-export const BYTEX_PAGE_CTA_COLOR = "#153a75";
-
-export const BYTEX_PAGE_CTA_CLASSES = {
-  primaryButton:
-    "bg-[#153a75] text-white hover:bg-[#153a75]/90 focus-visible:ring-[#153a75]",
-  link: "text-[#153a75] transition-colors hover:text-[#153a75]/80",
-  outlineButton:
-    "border-[#153a75] text-[#153a75] transition-colors hover:bg-[#153a75]/5 focus-visible:ring-[#153a75]",
-  ghostButton: "text-[#153a75] hover:bg-surface-alt focus-visible:ring-[#153a75]",
-} as const;
-
 export const BYTEX_HERO = {
   title: "Unlock Your Journey with Bytex",
   description:

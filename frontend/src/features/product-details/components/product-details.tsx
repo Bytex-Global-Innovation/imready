@@ -37,106 +37,69 @@ import {
   getSubVariantDisplayPrice,
 } from "@/lib/product-detail-utils";
 import { cn } from "@/lib/utils";
-import { ImageList } from "./image-list";
-import { ProductActions } from "./product-actions";
-import { ProductImage } from "./product-image";
-import { ProductDetailsSkeleton } from "./product-details-skeleton";
-import { ProductDetailsSkeletonMobile } from "./product-details-skeleton-mobile";
-import { Specifications } from "./specifications";
+import { ImageList } from "@/features/product-details/components/image-list";
+import { ProductActions } from "@/features/product-details/components/product-actions";
+import { ProductImage } from "@/features/product-details/components/product-image";
+import { ProductDetailsSkeleton } from "@/features/product-details/components/product-details-skeleton";
+import { ProductDetailsSkeletonMobile } from "@/features/product-details/components/product-details-skeleton-mobile";
+import { Specifications } from "@/features/product-details/components/specifications";
 import {
   buildServices,
   getServiceOverlayStyle,
   type ServiceOverlayStyle,
-} from "./services-data";
-import { ShareProductModal } from "./share-product-modal";
-import { StarRatingDisplay } from "./star-rating-display";
-
-const PRODUCT_DETAIL_CLASSES = {
-  navyText: "text-[#213c73]",
-  navyBorder: "border-[#213c73]",
-  navyBorderMuted: "border-[#213c73]/50",
-  navyBorderHover: "hover:border-[#213c73]",
-  navyBgMuted: "lg:bg-[#213c73]/60",
-  navyRing: "lg:ring-2 lg:ring-[#213c73]/60",
-  overlayGradient: "bg-gradient-to-r from-[#213c73] via-blue-400 to-cyan-400",
-  quantityBtn:
-    "flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-gray-400 bg-white text-xl font-bold text-foreground transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50",
-  quantityValue: "w-6 text-center text-lg font-medium text-foreground",
-  outOfStock: "ml-2 text-xs text-red-500",
-  priceDesktop: "text-3xl font-bold tracking-tight text-gray-900",
-  priceGstDesktop: "ml-1 text-base font-semibold text-gray-500",
-  priceMobile: "text-[28px] font-bold tracking-tight text-gray-900",
-  priceGstMobile: "ml-1 text-sm font-semibold text-gray-500",
-  toast: "fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg lg:bottom-6",
-  desktopShell: "mx-auto hidden max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block",
-  desktopCard:
-    "flex flex-col gap-8 overflow-visible border border-gray-200 bg-white p-4 lg:flex-row lg:items-start",
-  galleryColumn:
-    "relative flex min-w-[340px] flex-col border-r border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 md:min-w-[390px] lg:min-w-[420px]",
-  shareBtnDesktop:
-    "cursor-pointer rounded-full bg-white p-2 backdrop-blur-md transition-all duration-200 ease-in-out hover:bg-gray-100 focus:outline-none",
-  favBtnDesktop:
-    "mb-1 flex cursor-pointer items-center justify-center rounded-full bg-white p-2 backdrop-blur-md transition-all hover:bg-red-100 focus:outline-none",
-  favActive: "fill-red-500 text-red-500",
-  favIdle: "text-gray-400",
-  mainImageFrame: "relative rounded-lg border border-gray-200 bg-white/70 p-3 shadow-sm",
-  infoColumn: "flex flex-1 flex-col py-8 pl-6 pr-2 lg:self-start",
-  titleDesktop: "mb-2 text-2xl font-semibold capitalize text-gray-900 lg:text-3xl",
-  accessoryDesc: "w-full text-sm font-semibold text-gray-700",
-  specPill:
-    "inline-flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-foreground shadow-sm transition-all duration-200",
-  specPillIcon: "h-5 w-5 text-[#213c73]",
-  quantityLabel: "mb-1 text-base font-medium text-foreground",
-  serviceChevron: "h-5 w-5 text-gray-800",
-  serviceScrollMobile: "mobile-services-scroll flex snap-x snap-mandatory gap-0 overflow-x-auto py-1 pl-12 pr-2",
-  serviceScrollDesktop:
-    "flex flex-nowrap space-x-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-  serviceBtnBase:
-    "flex shrink-0 cursor-pointer flex-col items-center justify-start text-center transition duration-300",
-  serviceBtnMobile: "w-28 min-w-[110px] snap-start rounded-lg p-2.5",
-  serviceBtnDesktop: "w-20 min-w-[80px] p-2",
-  serviceIconWrapMobile: "h-7 w-7",
-  serviceIconWrapDesktop: "h-10 w-10",
-  serviceIconMobile: "h-3 w-3",
-  serviceIconDesktop: "h-5 w-5",
-  serviceLabelMobile: "min-h-0 text-[12px] leading-tight",
-  serviceLabelDesktop: "min-h-[28px] text-[10px]",
-  serviceLabelPartMobile: "text-[11px]",
-  serviceLabelPartDesktop: "text-[10px]",
-  mobileShell: "mt-4 block w-full bg-white pb-4 md:pb-28 lg:hidden",
-  mobileShareBtn:
-    "cursor-pointer rounded-full bg-white p-2 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none",
-  carouselTrack:
-    "scrollbar-hide h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-  dotActive: "bg-gray-800",
-  dotIdle: "bg-gray-300",
-  carouselDot: "h-2 w-2 cursor-pointer rounded-full",
-  mobileTitle: "text-[24px] font-normal leading-tight text-gray-900",
-  mobileSpecs: "break-words text-[14px] font-normal leading-[20px] text-gray-800",
-  mobileQuantityLabel: "text-foreground",
-  mobileServicesTitle: "text-md mb-1 font-semibold text-foreground",
-  stickyBar: "fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-md max-md:hidden lg:hidden",
-  overlayPanel: "relative rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:p-5",
-  overlayTitle: "text-base font-semibold text-gray-900",
-  overlayClose:
-    "cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#213c73]/30",
-  overlayBody: "mt-3 max-h-60 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3",
-  overlayText: "whitespace-pre-line text-sm leading-6 text-gray-700",
-  overlayDivider: "mt-3 h-px bg-gray-100",
-  mobileFavBtn:
-    "flex cursor-pointer items-center justify-center rounded-full p-2 shadow-sm backdrop-blur-md transition-all focus:outline-none",
-  overlayServiceIcon: "hidden h-5 w-5 text-[#213c73] sm:inline",
-  overlayArrowBase:
-    "absolute h-0 w-0 border-x-8 border-x-transparent",
-  overlayArrowBelow:
-    "top-[-8px] border-b-8 border-b-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
-  overlayArrowAbove:
-    "-bottom-2 border-t-8 border-t-white drop-shadow-[0_-1px_1px_rgba(0,0,0,0.06)]",
-} as const;
+} from "@/features/product-details/components/services-data";
+import { ShareProductModal } from "@/features/product-details/components/share-product-modal";
+import { StarRatingDisplay } from "@/features/product-details/components/star-rating-display";
 
 interface ProductDetailsProps {
   productDetails: ProductDetailsData | null;
   onAction?: (action: "unlock" | "notify", message: string) => void;
+}
+
+function ServiceOverlayPortal({
+  overlayStyle,
+  overlayDomRef,
+  arrowRef,
+  showBelow,
+  children,
+}: {
+  overlayStyle: ServiceOverlayStyle;
+  overlayDomRef: React.RefObject<HTMLDivElement | null>;
+  arrowRef: React.RefObject<HTMLDivElement | null>;
+  showBelow: boolean;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    const el = overlayDomRef.current;
+    if (!el) return;
+    el.style.left = `${overlayStyle.left}px`;
+    el.style.top = `${overlayStyle.top}px`;
+    el.style.width = `${overlayStyle.width}px`;
+    el.style.zIndex = String(overlayStyle.zIndex);
+  }, [overlayDomRef, overlayStyle]);
+
+  useEffect(() => {
+    const el = arrowRef.current;
+    if (!el) return;
+    el.style.left = `${overlayStyle.arrowLeft}px`;
+  }, [arrowRef, overlayStyle.arrowLeft]);
+
+  return (
+    <div ref={overlayDomRef} className="pointer-events-auto absolute">
+      {showBelow ? (
+        <div
+          ref={arrowRef}
+          className="absolute top-[-8px] h-0 w-0 border-x-8 border-x-transparent border-b-8 border-b-white drop-shadow-sm"
+        />
+      ) : (
+        <div
+          ref={arrowRef}
+          className="absolute -bottom-2 h-0 w-0 border-x-8 border-x-transparent border-t-8 border-t-white drop-shadow-sm"
+        />
+      )}
+      {children}
+    </div>
+  );
 }
 
 function QuantityStepper({
@@ -149,30 +112,29 @@ function QuantityStepper({
   onChange: (type: "decrease" | "increase") => void;
 }) {
   const disabled = maxQuantity === 0;
+
   return (
     <div className="flex items-center gap-2">
       <button
         disabled={disabled}
-        className={PRODUCT_DETAIL_CLASSES.quantityBtn}
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-border bg-white text-xl font-bold text-foreground transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onChange("decrease")}
         aria-label="Decrease quantity"
         type="button"
       >
         −
       </button>
-      <span className={PRODUCT_DETAIL_CLASSES.quantityValue}>{quantity}</span>
+      <span className="w-6 text-center text-lg font-medium text-foreground">{quantity}</span>
       <button
         disabled={disabled}
-        className={PRODUCT_DETAIL_CLASSES.quantityBtn}
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-border bg-white text-xl font-bold text-foreground transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onChange("increase")}
         aria-label="Increase quantity"
         type="button"
       >
         +
       </button>
-      {disabled ? (
-        <span className={PRODUCT_DETAIL_CLASSES.outOfStock}>Out of Stock</span>
-      ) : null}
+      {disabled ? <span className="ml-2 text-xs text-red-500">Out of Stock</span> : null}
     </div>
   );
 }
@@ -202,6 +164,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
   const specsRef = useRef<HTMLDivElement>(null);
   const lastClickedServiceEl = useRef<HTMLElement | null>(null);
   const overlayDomRef = useRef<HTMLDivElement>(null);
+  const overlayArrowRef = useRef<HTMLDivElement>(null);
   const openedOnMobileRef = useRef(false);
   const openedOnDesktopRef = useRef(false);
 
@@ -398,9 +361,9 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
 
   const priceBlockDesktop = (
     <div className="mb-2 mt-3">
-      <p className={PRODUCT_DETAIL_CLASSES.priceDesktop}>
+      <p className="text-3xl font-bold tracking-tight text-foreground">
         ₹{formatNumberWithCommas(displayPrice)}
-        <span className={PRODUCT_DETAIL_CLASSES.priceGstDesktop}>+ GST</span>
+        <span className="ml-1 text-base font-semibold text-muted">+ GST</span>
       </p>
     </div>
   );
@@ -413,17 +376,17 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
           onClick={() => scrollServices("prev")}
           aria-label="Previous services"
           disabled={!canScrollLeftServices}
-          className="absolute -ml-4 left-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
+          className="absolute -ml-4 left-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
         >
-          <ChevronLeft className={PRODUCT_DETAIL_CLASSES.serviceChevron} />
+          <ChevronLeft className="h-5 w-5 text-foreground" />
         </button>
       ) : null}
       <div
         ref={mobile ? servicesRef : undefined}
         className={cn(
           mobile
-            ? PRODUCT_DETAIL_CLASSES.serviceScrollMobile
-            : PRODUCT_DETAIL_CLASSES.serviceScrollDesktop,
+            ? "mobile-services-scroll flex snap-x snap-mandatory gap-0 overflow-x-auto py-1 pl-12 pr-2"
+            : "flex flex-nowrap space-x-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         )}
         role={mobile ? "list" : undefined}
         aria-label={mobile ? "Product services" : undefined}
@@ -441,45 +404,37 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               role={mobile ? "listitem" : undefined}
               aria-expanded={mobile ? expanded : undefined}
               className={cn(
-                PRODUCT_DETAIL_CLASSES.serviceBtnBase,
-                mobile ? PRODUCT_DETAIL_CLASSES.serviceBtnMobile : PRODUCT_DETAIL_CLASSES.serviceBtnDesktop,
-                mobile && expanded && PRODUCT_DETAIL_CLASSES.navyRing,
+                "flex shrink-0 cursor-pointer flex-col items-center justify-start text-center transition duration-300",
+                mobile ? "w-28 min-w-[110px] snap-start rounded-lg p-2.5" : "w-20 min-w-[80px] p-2",
+                mobile && expanded && "lg:ring-2 lg:ring-[#153a75]/60",
               )}
             >
               <div
                 className={cn(
                   "mb-1 flex items-center justify-center rounded-full border",
-                  mobile ? PRODUCT_DETAIL_CLASSES.serviceIconWrapMobile : PRODUCT_DETAIL_CLASSES.serviceIconWrapDesktop,
+                  mobile ? "h-7 w-7" : "h-10 w-10",
                   expanded && mobile
-                    ? cn(PRODUCT_DETAIL_CLASSES.navyBorder, PRODUCT_DETAIL_CLASSES.navyBgMuted)
-                    : cn(PRODUCT_DETAIL_CLASSES.navyBorderMuted, PRODUCT_DETAIL_CLASSES.navyBorderHover),
+                    ? "border-[#153a75] lg:bg-[#153a75]/60"
+                    : "border-[#153a75]/50 hover:border-[#153a75]",
                 )}
               >
                 <Icon
                   className={cn(
-                    PRODUCT_DETAIL_CLASSES.navyText,
-                    mobile ? PRODUCT_DETAIL_CLASSES.serviceIconMobile : PRODUCT_DETAIL_CLASSES.serviceIconDesktop,
+                    "text-[#153a75]",
+                    mobile ? "h-3 w-3" : "h-5 w-5",
                   )}
                 />
               </div>
               <div
                 className={cn(
-                  "max-w-[75px] text-center font-semibold leading-snug",
-                  PRODUCT_DETAIL_CLASSES.navyText,
-                  mobile ? PRODUCT_DETAIL_CLASSES.serviceLabelMobile : PRODUCT_DETAIL_CLASSES.serviceLabelDesktop,
+                  "max-w-[75px] text-center font-semibold leading-snug text-[#153a75]",
+                  mobile ? "min-h-0 text-xs leading-tight" : "min-h-7 text-[10px]",
                 )}
               >
                 {service.nameParts ? (
                   <div className="flex flex-col items-center gap-0">
                     {service.nameParts.map((part, i) => (
-                      <span
-                        key={i}
-                        className={
-                          mobile
-                            ? PRODUCT_DETAIL_CLASSES.serviceLabelPartMobile
-                            : PRODUCT_DETAIL_CLASSES.serviceLabelPartDesktop
-                        }
-                      >
+                      <span key={i} className={mobile ? "text-[11px]" : "text-[10px]"}>
                         {part}
                       </span>
                     ))}
@@ -498,9 +453,9 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
           onClick={() => scrollServices("next")}
           aria-label="Next services"
           disabled={!canScrollRightServices}
-          className="absolute -mr-4 right-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
+          className="absolute -mr-4 right-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
         >
-          <ChevronRight className={cn("ml-6", PRODUCT_DETAIL_CLASSES.serviceChevron)} />
+          <ChevronRight className="ml-6 h-5 w-5 text-foreground" />
         </button>
       ) : null}
     </div>
@@ -509,24 +464,26 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
   return (
     <>
       {toastMessage ? (
-        <div className={PRODUCT_DETAIL_CLASSES.toast}>{toastMessage}</div>
+        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg lg:bottom-6">
+          {toastMessage}
+        </div>
       ) : null}
 
       {/* Desktop */}
-      <div className={PRODUCT_DETAIL_CLASSES.desktopShell}>
-        <div className={PRODUCT_DETAIL_CLASSES.desktopCard}>
-          <div className={PRODUCT_DETAIL_CLASSES.galleryColumn}>
+      <div className="mx-auto hidden max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block">
+        <div className="flex flex-col gap-8 overflow-visible border border-border bg-white p-4 lg:flex-row lg:items-start">
+          <div className="relative flex min-w-[340px] flex-col border-r border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 md:min-w-[390px] lg:min-w-[420px]">
             <div className="absolute right-4 top-4 z-10 me-3 mt-3 flex items-center gap-2">
               <button
-                className={PRODUCT_DETAIL_CLASSES.shareBtnDesktop}
+                className="cursor-pointer rounded-full bg-white p-2 backdrop-blur-md transition-all duration-200 ease-in-out hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 onClick={() => setIsShareModalOpen(true)}
                 aria-label="Share"
                 type="button"
               >
-                <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
+                <Share2 className="h-5 w-5 text-gray-400" />
               </button>
               <button
-                className={PRODUCT_DETAIL_CLASSES.favBtnDesktop}
+                className="mb-1 flex cursor-pointer items-center justify-center rounded-full bg-white p-2 backdrop-blur-md transition-all hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 onClick={() => setIsFavourite((f) => !f)}
                 aria-label="Add to favourites"
                 type="button"
@@ -534,7 +491,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                 <Heart
                   className={cn(
                     "h-7 w-7",
-                    isFavourite ? PRODUCT_DETAIL_CLASSES.favActive : PRODUCT_DETAIL_CLASSES.favIdle,
+                    isFavourite ? "fill-red-500 text-red-500" : "text-gray-400",
                   )}
                 />
               </button>
@@ -549,26 +506,33 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                   scrollToIndex(idx);
                 }}
               />
-              <div className={PRODUCT_DETAIL_CLASSES.mainImageFrame}>
+              <div className="relative rounded-lg border border-border bg-white/70 p-3 shadow-sm">
                 <ProductImage image={selectedImage} disableMagnifier={magnifierDisabled} />
               </div>
             </div>
           </div>
 
-          <div className={PRODUCT_DETAIL_CLASSES.infoColumn}>
+          <div className="flex flex-1 flex-col py-8 pl-6 pr-2 lg:self-start">
             <div>
-              <p className={PRODUCT_DETAIL_CLASSES.titleDesktop}>{productDetails.name}</p>
+              <p className="mb-2 text-2xl font-semibold capitalize text-foreground lg:text-3xl">
+                {productDetails.name}
+              </p>
               <div className="mb-4 flex flex-wrap gap-4">
                 {isAccessoryCategory ? (
-                  <p className={PRODUCT_DETAIL_CLASSES.accessoryDesc}>
+                  <p className="w-full text-sm font-semibold text-gray-700">
                     {productDetails.description || productDetails.shortDescription}
                   </p>
                 ) : (
                   quickSpecPills.map((pill, idx) => {
                     const Icon = getIconForPill(pill);
                     return (
-                      <span key={`${pill}-${idx}`} className={PRODUCT_DETAIL_CLASSES.specPill}>
-                        {Icon ? <Icon className={PRODUCT_DETAIL_CLASSES.specPillIcon} /> : null}
+                      <span
+                        key={`${pill}-${idx}`}
+                        className="inline-flex items-center gap-3 rounded-lg border border-border bg-gray-50 px-4 py-2 text-sm text-foreground shadow-sm transition-all duration-200"
+                      >
+                        {Icon ? (
+                          <Icon className="h-5 w-5 text-[#153a75]" />
+                        ) : null}
                         <span>{pill}</span>
                       </span>
                     );
@@ -583,9 +547,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               {priceBlockDesktop}
               <div className="mb-4">
                 <div className="mb-6">
-                  <h3 className={PRODUCT_DETAIL_CLASSES.quantityLabel}>
-                    Quantity
-                  </h3>
+                  <h3 className="mb-1 text-base font-medium text-foreground">Quantity</h3>
                   <QuantityStepper
                     quantity={quantity}
                     maxQuantity={selectedSubVariants.inventory?.qty ?? 0}
@@ -607,12 +569,12 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         </div>
       </div>
 
-      {/* Mobile */}
-      <div className={PRODUCT_DETAIL_CLASSES.mobileShell}>
+      {/* Mobile / tablet */}
+      <div className="mt-4 block w-full bg-white pb-4 md:pb-28 lg:hidden">
         <div className="relative h-64 w-full bg-white">
           <div className="absolute right-3 top-3 z-20 flex flex-col items-center gap-2">
             <button
-              className={PRODUCT_DETAIL_CLASSES.mobileFavBtn}
+              className="flex cursor-pointer items-center justify-center rounded-full p-2 shadow-sm backdrop-blur-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               onClick={() => setIsFavourite((f) => !f)}
               type="button"
               aria-label="Add to favourites"
@@ -620,24 +582,23 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               <Heart
                 className={cn(
                   "h-7 w-7",
-                  isFavourite ? PRODUCT_DETAIL_CLASSES.favActive : PRODUCT_DETAIL_CLASSES.favIdle,
+                  isFavourite ? "fill-red-500 text-red-500" : "text-gray-400",
                 )}
               />
             </button>
             <button
-              className={PRODUCT_DETAIL_CLASSES.mobileShareBtn}
+              className="cursor-pointer rounded-full bg-white p-2 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               onClick={() => setIsShareModalOpen(true)}
               type="button"
               aria-label="Share product"
             >
-              <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
+              <Share2 className="h-5 w-5 text-gray-400" />
             </button>
           </div>
           <div
             ref={trackRef}
             onScroll={onCarouselScroll}
-            className={PRODUCT_DETAIL_CLASSES.carouselTrack}
-            style={{ WebkitOverflowScrolling: "touch" }}
+            className="scrollbar-hide h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex h-full">
               {productImagesByVariant.map((img, idx) => (
@@ -650,7 +611,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={img}
+                    src={toAbsoluteProductImageUrl(img)}
                     alt={`product-${idx + 1}`}
                     className="h-full w-full object-contain"
                     draggable={false}
@@ -666,10 +627,8 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                 onClick={() => scrollToIndex(i)}
                 type="button"
                 className={cn(
-                  PRODUCT_DETAIL_CLASSES.carouselDot,
-                  carouselStartIdx === i
-                    ? PRODUCT_DETAIL_CLASSES.dotActive
-                    : PRODUCT_DETAIL_CLASSES.dotIdle,
+                  "h-2 w-2 cursor-pointer rounded-full",
+                  carouselStartIdx === i ? "bg-gray-800" : "bg-gray-300",
                 )}
                 aria-label={`Go to image ${i + 1}`}
               />
@@ -678,11 +637,11 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         </div>
 
         <div className="mt-8 px-4 pt-3">
-          <h1 className={PRODUCT_DETAIL_CLASSES.mobileTitle}>{productDetails.name}</h1>
+          <h1 className="text-2xl font-normal leading-tight text-foreground">{productDetails.name}</h1>
         </div>
 
         <div className="gap-2 px-4">
-          <p className={PRODUCT_DETAIL_CLASSES.mobileSpecs}>
+          <p className="break-words text-sm font-normal leading-5 text-gray-800">
             {isAccessoryCategory
               ? productDetails.description || productDetails.shortDescription
               : quickSpecsList.length > 0
@@ -705,11 +664,11 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         <div className="mt-2 px-4 pt-2">
           <div className="flex flex-col gap-3">
             <div className="min-w-0 flex-1">
-              <div className={PRODUCT_DETAIL_CLASSES.priceMobile}>
+              <div className="text-[28px] font-bold tracking-tight text-foreground">
                 ₹ {formatNumberWithCommas(displayPrice)}
-                <span className={PRODUCT_DETAIL_CLASSES.priceGstMobile}>+ GST</span>
+                <span className="ml-1 text-sm font-semibold text-muted">+ GST</span>
               </div>
-              <div className="mt-3 md:hidden">
+              <div className="mt-2 md:hidden">
                 <ProductActions
                   inlineOnly
                   selectedProduct={{
@@ -723,9 +682,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
             </div>
 
             <div className="mt-2 flex items-center gap-2">
-              <h2 className={PRODUCT_DETAIL_CLASSES.mobileQuantityLabel}>
-                Quantity
-              </h2>
+              <h2 className="text-foreground">Quantity</h2>
               <QuantityStepper
                 quantity={quantity}
                 maxQuantity={selectedSubVariants.inventory?.qty ?? 0}
@@ -736,9 +693,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         </div>
 
         <div className="mt-2 px-4 pb-0 pt-2">
-          <h3 className={PRODUCT_DETAIL_CLASSES.mobileServicesTitle}>
-            Services
-          </h3>
+          <h3 className="mb-1 text-base font-semibold text-foreground">Services</h3>
           {servicesRow(true)}
         </div>
 
@@ -751,8 +706,8 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         </div>
       </div>
 
-      {/* Sticky mobile CTA */}
-      <div className={PRODUCT_DETAIL_CLASSES.stickyBar}>
+      {/* Sticky CTA — tablet only */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white shadow-md max-md:hidden lg:hidden">
         <div className="mx-auto max-w-[1700px] px-0">
           <ProductActions
             stickyOnly
@@ -765,37 +720,20 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
 
       {activeServiceIndex !== null && overlayStyle && typeof document !== "undefined"
         ? createPortal(
-            <div ref={overlayDomRef} style={overlayStyle} className="pointer-events-auto">
-              {overlayStyle.showBelow ? (
-                <div
-                  className={cn(
-                    PRODUCT_DETAIL_CLASSES.overlayArrowBase,
-                    PRODUCT_DETAIL_CLASSES.overlayArrowBelow,
-                  )}
-                  style={{ left: overlayStyle.arrowLeft }}
-                />
-              ) : (
-                <div
-                  className={cn(
-                    PRODUCT_DETAIL_CLASSES.overlayArrowBase,
-                    PRODUCT_DETAIL_CLASSES.overlayArrowAbove,
-                  )}
-                  style={{ left: overlayStyle.arrowLeft }}
-                />
-              )}
-              <div className={PRODUCT_DETAIL_CLASSES.overlayPanel}>
-                <div
-                  className={cn(
-                    "absolute inset-x-0 top-0 h-1 rounded-t-xl",
-                    PRODUCT_DETAIL_CLASSES.overlayGradient,
-                  )}
-                />
+            <ServiceOverlayPortal
+              overlayStyle={overlayStyle}
+              overlayDomRef={overlayDomRef}
+              arrowRef={overlayArrowRef}
+              showBelow={overlayStyle.showBelow}
+            >
+              <div className="relative rounded-xl border border-border bg-white p-4 shadow-xl sm:p-5">
+                <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-[#153a75] via-blue-400 to-cyan-400" />
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     {ActiveServiceIcon ? (
-                      <ActiveServiceIcon className={PRODUCT_DETAIL_CLASSES.overlayServiceIcon} />
+                      <ActiveServiceIcon className="hidden h-5 w-5 text-[#153a75] sm:inline" />
                     ) : null}
-                    <h3 className={PRODUCT_DETAIL_CLASSES.overlayTitle}>
+                    <h3 className="text-base font-semibold text-foreground">
                       {services[activeServiceIndex].name}
                     </h3>
                   </div>
@@ -803,19 +741,19 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                     onClick={closeServiceModal}
                     type="button"
                     aria-label="Close service details"
-                    className={PRODUCT_DETAIL_CLASSES.overlayClose}
+                    className="cursor-pointer rounded-md p-1.5 text-muted hover:bg-gray-100 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-[#153a75]/30"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <div className={PRODUCT_DETAIL_CLASSES.overlayDivider} />
-                <div className={PRODUCT_DETAIL_CLASSES.overlayBody}>
-                  <p className={PRODUCT_DETAIL_CLASSES.overlayText}>
+                <div className="mt-3 h-px bg-gray-100" />
+                <div className="mt-3 max-h-60 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <p className="whitespace-pre-line text-sm leading-6 text-gray-700">
                     {services[activeServiceIndex].details}
                   </p>
                 </div>
               </div>
-            </div>,
+            </ServiceOverlayPortal>,
             document.body,
           )
         : null}
