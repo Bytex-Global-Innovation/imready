@@ -20,6 +20,7 @@ const classes = {
 interface ProductActionsProps {
   selectedProduct: ProductSubVariant & { name?: string };
   stickyOnly?: boolean;
+  inlineOnly?: boolean;
   onUnlock?: () => void;
   onNotify?: (message: string) => void;
 }
@@ -27,6 +28,7 @@ interface ProductActionsProps {
 export function ProductActions({
   selectedProduct,
   stickyOnly = false,
+  inlineOnly = false,
   onUnlock,
   onNotify,
 }: ProductActionsProps) {
@@ -61,22 +63,52 @@ export function ProductActions({
     onNotify?.("You will be notified when this product is back in stock.");
   };
 
-  const unlockButton = (fullWidth = false) => (
+  const unlockButton = (fullWidth = false, compact = false) => (
     <Button
       type="button"
       onClick={handleUnlock}
       className={cn(
         unlockCls,
-        fullWidth
-          ? "min-h-[52px] w-full rounded-none px-6 text-base font-semibold lg:rounded-full"
-          : "h-11 w-full max-w-xs rounded-full px-6 shadow-sm",
+        compact
+          ? "h-10 w-full rounded-full px-4 text-sm font-semibold shadow-sm"
+          : fullWidth
+            ? "min-h-[52px] w-full rounded-none px-6 text-base font-semibold lg:rounded-full"
+            : "h-11 w-full max-w-xs rounded-full px-6 shadow-sm",
       )}
       aria-label={`${COMPARE_PRICING_CTA.unlockButtonLabel} for ${selectedProduct.name ?? "product"}`}
     >
-      <Lock className="h-4 w-4" aria-hidden="true" />
+      <Lock className={cn("h-4 w-4", compact && "h-3.5 w-3.5")} aria-hidden="true" />
       {COMPARE_PRICING_CTA.unlockButtonLabel}
     </Button>
   );
+
+  const inlineMobileActions = (
+    <div className="w-full">
+      {productQty > 0 ? (
+        <>
+          {unlockButton(true, true)}
+          <p className="mt-1 text-center text-xs text-muted">
+            {COMPARE_PRICING_CTA.verificationHint}
+          </p>
+        </>
+      ) : (
+        <div>
+          <p className={cn(classes.outOfStockBanner, "text-[13px]")}>Out of stock</p>
+          <button
+            onClick={handleNotifyMe}
+            disabled={isNotifiedLocal}
+            type="button"
+            aria-pressed={isNotifiedLocal}
+            className={cn(notifyCls, "h-10 w-full rounded-full px-4 text-sm font-semibold")}
+          >
+            Notify Me
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (inlineOnly) return inlineMobileActions;
 
   const desktopActions = (
     <div className="hidden flex-col items-start gap-2 lg:flex">

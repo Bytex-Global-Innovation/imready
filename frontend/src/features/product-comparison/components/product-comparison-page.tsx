@@ -174,9 +174,6 @@ function CompareProductColumn({
                 + GST
               </span>
             </p>
-            <p className="text-xs font-medium text-muted">
-              {COMPARE_PRICING_CTA.firstCutLabel}
-            </p>
             <Button
               className={cn(
                 "mt-3 w-full max-w-xs cursor-pointer rounded-full px-6",

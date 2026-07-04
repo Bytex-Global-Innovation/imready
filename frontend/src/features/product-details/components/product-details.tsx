@@ -65,10 +65,8 @@ const PRODUCT_DETAIL_CLASSES = {
   outOfStock: "ml-2 text-xs text-red-500",
   priceDesktop: "text-3xl font-bold tracking-tight text-gray-900",
   priceGstDesktop: "ml-1 text-base font-semibold text-gray-500",
-  priceSubDesktop: "mt-1 text-xs font-medium text-gray-500",
   priceMobile: "text-[28px] font-bold tracking-tight text-gray-900",
   priceGstMobile: "ml-1 text-sm font-semibold text-gray-500",
-  priceSubMobile: "mt-1 text-xs font-medium text-gray-500",
   toast: "fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg lg:bottom-6",
   desktopShell: "mx-auto hidden max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block",
   desktopCard:
@@ -105,7 +103,7 @@ const PRODUCT_DETAIL_CLASSES = {
   serviceLabelDesktop: "min-h-[28px] text-[10px]",
   serviceLabelPartMobile: "text-[11px]",
   serviceLabelPartDesktop: "text-[10px]",
-  mobileShell: "mt-4 block w-full bg-white pb-28 lg:hidden",
+  mobileShell: "mt-4 block w-full bg-white pb-4 md:pb-28 lg:hidden",
   mobileShareBtn:
     "cursor-pointer rounded-full bg-white p-2 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none",
   carouselTrack:
@@ -117,7 +115,7 @@ const PRODUCT_DETAIL_CLASSES = {
   mobileSpecs: "break-words text-[14px] font-normal leading-[20px] text-gray-800",
   mobileQuantityLabel: "text-foreground",
   mobileServicesTitle: "text-md mb-1 font-semibold text-foreground",
-  stickyBar: "fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-md lg:hidden",
+  stickyBar: "fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-md max-md:hidden lg:hidden",
   overlayPanel: "relative rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:p-5",
   overlayTitle: "text-base font-semibold text-gray-900",
   overlayClose:
@@ -403,9 +401,6 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
       <p className={PRODUCT_DETAIL_CLASSES.priceDesktop}>
         ₹{formatNumberWithCommas(displayPrice)}
         <span className={PRODUCT_DETAIL_CLASSES.priceGstDesktop}>+ GST</span>
-      </p>
-      <p className={PRODUCT_DETAIL_CLASSES.priceSubDesktop}>
-        {COMPARE_PRICING_CTA.firstCutLabel}
       </p>
     </div>
   );
@@ -714,9 +709,17 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                 ₹ {formatNumberWithCommas(displayPrice)}
                 <span className={PRODUCT_DETAIL_CLASSES.priceGstMobile}>+ GST</span>
               </div>
-              <p className={PRODUCT_DETAIL_CLASSES.priceSubMobile}>
-                {COMPARE_PRICING_CTA.firstCutLabel}
-              </p>
+              <div className="mt-3 md:hidden">
+                <ProductActions
+                  inlineOnly
+                  selectedProduct={{
+                    ...selectedSubVariants,
+                    name: productDetails.name,
+                  }}
+                  onUnlock={handleUnlock}
+                  onNotify={handleNotify}
+                />
+              </div>
             </div>
 
             <div className="mt-2 flex items-center gap-2">
