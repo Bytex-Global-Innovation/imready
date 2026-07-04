@@ -16,18 +16,17 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import {
-  COMPARE_PRICING_CTA,
-  PRODUCT_DETAIL_CLASSES,
-  PRODUCT_DETAIL_COPY,
-  PRODUCT_DETAIL_UI,
-} from "@/constants";
+import { COMPARE_PRICING_CTA, ROUTES } from "@/constants";
 import type {
   ProductDetailsData,
   ProductSubVariant,
   ProductVariant,
 } from "@/constants/product-detail";
-import { ACCESSORY_CATEGORY_ID } from "@/constants/product-detail";
+import {
+  ACCESSORY_CATEGORY_ID,
+  PRODUCT_DETAIL_MOBILE_BREAKPOINT,
+  toAbsoluteProductImageUrl,
+} from "@/constants/product-detail";
 import { useMobileView } from "@/hooks/use-mobile-view";
 import { useMagnifierDisabled } from "@/hooks/use-magnifier-disabled";
 import {
@@ -52,6 +51,91 @@ import {
 import { ShareProductModal } from "./share-product-modal";
 import { StarRatingDisplay } from "./star-rating-display";
 
+const PRODUCT_DETAIL_CLASSES = {
+  navyText: "text-[#213c73]",
+  navyBorder: "border-[#213c73]",
+  navyBorderMuted: "border-[#213c73]/50",
+  navyBorderHover: "hover:border-[#213c73]",
+  navyBgMuted: "lg:bg-[#213c73]/60",
+  navyRing: "lg:ring-2 lg:ring-[#213c73]/60",
+  overlayGradient: "bg-gradient-to-r from-[#213c73] via-blue-400 to-cyan-400",
+  quantityBtn:
+    "flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-gray-400 bg-white text-xl font-bold text-foreground transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50",
+  quantityValue: "w-6 text-center text-lg font-medium text-foreground",
+  outOfStock: "ml-2 text-xs text-red-500",
+  priceDesktop: "text-3xl font-bold tracking-tight text-gray-900",
+  priceGstDesktop: "ml-1 text-base font-semibold text-gray-500",
+  priceSubDesktop: "mt-1 text-xs font-medium text-gray-500",
+  priceMobile: "text-[28px] font-bold tracking-tight text-gray-900",
+  priceGstMobile: "ml-1 text-sm font-semibold text-gray-500",
+  priceSubMobile: "mt-1 text-xs font-medium text-gray-500",
+  toast: "fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg lg:bottom-6",
+  desktopShell: "mx-auto hidden max-w-[1700px] bg-gray-50 px-2 md:px-0 lg:block",
+  desktopCard:
+    "flex flex-col gap-8 overflow-visible border border-gray-200 bg-white p-4 lg:flex-row lg:items-start",
+  galleryColumn:
+    "relative flex min-w-[340px] flex-col border-r border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 md:min-w-[390px] lg:min-w-[420px]",
+  shareBtnDesktop:
+    "cursor-pointer rounded-full bg-white p-2 backdrop-blur-md transition-all duration-200 ease-in-out hover:bg-gray-100 focus:outline-none",
+  favBtnDesktop:
+    "mb-1 flex cursor-pointer items-center justify-center rounded-full bg-white p-2 backdrop-blur-md transition-all hover:bg-red-100 focus:outline-none",
+  favActive: "fill-red-500 text-red-500",
+  favIdle: "text-gray-400",
+  mainImageFrame: "relative rounded-lg border border-gray-200 bg-white/70 p-3 shadow-sm",
+  infoColumn: "flex flex-1 flex-col py-8 pl-6 pr-2 lg:self-start",
+  titleDesktop: "mb-2 text-2xl font-semibold capitalize text-gray-900 lg:text-3xl",
+  accessoryDesc: "w-full text-sm font-semibold text-gray-700",
+  specPill:
+    "inline-flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-foreground shadow-sm transition-all duration-200",
+  specPillIcon: "h-5 w-5 text-[#213c73]",
+  quantityLabel: "mb-1 text-base font-medium text-foreground",
+  serviceChevron: "h-5 w-5 text-gray-800",
+  serviceScrollMobile: "mobile-services-scroll flex snap-x snap-mandatory gap-0 overflow-x-auto py-1 pl-12 pr-2",
+  serviceScrollDesktop:
+    "flex flex-nowrap space-x-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+  serviceBtnBase:
+    "flex shrink-0 cursor-pointer flex-col items-center justify-start text-center transition duration-300",
+  serviceBtnMobile: "w-28 min-w-[110px] snap-start rounded-lg p-2.5",
+  serviceBtnDesktop: "w-20 min-w-[80px] p-2",
+  serviceIconWrapMobile: "h-7 w-7",
+  serviceIconWrapDesktop: "h-10 w-10",
+  serviceIconMobile: "h-3 w-3",
+  serviceIconDesktop: "h-5 w-5",
+  serviceLabelMobile: "min-h-0 text-[12px] leading-tight",
+  serviceLabelDesktop: "min-h-[28px] text-[10px]",
+  serviceLabelPartMobile: "text-[11px]",
+  serviceLabelPartDesktop: "text-[10px]",
+  mobileShell: "mt-4 block w-full bg-white pb-28 lg:hidden",
+  mobileShareBtn:
+    "cursor-pointer rounded-full bg-white p-2 shadow-sm backdrop-blur-md transition-all ease-in-out hover:bg-gray-100 focus:outline-none",
+  carouselTrack:
+    "scrollbar-hide h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+  dotActive: "bg-gray-800",
+  dotIdle: "bg-gray-300",
+  carouselDot: "h-2 w-2 cursor-pointer rounded-full",
+  mobileTitle: "text-[24px] font-normal leading-tight text-gray-900",
+  mobileSpecs: "break-words text-[14px] font-normal leading-[20px] text-gray-800",
+  mobileQuantityLabel: "text-foreground",
+  mobileServicesTitle: "text-md mb-1 font-semibold text-foreground",
+  stickyBar: "fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white shadow-md lg:hidden",
+  overlayPanel: "relative rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:p-5",
+  overlayTitle: "text-base font-semibold text-gray-900",
+  overlayClose:
+    "cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#213c73]/30",
+  overlayBody: "mt-3 max-h-60 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3",
+  overlayText: "whitespace-pre-line text-sm leading-6 text-gray-700",
+  overlayDivider: "mt-3 h-px bg-gray-100",
+  mobileFavBtn:
+    "flex cursor-pointer items-center justify-center rounded-full p-2 shadow-sm backdrop-blur-md transition-all focus:outline-none",
+  overlayServiceIcon: "hidden h-5 w-5 text-[#213c73] sm:inline",
+  overlayArrowBase:
+    "absolute h-0 w-0 border-x-8 border-x-transparent",
+  overlayArrowBelow:
+    "top-[-8px] border-b-8 border-b-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
+  overlayArrowAbove:
+    "-bottom-2 border-t-8 border-t-white drop-shadow-[0_-1px_1px_rgba(0,0,0,0.06)]",
+} as const;
+
 interface ProductDetailsProps {
   productDetails: ProductDetailsData | null;
   onAction?: (action: "unlock" | "notify", message: string) => void;
@@ -73,7 +157,7 @@ function QuantityStepper({
         disabled={disabled}
         className={PRODUCT_DETAIL_CLASSES.quantityBtn}
         onClick={() => onChange("decrease")}
-        aria-label={PRODUCT_DETAIL_COPY.decreaseQuantity}
+        aria-label="Decrease quantity"
         type="button"
       >
         −
@@ -83,13 +167,13 @@ function QuantityStepper({
         disabled={disabled}
         className={PRODUCT_DETAIL_CLASSES.quantityBtn}
         onClick={() => onChange("increase")}
-        aria-label={PRODUCT_DETAIL_COPY.increaseQuantity}
+        aria-label="Increase quantity"
         type="button"
       >
         +
       </button>
       {disabled ? (
-        <span className={PRODUCT_DETAIL_CLASSES.outOfStock}>{PRODUCT_DETAIL_COPY.outOfStock}</span>
+        <span className={PRODUCT_DETAIL_CLASSES.outOfStock}>Out of Stock</span>
       ) : null}
     </div>
   );
@@ -141,6 +225,12 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
   );
 
   const displayPrice = getSubVariantDisplayPrice(selectedSubVariants);
+  const shareUrl = useMemo(() => {
+    if (typeof window === "undefined" || !productDetails) return "";
+    const url = new URL(ROUTES.product(productDetails.id), window.location.origin);
+    if (selectedSubVId) url.searchParams.set("id", selectedSubVId);
+    return url.toString();
+  }, [productDetails, selectedSubVId]);
   const ActiveServiceIcon =
     activeServiceIndex !== null ? services[activeServiceIndex]?.icon : null;
 
@@ -156,7 +246,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         if (sv) {
           setSelectedVariant(variantWithSub);
           setSelectedSubVariants(sv);
-          const urls = variantWithSub.images.map((i) => i.url);
+          const urls = variantWithSub.images.map((i) => toAbsoluteProductImageUrl(i.url));
           setProductImagesByVariant(urls);
           setSelectedImage(urls[0]);
           return;
@@ -169,7 +259,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
     if (v && sv) {
       setSelectedVariant(v);
       setSelectedSubVariants(sv);
-      const urls = v.images.map((i) => i.url);
+      const urls = v.images.map((i) => toAbsoluteProductImageUrl(i.url));
       setProductImagesByVariant(urls);
       setSelectedImage(urls[0]);
     }
@@ -243,7 +333,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
       return;
     }
     const rect = e.currentTarget.getBoundingClientRect();
-    const isDesktop = window.innerWidth >= PRODUCT_DETAIL_UI.mobileBreakpoint;
+    const isDesktop = window.innerWidth >= PRODUCT_DETAIL_MOBILE_BREAKPOINT;
     openedOnMobileRef.current = !isDesktop;
     openedOnDesktopRef.current = isDesktop;
     lastClickedServiceEl.current = e.currentTarget;
@@ -326,7 +416,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         <button
           type="button"
           onClick={() => scrollServices("prev")}
-          aria-label={PRODUCT_DETAIL_COPY.previousServices}
+          aria-label="Previous services"
           disabled={!canScrollLeftServices}
           className="absolute -ml-4 left-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
         >
@@ -341,7 +431,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
             : PRODUCT_DETAIL_CLASSES.serviceScrollDesktop,
         )}
         role={mobile ? "list" : undefined}
-        aria-label={mobile ? PRODUCT_DETAIL_COPY.productServices : undefined}
+        aria-label={mobile ? "Product services" : undefined}
       >
         {services.map((service, index) => {
           const Icon = service.icon;
@@ -351,7 +441,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               key={service.name}
               type="button"
               onClick={(e) => handleServiceClick(e, index)}
-              aria-label={`${PRODUCT_DETAIL_COPY.productServices}: ${service.name}`}
+              aria-label={`Product services: ${service.name}`}
               title={service.name}
               role={mobile ? "listitem" : undefined}
               aria-expanded={mobile ? expanded : undefined}
@@ -411,7 +501,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
         <button
           type="button"
           onClick={() => scrollServices("next")}
-          aria-label={PRODUCT_DETAIL_COPY.nextServices}
+          aria-label="Next services"
           disabled={!canScrollRightServices}
           className="absolute -mr-4 right-0 top-1/2 z-20 -translate-y-1/2 cursor-pointer p-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
         >
@@ -435,7 +525,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               <button
                 className={PRODUCT_DETAIL_CLASSES.shareBtnDesktop}
                 onClick={() => setIsShareModalOpen(true)}
-                aria-label={PRODUCT_DETAIL_COPY.share}
+                aria-label="Share"
                 type="button"
               >
                 <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
@@ -443,7 +533,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               <button
                 className={PRODUCT_DETAIL_CLASSES.favBtnDesktop}
                 onClick={() => setIsFavourite((f) => !f)}
-                aria-label={PRODUCT_DETAIL_COPY.addToFavourites}
+                aria-label="Add to favourites"
                 type="button"
               >
                 <Heart
@@ -499,7 +589,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               <div className="mb-4">
                 <div className="mb-6">
                   <h3 className={PRODUCT_DETAIL_CLASSES.quantityLabel}>
-                    {PRODUCT_DETAIL_COPY.quantityLabel}
+                    Quantity
                   </h3>
                   <QuantityStepper
                     quantity={quantity}
@@ -530,7 +620,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               className={PRODUCT_DETAIL_CLASSES.mobileFavBtn}
               onClick={() => setIsFavourite((f) => !f)}
               type="button"
-              aria-label={PRODUCT_DETAIL_COPY.addToFavourites}
+              aria-label="Add to favourites"
             >
               <Heart
                 className={cn(
@@ -543,7 +633,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
               className={PRODUCT_DETAIL_CLASSES.mobileShareBtn}
               onClick={() => setIsShareModalOpen(true)}
               type="button"
-              aria-label={PRODUCT_DETAIL_COPY.shareProduct}
+              aria-label="Share product"
             >
               <Share2 className={cn("h-5 w-5", PRODUCT_DETAIL_CLASSES.favIdle)} />
             </button>
@@ -560,7 +650,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                   key={idx}
                   onClick={() => scrollToIndex(idx)}
                   type="button"
-                  aria-label={PRODUCT_DETAIL_COPY.openImage(idx + 1)}
+                  aria-label={`Open image ${idx + 1}`}
                   className="h-full w-full shrink-0 snap-start"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -586,7 +676,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                     ? PRODUCT_DETAIL_CLASSES.dotActive
                     : PRODUCT_DETAIL_CLASSES.dotIdle,
                 )}
-                aria-label={PRODUCT_DETAIL_COPY.goToImage(i + 1)}
+                aria-label={`Go to image ${i + 1}`}
               />
             ))}
           </div>
@@ -605,7 +695,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                     .map((s) => String(s).replace(/^[*•\-\s]+/, "").trim())
                     .map((s, i) => (i === 0 ? s : "\u00A0/\u00A0" + s))
                     .join("")
-                : PRODUCT_DETAIL_COPY.specsUnavailable}
+                : "Specifications unavailable"}
           </p>
         </div>
 
@@ -631,7 +721,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
 
             <div className="mt-2 flex items-center gap-2">
               <h2 className={PRODUCT_DETAIL_CLASSES.mobileQuantityLabel}>
-                {PRODUCT_DETAIL_COPY.quantityLabel}
+                Quantity
               </h2>
               <QuantityStepper
                 quantity={quantity}
@@ -644,7 +734,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
 
         <div className="mt-2 px-4 pb-0 pt-2">
           <h3 className={PRODUCT_DETAIL_CLASSES.mobileServicesTitle}>
-            {PRODUCT_DETAIL_COPY.servicesHeading}
+            Services
           </h3>
           {servicesRow(true)}
         </div>
@@ -675,31 +765,19 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
             <div ref={overlayDomRef} style={overlayStyle} className="pointer-events-auto">
               {overlayStyle.showBelow ? (
                 <div
-                  style={{
-                    position: "absolute",
-                    left: overlayStyle.arrowLeft,
-                    top: -8,
-                    width: 0,
-                    height: 0,
-                    borderLeft: "8px solid transparent",
-                    borderRight: "8px solid transparent",
-                    borderBottom: "8px solid white",
-                    filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.06))",
-                  }}
+                  className={cn(
+                    PRODUCT_DETAIL_CLASSES.overlayArrowBase,
+                    PRODUCT_DETAIL_CLASSES.overlayArrowBelow,
+                  )}
+                  style={{ left: overlayStyle.arrowLeft }}
                 />
               ) : (
                 <div
-                  style={{
-                    position: "absolute",
-                    left: overlayStyle.arrowLeft,
-                    bottom: -8,
-                    width: 0,
-                    height: 0,
-                    borderLeft: "8px solid transparent",
-                    borderRight: "8px solid transparent",
-                    borderTop: "8px solid white",
-                    filter: "drop-shadow(0 -1px 1px rgba(0,0,0,0.06))",
-                  }}
+                  className={cn(
+                    PRODUCT_DETAIL_CLASSES.overlayArrowBase,
+                    PRODUCT_DETAIL_CLASSES.overlayArrowAbove,
+                  )}
+                  style={{ left: overlayStyle.arrowLeft }}
                 />
               )}
               <div className={PRODUCT_DETAIL_CLASSES.overlayPanel}>
@@ -721,7 +799,7 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
                   <button
                     onClick={closeServiceModal}
                     type="button"
-                    aria-label={PRODUCT_DETAIL_COPY.closeServiceDetails}
+                    aria-label="Close service details"
                     className={PRODUCT_DETAIL_CLASSES.overlayClose}
                   >
                     <X className="h-5 w-5" />
@@ -742,8 +820,8 @@ export function ProductDetails({ productDetails, onAction }: ProductDetailsProps
       <ShareProductModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        url={typeof window !== "undefined" ? window.location.href : ""}
-        onCopy={() => setToastMessage(PRODUCT_DETAIL_COPY.urlCopiedToast)}
+        url={shareUrl}
+        onCopy={() => setToastMessage("URL copied to clipboard")}
       />
     </>
   );

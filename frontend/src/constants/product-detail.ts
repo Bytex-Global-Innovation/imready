@@ -1,15 +1,8 @@
-import { PRODUCTS_INVENTORY, type Product } from "./product-comparison";
+import { BYTEX_IMAGE_CDN, PRODUCTS_INVENTORY, type Product } from "./product-comparison";
 import { getFirstComment, parsePrice } from "@/lib/product-utils";
 
-/** UI tokens — match ByteX product details reference */
-export const PRODUCT_DETAIL_UI = {
-  primaryBlue: "#2874f0",
-  primaryBlueHover: "#0b62e0",
-  navy: "#213c73",
-  mobileBreakpoint: 1024,
-} as const;
-
 export const ACCESSORY_CATEGORY_ID = "5c4505ab-3860-4c59-b0fd-02342badd22d";
+export const PRODUCT_DETAIL_MOBILE_BREAKPOINT = 1024;
 
 export interface ProductSubVariant {
   id: string;
@@ -88,6 +81,11 @@ export interface ProductDetailsData {
 
 const OUT_OF_STOCK_IDS = new Set(["2"]);
 
+export function toAbsoluteProductImageUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BYTEX_IMAGE_CDN}/${url.replace(/^\/+/, "")}`;
+}
+
 function buildSpecsFromProduct(product: Product): ProductSpecs {
   const screenMatch = product.screen.match(/(\d+(?:\.\d+)?)\s*cms?\s*\(([^)]+)\)/i);
   return {
@@ -122,6 +120,7 @@ export function buildProductDetailsFromInventory(product: Product): ProductDetai
   const priceNum = parsePrice(product.price);
   const specialNum = parsePrice(product.specialPrice);
   const hasDiscount = specialNum > 0 && specialNum < priceNum;
+  const imageUrl = toAbsoluteProductImageUrl(product.image);
 
   const subVariant: ProductSubVariant = {
     id: `${product.id}-default`,
@@ -135,11 +134,7 @@ export function buildProductDetailsFromInventory(product: Product): ProductDetai
     productId: product.id,
   };
 
-  const images = [
-    { url: product.image },
-    { url: product.image },
-    { url: product.image },
-  ];
+  const images = [{ url: imageUrl }, { url: imageUrl }, { url: imageUrl }];
 
   return {
     id: product.id,
@@ -164,75 +159,3 @@ export function getProductDetailsById(productId: string): ProductDetailsData | n
   if (!product) return null;
   return buildProductDetailsFromInventory(product);
 }
-
-export const PRODUCT_DETAIL_COPY = {
-  detailsHeading: "Details",
-  quantityLabel: "Quantity:",
-  outOfStock: "Out of stock",
-  outOfStockLower: "out of stock",
-  servicesHeading: "Services",
-  shareTitle: "Share with Your Friends",
-  notifyMe: "Notify Me",
-  allDetails: "All Details",
-  showMore: "Show more",
-  showLess: "Show less",
-  specsUnavailable: "Specifications not available",
-  noImage: "No image",
-  selectedProductAlt: "Selected Product",
-  urlCopiedToast: "URL copied to clipboard!",
-  notifySuccessMessage: "You will be notified when this product is back in stock.",
-  noSpecsAvailable: "No specifications available.",
-  noSpecData: "No data available.",
-  specificationColumn: "Specification",
-  detailsColumn: "Details",
-  shareFacebook: "Facebook",
-  shareX: "X",
-  shareWhatsapp: "WhatsApp",
-  shareEmail: "E-Mail",
-  shareCopyLink: "Copy Link",
-  close: "Close",
-  decreaseQuantity: "Decrease quantity",
-  increaseQuantity: "Increase quantity",
-  previousServices: "Previous services",
-  nextServices: "Next services",
-  productServices: "Product services",
-  share: "Share",
-  shareProduct: "Share product",
-  addToFavourites: "Add to favourites",
-  closeServiceDetails: "Close service details",
-  thumbnails: "Product image thumbnails",
-  openImage: (index: number) => `Open image ${index}`,
-  goToImage: (index: number) => `Go to image ${index}`,
-} as const;
-
-export const PRODUCT_DETAIL_SERVICE_COPY = {
-  replacement: {
-    name: "10 Days Replacement by Brand",
-    details: `Defective Item:
-- Eligible for replacement within 10 days of delivery.
-- OEM provides on-call support followed by technician inspection at your location.
-- Expert may repair, replace, or issue a service letter as per Lenovo policy.`,
-  },
-  delivery: {
-    name: "Free Delivery",
-    details: `- Enjoy free doorstep delivery across the country.
-- No hidden delivery charges during checkout.
-- Delivery timelines may vary based on location and availability.`,
-  },
-  secureTransaction: {
-    name: "Secure Transaction",
-    details: `- All transactions are processed through PCI DSS-compliant gateways.
-- Ensures safety of personal and financial data.
-- Supports secure options: UPI, credit/debit cards, net banking, and more.`,
-  },
-  corporateBenefits: {
-    name: "Corporate Benefits",
-    details: `Exclusive discounts for professional businesses and professionals.
-- Flexible payment options including EMI and bulk purchase plans.
-- Priority customer support and dedicated account managers`,
-  },
-  warrantyCarryIn:
-    "Bring-in service at an authorized service center. Required to deliver the device to the service location for diagnosis and repair. Service timelines, parts replacement and any shipping reimbursements are governed by the OEM policy.",
-  warrantyDoorstep:
-    "Provides in-home or at-work repair services where a technician is dispatched to your location to fix the device",
-} as const;

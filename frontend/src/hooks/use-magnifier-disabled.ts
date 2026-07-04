@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PRODUCT_DETAIL_UI } from "@/constants/product-detail";
+import { PRODUCT_DETAIL_MOBILE_BREAKPOINT } from "@/constants/product-detail";
 
 export function useMagnifierDisabled() {
   const [disabled, setDisabled] = useState(true);
 
   useEffect(() => {
     const check = () => {
-      const narrow = window.innerWidth < PRODUCT_DETAIL_UI.mobileBreakpoint;
+      const narrow = window.innerWidth < PRODUCT_DETAIL_MOBILE_BREAKPOINT;
       const touch =
         "ontouchstart" in window || (navigator.maxTouchPoints ?? 0) > 0;
       setDisabled(narrow || touch);

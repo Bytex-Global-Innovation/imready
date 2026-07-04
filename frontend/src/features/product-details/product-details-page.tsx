@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  PRODUCT_DETAIL_COPY,
-  getProductDetailsById,
-} from "@/constants/product-detail";
+import { getProductDetailsById } from "@/constants/product-detail";
 import { ProductDetails } from "./components/product-details";
 import { Specifications } from "./components/specifications";
 import { cn } from "@/lib/utils";
@@ -33,7 +30,7 @@ export function ProductDetailsPage({ productId }: ProductDetailsPageProps) {
       <div className="container mx-auto hidden px-4 pb-4 pt-0 lg:block">
         <div className="border-t border-border pt-4">
           <p className={cn("text-2xl font-semibold", "text-foreground")}>
-            {PRODUCT_DETAIL_COPY.detailsHeading}
+            Details
           </p>
           <p className="mt-2 leading-relaxed text-muted">{productDetails.description}</p>
         </div>

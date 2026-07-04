@@ -1,6 +1,12 @@
 import { Star } from "lucide-react";
-import { PRODUCT_DETAIL_RATING_CLASSES } from "@/constants";
 import { cn } from "@/lib/utils";
+
+const classes = {
+  starFilled: "fill-amber-400 text-amber-400",
+  starEmpty: "fill-gray-200 text-gray-200",
+  count: "text-sm text-gray-600",
+  size20: "h-5 w-5",
+} as const;
 
 interface StarRatingDisplayProps {
   value: number;
@@ -9,8 +15,7 @@ interface StarRatingDisplayProps {
 }
 
 export function StarRatingDisplay({ value, count, size = 20 }: StarRatingDisplayProps) {
-  const sizeClass =
-    size === 20 ? PRODUCT_DETAIL_RATING_CLASSES.size20 : PRODUCT_DETAIL_RATING_CLASSES.size20;
+  const sizeClass = size === 20 ? classes.size20 : classes.size20;
 
   return (
     <div className="flex items-center gap-2">
@@ -22,9 +27,7 @@ export function StarRatingDisplay({ value, count, size = 20 }: StarRatingDisplay
               key={i}
               className={cn(
                 sizeClass,
-                filled
-                  ? PRODUCT_DETAIL_RATING_CLASSES.starFilled
-                  : PRODUCT_DETAIL_RATING_CLASSES.starEmpty,
+                filled ? classes.starFilled : classes.starEmpty,
               )}
               strokeWidth={1.5}
               aria-hidden="true"
@@ -33,7 +36,7 @@ export function StarRatingDisplay({ value, count, size = 20 }: StarRatingDisplay
         })}
       </div>
       {count != null ? (
-        <span className={PRODUCT_DETAIL_RATING_CLASSES.count}>
+        <span className={classes.count}>
           ({count.toLocaleString("en-IN")})
         </span>
       ) : null}

@@ -4,4 +4,3 @@ export * from "./landing";
 export * from "./bytex";
 export * from "./product-comparison";
 export * from "./product-detail";
-export * from "./product-detail-styles";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PRODUCT_DETAIL_UI } from "@/constants/product-detail";
+import { PRODUCT_DETAIL_MOBILE_BREAKPOINT } from "@/constants/product-detail";
 
-export function useMobileView(breakpoint = PRODUCT_DETAIL_UI.mobileBreakpoint) {
+export function useMobileView(breakpoint = PRODUCT_DETAIL_MOBILE_BREAKPOINT) {
   const [isMobileView, setIsMobileView] = useState(false);
   const [mounted, setMounted] = useState(false);
 

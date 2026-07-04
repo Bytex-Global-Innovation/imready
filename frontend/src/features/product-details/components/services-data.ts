@@ -1,9 +1,12 @@
 import { Briefcase, Lock, RefreshCw, Shield, Truck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  PRODUCT_DETAIL_SERVICE_COPY,
-  type ProductSpecs,
-} from "@/constants/product-detail";
+import type { ProductSpecs } from "@/constants/product-detail";
+
+const WARRANTY_CARRY_IN =
+  "Bring-in service at an authorized service center. Required to deliver the device to the service location for diagnosis and repair. Service timelines, parts replacement and any shipping reimbursements are governed by the OEM policy.";
+
+const WARRANTY_DOORSTEP =
+  "Provides in-home or at-work repair services where a technician is dispatched to your location to fix the device";
 
 export interface ProductService {
   name: string;
@@ -40,32 +43,38 @@ export function buildServices(specs: ProductSpecs | null | undefined): ProductSe
 
   return [
     {
-      name: PRODUCT_DETAIL_SERVICE_COPY.replacement.name,
-      details: PRODUCT_DETAIL_SERVICE_COPY.replacement.details,
+      name: "10 Days Replacement by Brand",
+      details: `Defective Item:
+- Eligible for replacement within 10 days of delivery.
+- OEM provides on-call support followed by technician inspection at your location.
+- Expert may repair, replace, or issue a service letter as per Lenovo policy.`,
       icon: RefreshCw,
     },
     {
-      name: PRODUCT_DETAIL_SERVICE_COPY.delivery.name,
-      details: PRODUCT_DETAIL_SERVICE_COPY.delivery.details,
+      name: "Free Delivery",
+      details: `- Enjoy free doorstep delivery across the country.
+- No hidden delivery charges during checkout.
+- Delivery timelines may vary based on location and availability.`,
       icon: Truck,
     },
     {
       name: warrantyLabel,
       nameParts: [`${years} ${years === 1 ? "Year" : "Years"}`, type, "Warranty"],
-      details:
-        type === "Carry-in"
-          ? PRODUCT_DETAIL_SERVICE_COPY.warrantyCarryIn
-          : PRODUCT_DETAIL_SERVICE_COPY.warrantyDoorstep,
+      details: type === "Carry-in" ? WARRANTY_CARRY_IN : WARRANTY_DOORSTEP,
       icon: Shield,
     },
     {
-      name: PRODUCT_DETAIL_SERVICE_COPY.secureTransaction.name,
-      details: PRODUCT_DETAIL_SERVICE_COPY.secureTransaction.details,
+      name: "Secure Transaction",
+      details: `- All transactions are processed through PCI DSS-compliant gateways.
+- Ensures safety of personal and financial data.
+- Supports secure options: UPI, credit/debit cards, net banking, and more.`,
       icon: Lock,
     },
     {
-      name: PRODUCT_DETAIL_SERVICE_COPY.corporateBenefits.name,
-      details: PRODUCT_DETAIL_SERVICE_COPY.corporateBenefits.details,
+      name: "Corporate Benefits",
+      details: `Exclusive discounts for professional businesses and professionals.
+- Flexible payment options including EMI and bulk purchase plans.
+- Priority customer support and dedicated account managers`,
       icon: Briefcase,
     },
   ];

@@ -3,11 +3,31 @@
 import { Fragment, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ProductSpecs, ProductSubVariant } from "@/constants/product-detail";
-import {
-  PRODUCT_DETAIL_COPY,
-  PRODUCT_DETAIL_SPEC_CLASSES,
-} from "@/constants";
 import { cn } from "@/lib/utils";
+
+const classes = {
+  mobileDescription: "mb-4 ml-[-17px] mr-[-17px] whitespace-pre-wrap text-[12px] text-gray-700 lg:hidden",
+  tableWrap: "ml-[-17px] mr-[-17px] overflow-hidden rounded-2xl border border-gray-200 bg-white",
+  th: "select-none border-b border-gray-300 py-5 px-8 text-left font-extrabold tracking-wide text-gray-800",
+  emptyCell: "border-b py-7 px-6 text-center italic text-gray-400",
+  groupRow: "bg-blue-100",
+  groupCell: "select-none border-b border-gray-300 py-3 px-8 font-bold tracking-wider text-blue-900",
+  groupSpacer: "border-b border-gray-300",
+  row: "cursor-default bg-white transition-colors duration-200 hover:bg-blue-50",
+  labelCell:
+    "break-words whitespace-normal border-b border-gray-200 py-5 px-8 align-top font-semibold text-gray-900",
+  valueCell:
+    "max-w-[450px] break-words whitespace-normal border-b border-gray-200 py-5 px-8 font-normal text-gray-900",
+  mobileEmpty: "text-center italic text-gray-400",
+  groupTitle: "mb-1 text-md font-bold text-gray-900",
+  mobileLabel: "text-xs text-gray-500",
+  mobileValue: "break-words whitespace-pre-wrap text-xs font-medium text-gray-900",
+  showMoreBtn: "inline-flex cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none",
+  showMoreText: "font-semibold text-blue-600",
+  showMoreIcon: "h-4 w-4 text-blue-600 transition-transform",
+  showMoreDesktop:
+    "inline-flex cursor-pointer items-center gap-2 rounded-md border border-blue-700 bg-blue-200 px-4 py-2 text-sm font-medium focus:outline-none",
+} as const;
 
 interface SpecItem {
   sub: string;
@@ -231,43 +251,43 @@ export function Specifications({
   return (
     <div className="mx-auto max-w-7xl lg:mt-2 lg:mb-6">
       <h2 className="mb-1 ml-[-17px] mr-[-17px] text-left text-md font-semibold text-foreground lg:hidden">
-        {PRODUCT_DETAIL_COPY.allDetails}
+        All Details
       </h2>
 
       {description ? (
-        <p className={PRODUCT_DETAIL_SPEC_CLASSES.mobileDescription}>{description}</p>
+        <p className={classes.mobileDescription}>{description}</p>
       ) : null}
 
-      <div className={PRODUCT_DETAIL_SPEC_CLASSES.tableWrap}>
+      <div className={classes.tableWrap}>
         <table className="hidden min-w-full table-fixed border-collapse text-base lg:table">
           <thead>
             <tr>
-              <th className={cn("w-1/3 min-w-[130px]", PRODUCT_DETAIL_SPEC_CLASSES.th)}>
-                {PRODUCT_DETAIL_COPY.specificationColumn}
+              <th className={cn("w-1/3 min-w-[130px]", classes.th)}>
+                Specification
               </th>
-              <th className={cn("min-w-[140px]", PRODUCT_DETAIL_SPEC_CLASSES.th)}>
-                {PRODUCT_DETAIL_COPY.detailsColumn}
+              <th className={cn("min-w-[140px]", classes.th)}>
+                Details
               </th>
             </tr>
           </thead>
           <tbody>
             {groupsToRender.length === 0 ? (
               <tr>
-                <td className={PRODUCT_DETAIL_SPEC_CLASSES.emptyCell} colSpan={2}>
-                  {PRODUCT_DETAIL_COPY.noSpecsAvailable}
+                <td className={classes.emptyCell} colSpan={2}>
+                  No specifications available
                 </td>
               </tr>
             ) : (
               groupsToRender.map(({ label, content }) => (
                 <Fragment key={label}>
-                  <tr className={PRODUCT_DETAIL_SPEC_CLASSES.groupRow}>
-                    <td className={PRODUCT_DETAIL_SPEC_CLASSES.groupCell}>{label}</td>
-                    <td className={PRODUCT_DETAIL_SPEC_CLASSES.groupSpacer} />
+                  <tr className={classes.groupRow}>
+                    <td className={classes.groupCell}>{label}</td>
+                    <td className={classes.groupSpacer} />
                   </tr>
                   {content.map((item, idx) => (
-                    <tr key={`${label}-${idx}`} className={PRODUCT_DETAIL_SPEC_CLASSES.row}>
-                      <td className={PRODUCT_DETAIL_SPEC_CLASSES.labelCell}>{item.sub}</td>
-                      <td className={PRODUCT_DETAIL_SPEC_CLASSES.valueCell}>{item.head}</td>
+                    <tr key={`${label}-${idx}`} className={classes.row}>
+                      <td className={classes.labelCell}>{item.sub}</td>
+                      <td className={classes.valueCell}>{item.head}</td>
                     </tr>
                   ))}
                 </Fragment>
@@ -278,8 +298,8 @@ export function Specifications({
 
         <div className="px-4 py-4 lg:hidden">
           {specificationGroups.every((g) => (g.mobileContent || []).length === 0) ? (
-            <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileEmpty}>
-              {PRODUCT_DETAIL_COPY.noSpecsAvailable}
+            <div className={classes.mobileEmpty}>
+              No specifications available
             </div>
           ) : (
             <>
@@ -317,30 +337,30 @@ export function Specifications({
 
                   return (
                     <div key={label} className="mb-2">
-                      <div className={PRODUCT_DETAIL_SPEC_CLASSES.groupTitle}>{label}</div>
+                      <div className={classes.groupTitle}>{label}</div>
                       {rows.length === 0 ? (
-                        <div className={cn("px-3 py-4", PRODUCT_DETAIL_SPEC_CLASSES.mobileEmpty)}>
-                          {PRODUCT_DETAIL_COPY.noSpecData}
+                        <div className={cn("px-3 py-4", classes.mobileEmpty)}>
+                          No data available
                         </div>
                       ) : (
                         rows.map((pair, ridx) => (
                           <div key={ridx} className="border-b py-4 last:border-b-0">
                             <div className="flex gap-4">
                               <div className="w-1/2 pr-2">
-                                <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileLabel}>
+                                <div className={classes.mobileLabel}>
                                   {pair[0]?.sub}
                                 </div>
-                                <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileValue}>
+                                <div className={classes.mobileValue}>
                                   {pair[0]?.head}
                                 </div>
                               </div>
                               <div className="w-1/2 pl-2">
                                 {pair[1] ? (
                                   <>
-                                    <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileLabel}>
+                                    <div className={classes.mobileLabel}>
                                       {pair[1].sub}
                                     </div>
-                                    <div className={PRODUCT_DETAIL_SPEC_CLASSES.mobileValue}>
+                                    <div className={classes.mobileValue}>
                                       {pair[1].head}
                                     </div>
                                   </>
@@ -361,14 +381,14 @@ export function Specifications({
                     type="button"
                     onClick={() => setExpanded((s) => !s)}
                     aria-expanded={expanded}
-                    className={PRODUCT_DETAIL_SPEC_CLASSES.showMoreBtn}
+                    className={classes.showMoreBtn}
                   >
-                    <span className={PRODUCT_DETAIL_SPEC_CLASSES.showMoreText}>
-                      {expanded ? PRODUCT_DETAIL_COPY.showLess : PRODUCT_DETAIL_COPY.showMore}
+                    <span className={classes.showMoreText}>
+                      {expanded ? "Show less" : "Show more"}
                     </span>
                     <ChevronDown
                       className={cn(
-                        PRODUCT_DETAIL_SPEC_CLASSES.showMoreIcon,
+                        classes.showMoreIcon,
                         expanded && "rotate-180",
                       )}
                     />
@@ -386,14 +406,14 @@ export function Specifications({
             type="button"
             onClick={() => setExpanded((s) => !s)}
             aria-expanded={expanded}
-            className={PRODUCT_DETAIL_SPEC_CLASSES.showMoreDesktop}
+            className={classes.showMoreDesktop}
           >
-            <span className={PRODUCT_DETAIL_SPEC_CLASSES.showMoreText}>
-              {expanded ? PRODUCT_DETAIL_COPY.showLess : PRODUCT_DETAIL_COPY.showMore}
+            <span className={classes.showMoreText}>
+              {expanded ? "Show less" : "Show more"}
             </span>
             <ChevronDown
               className={cn(
-                PRODUCT_DETAIL_SPEC_CLASSES.showMoreIcon,
+                classes.showMoreIcon,
                 "font-semibold",
                 expanded && "rotate-180",
               )}

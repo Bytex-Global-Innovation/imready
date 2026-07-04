@@ -6,11 +6,16 @@ import { Button } from "@/components/ui";
 import {
   BYTEX_PAGE_CTA_CLASSES,
   COMPARE_PRICING_CTA,
-  PRODUCT_DETAIL_CLASSES,
-  PRODUCT_DETAIL_COPY,
 } from "@/constants";
 import type { ProductSubVariant } from "@/constants/product-detail";
 import { cn } from "@/lib/utils";
+
+const classes = {
+  notifyDisabled: "cursor-not-allowed border border-[#cfcfcf] bg-[#d6d9dd] text-white",
+  notifyActive: "bg-orange-400 text-white hover:bg-orange-600 active:bg-[#c0463d]",
+  outOfStockBanner: "mb-2 text-center text-[14px] font-semibold text-red-500",
+  stickyBarInner: "mx-0 w-full max-w-none border-t border-gray-200 bg-white shadow-md",
+} as const;
 
 interface ProductActionsProps {
   selectedProduct: ProductSubVariant & { name?: string };
@@ -43,7 +48,7 @@ export function ProductActions({
 
   const notifyCls = cn(
     "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition duration-150 focus:outline-none",
-    isNotifiedLocal ? PRODUCT_DETAIL_CLASSES.notifyDisabled : PRODUCT_DETAIL_CLASSES.notifyActive,
+    isNotifiedLocal ? classes.notifyDisabled : classes.notifyActive,
   );
 
   const handleUnlock = () => {
@@ -53,7 +58,7 @@ export function ProductActions({
   const handleNotifyMe = () => {
     if (isNotifiedLocal) return;
     setIsNotifiedLocal(true);
-    onNotify?.(PRODUCT_DETAIL_COPY.notifySuccessMessage);
+    onNotify?.("You will be notified when this product is back in stock.");
   };
 
   const unlockButton = (fullWidth = false) => (
@@ -82,8 +87,8 @@ export function ProductActions({
         </>
       ) : (
         <div>
-          <p className={PRODUCT_DETAIL_CLASSES.outOfStockBanner}>
-            {PRODUCT_DETAIL_COPY.outOfStockLower}
+          <p className={classes.outOfStockBanner}>
+            Out of stock
           </p>
           <button
             onClick={handleNotifyMe}
@@ -92,7 +97,7 @@ export function ProductActions({
             type="button"
             aria-pressed={isNotifiedLocal}
           >
-            {PRODUCT_DETAIL_COPY.notifyMe}
+            Notify Me
           </button>
         </div>
       )}
@@ -101,11 +106,11 @@ export function ProductActions({
 
   const mobileSticky = (
     <div className={cn(stickyOnly ? "w-full" : "fixed bottom-0 left-0 right-0 z-50 lg:hidden")}>
-      <div className={PRODUCT_DETAIL_CLASSES.stickyBarInner}>
+      <div className={classes.stickyBarInner}>
         {productQty === 0 ? (
           <div className="w-full px-0">
-            <p className={cn(PRODUCT_DETAIL_CLASSES.outOfStockBanner, "pt-2")}>
-              {PRODUCT_DETAIL_COPY.outOfStockLower}
+            <p className={cn(classes.outOfStockBanner, "pt-2")}>
+              Out of stock
             </p>
             <button
               onClick={handleNotifyMe}
@@ -117,7 +122,7 @@ export function ProductActions({
                 "min-h-[52px] w-full rounded-none border-none text-lg font-semibold shadow-none outline-none",
               )}
             >
-              {PRODUCT_DETAIL_COPY.notifyMe}
+              Notify Me
             </button>
           </div>
         ) : (

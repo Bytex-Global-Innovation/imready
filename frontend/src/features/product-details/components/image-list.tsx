@@ -1,5 +1,16 @@
-import { PRODUCT_DETAIL_COPY, PRODUCT_DETAIL_IMAGE_CLASSES } from "@/constants";
 import { cn } from "@/lib/utils";
+
+const classes = {
+  thumbList:
+    "h-[300px] max-h-[472px] overflow-y-auto px-3 sm:h-[400px] md:h-[472px] [scrollbar-width:thin] [scrollbar-color:rgba(100,116,139,0.4)_transparent]",
+  thumbBtn:
+    "flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-lg border p-1 transition focus:outline-none sm:h-[60px] sm:w-[60px] md:h-[80px] md:w-[80px]",
+  thumbSelected: "border-blue-600 shadow-lg",
+  thumbIdle: "border-gray-300 hover:border-blue-400 hover:shadow-md",
+  thumbImgBase: "h-full w-full rounded-md object-contain transition-opacity duration-300",
+  thumbImgSelected: "opacity-100",
+  thumbImgIdle: "opacity-60 hover:opacity-90",
+} as const;
 
 interface ImageListProps {
   images: string[];
@@ -10,9 +21,9 @@ interface ImageListProps {
 export function ImageList({ images, selectedImage, onSelect }: ImageListProps) {
   return (
     <div
-      className={PRODUCT_DETAIL_IMAGE_CLASSES.thumbList}
+      className={classes.thumbList}
       tabIndex={0}
-      aria-label={PRODUCT_DETAIL_COPY.thumbnails}
+      aria-label="Product image thumbnails"
     >
       <div className="flex flex-col space-y-3">
         {images.map((img, index) => {
@@ -23,12 +34,10 @@ export function ImageList({ images, selectedImage, onSelect }: ImageListProps) {
               onClick={() => onSelect(img, index)}
               type="button"
               aria-current={isSelected}
-              aria-label={`${PRODUCT_DETAIL_COPY.thumbnails} ${index + 1}`}
+              aria-label={`Product image thumbnails ${index + 1}`}
               className={cn(
-                PRODUCT_DETAIL_IMAGE_CLASSES.thumbBtn,
-                isSelected
-                  ? PRODUCT_DETAIL_IMAGE_CLASSES.thumbSelected
-                  : PRODUCT_DETAIL_IMAGE_CLASSES.thumbIdle,
+                classes.thumbBtn,
+                isSelected ? classes.thumbSelected : classes.thumbIdle,
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -36,10 +45,8 @@ export function ImageList({ images, selectedImage, onSelect }: ImageListProps) {
                 src={img}
                 alt={`Product thumbnail ${index + 1}`}
                 className={cn(
-                  PRODUCT_DETAIL_IMAGE_CLASSES.thumbImgBase,
-                  isSelected
-                    ? PRODUCT_DETAIL_IMAGE_CLASSES.thumbImgSelected
-                    : PRODUCT_DETAIL_IMAGE_CLASSES.thumbImgIdle,
+                  classes.thumbImgBase,
+                  isSelected ? classes.thumbImgSelected : classes.thumbImgIdle,
                 )}
                 draggable={false}
               />
