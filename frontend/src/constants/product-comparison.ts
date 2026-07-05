@@ -154,7 +154,6 @@ export const COMPARE_BREADCRUMBS = [
 ];
 
 export const COMPARE_PRICING_CTA = {
-  firstCutLabel: "First-cut price",
   unlockButtonLabel: "Unlock Student Discount",
   verificationHint: "Get up to 20% off with verification",
 } as const;

@@ -12,6 +12,7 @@ export const ROUTES = {
   domainExplorer: "/domain-explorer",
   bytex: "/bytex",
   productComparison: "/product-comparison",
+  product: (id: string) => `/product/${id}`,
   privacy: "/privacy",
   terms: "/terms",
   cookies: "/cookies",

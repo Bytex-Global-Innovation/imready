@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BYTEX_FAQ, BYTEX_PAGE_CTA_CLASSES } from "@/constants";
+import { BYTEX_FAQ } from "@/constants";
 import { Button } from "@/components/ui";
 import { Plus } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -63,7 +63,7 @@ export function BytexFaqSection() {
         <Button
           href={BYTEX_FAQ.primaryAction.href}
           size="lg"
-          className={cn("px-12 shadow-md", BYTEX_PAGE_CTA_CLASSES.primaryButton)}
+          className="bg-[#153a75] px-12 text-white shadow-md hover:bg-[#153a75]/90 focus-visible:ring-[#153a75]"
         >
           {BYTEX_FAQ.primaryAction.label}
         </Button>

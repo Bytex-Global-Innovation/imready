@@ -17,7 +17,6 @@ import {
 } from "@/components/icons";
 import { Button } from "@/components/ui";
 import {
-  BYTEX_PAGE_CTA_CLASSES,
   COMPARE_BREADCRUMBS,
   COMPARE_MOBILE_SCROLL_HINT,
   COMPARE_PRICING_CTA,
@@ -174,14 +173,8 @@ function CompareProductColumn({
                 + GST
               </span>
             </p>
-            <p className="text-xs font-medium text-muted">
-              {COMPARE_PRICING_CTA.firstCutLabel}
-            </p>
             <Button
-              className={cn(
-                "mt-3 w-full max-w-xs cursor-pointer rounded-full px-6",
-                BYTEX_PAGE_CTA_CLASSES.primaryButton,
-              )}
+              className="mt-3 w-full max-w-xs cursor-pointer rounded-full bg-[#153a75] px-6 text-white hover:bg-[#153a75]/90 focus-visible:ring-[#153a75]"
               aria-label={`${COMPARE_PRICING_CTA.unlockButtonLabel} for ${product.name}`}
             >
               <Lock className="h-4 w-4" aria-hidden="true" />
@@ -306,10 +299,7 @@ export function ProductComparisonPage() {
         </label>
         <button
           type="button"
-          className={cn(
-            "inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 lg:hidden",
-            BYTEX_PAGE_CTA_CLASSES.outlineButton,
-          )}
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full border border-[#153a75] px-3 py-1.5 text-xs font-medium text-[#153a75] transition-colors hover:bg-[#153a75]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#153a75] focus-visible:ring-offset-2 lg:hidden"
           onClick={() => {
             scrollContainerRef.current?.scrollBy({ left: 280, behavior: "smooth" });
           }}
