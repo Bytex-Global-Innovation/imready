@@ -40,6 +40,48 @@ export const authApi = {
   },
 };
 
+export interface Student {
+  id: string;
+  studentName: string;
+  college: string;
+  domain: string;
+  status: "VERIFIED" | "PENDING" | "FLAGGED";
+}
+
+export interface StudentsResponse {
+  students: Student[];
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+const mockStudents: Student[] = [
+  { id: "STU-1001", studentName: "Ava Patel", college: "Tech Central Inst.", domain: "Cyber Security", status: "VERIFIED" },
+  { id: "STU-1002", studentName: "Mia Chen", college: "Bio Labs Univ.", domain: "Data Science", status: "PENDING" },
+  { id: "STU-1003", studentName: "Noah Brooks", college: "Global Arts Acad.", domain: "UX Architecture", status: "FLAGGED" },
+  { id: "STU-1004", studentName: "Liam Ortiz", college: "Tech Central Inst.", domain: "Quantum Comp", status: "VERIFIED" },
+  { id: "STU-1005", studentName: "Sophia Reed", college: "Bio Labs Univ.", domain: "Cyber Security", status: "PENDING" },
+  { id: "STU-1006", studentName: "Ethan Cole", college: "Global Arts Acad.", domain: "Data Science", status: "VERIFIED" },
+];
+
+export const studentsApi = {
+  getStudents: async (page = 1): Promise<StudentsResponse> => {
+    if (USE_MOCK) {
+      await delay(600);
+      const pageSize = 4;
+      const start = (page - 1) * pageSize;
+      const pagedStudents = mockStudents.slice(start, start + pageSize);
+      return {
+        students: pagedStudents,
+        page,
+        totalPages: Math.max(1, Math.ceil(mockStudents.length / pageSize)),
+        total: mockStudents.length,
+      };
+    }
+    return request<StudentsResponse>(`/admin/students?page=${page}`);
+  },
+};
+
 export const dashboardApi = {
   getSummary: async (): Promise<DashboardSummary> => {
     if (USE_MOCK) {
