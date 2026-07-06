@@ -177,7 +177,7 @@ export function AdvantageSection() {
               top companies are looking for.
             </p>
             <div className="mt-8">
-              <Button size="lg" href={ROUTES.signup}>
+              <Button size="lg" href={ROUTES.signupStep(1)}>
                 Start Your Journey
                 <RocketIcon />
               </Button>
