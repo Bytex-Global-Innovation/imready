@@ -117,3 +117,52 @@ export interface DashboardSummary {
     status: "PENDING" | "APPROVED" | "REJECTED";
   }[];
 }
+
+// ─── Assessments ─────────────────────────────────────────────────────────────
+
+export type AssessmentStatus = "ACTIVE" | "DRAFT" | "ARCHIVED";
+
+export interface Assessment {
+  id: string;
+  uuid: string;
+  name: string;
+  domain: string;
+  passMarks: string;
+  status: AssessmentStatus;
+}
+
+export interface AssessmentsResponse {
+  assessments: Assessment[];
+  total: number;
+  page: number;
+  totalPages: number;
+  totalThisMonth: number;
+  activeSessions: number;
+  avgPassRate: string;
+}
+
+const MOCK_ASSESSMENTS: Assessment[] = [
+  { id: "1", uuid: "147ac10b-98cc-4372-a867", name: "Data Structures V4",         domain: "Computer Science", passMarks: "75/100", status: "ACTIVE"   },
+  { id: "2", uuid: "b923d11c-22ff-11ee-978f", name: "Neural Net Basics",           domain: "Machine Learning", passMarks: "80/100", status: "DRAFT"    },
+  { id: "3", uuid: "a0eabc99-9c0b-4e18-b86d", name: "Cloud Arch Professional",     domain: "Infrastructure",   passMarks: "90/100", status: "ACTIVE"   },
+  { id: "4", uuid: "c81e7289-694c-11e1-9b23", name: "Legacy Systems Deprecated",   domain: "Mainframe",        passMarks: "60/100", status: "ARCHIVED" },
+  { id: "5", uuid: "28672166-4654-4638-953e", name: "Quantum Crypt Sec L3",        domain: "Cyber Security",   passMarks: "85/100", status: "ACTIVE"   },
+];
+
+export const assessmentsApi = {
+  getAssessments: async (page = 1): Promise<AssessmentsResponse> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        assessments: MOCK_ASSESSMENTS,
+        total: 124,
+        page,
+        totalPages: 25,
+        totalThisMonth: 4,
+        activeSessions: 18,
+        avgPassRate: "74.2%",
+      };
+    }
+    return request<AssessmentsResponse>(`/admin/assessments?page=${page}`);
+  },
+};
