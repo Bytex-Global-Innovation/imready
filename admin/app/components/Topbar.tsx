@@ -11,13 +11,13 @@ interface TopbarProps {
 
 export default function Topbar({ searchPlaceholder, onMenuToggle, menuOpen }: TopbarProps) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
+    <header className="z-40 flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
       <div className="flex items-center gap-3">
         {/* hamburger - only visible on mobile */}
         <button
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={onMenuToggle}
-          className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 sm:hidden"
+          className="cursor-pointer rounded-md p-1.5 text-gray-500 hover:bg-gray-100 sm:hidden"
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -38,10 +38,10 @@ export default function Topbar({ searchPlaceholder, onMenuToggle, menuOpen }: To
       </div>
 
       <div className="flex items-center gap-3 sm:gap-5">
-        <button aria-label="Notifications" className="text-gray-500 hover:text-gray-700">
+        <button aria-label="Notifications" className="cursor-pointer text-gray-500 hover:text-gray-700">
           <Bell className="h-5 w-5" />
         </button>
-        <button aria-label="Help" className="hidden text-gray-500 hover:text-gray-700 sm:block">
+        <button aria-label="Help" className="hidden cursor-pointer text-gray-500 hover:text-gray-700 sm:block">
           <HelpCircle className="h-5 w-5" />
         </button>
 

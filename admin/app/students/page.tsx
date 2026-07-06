@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
-import Topbar from "../components/Topbar";
-import Sidebar from "../components/Sidebar";
+import AdminShell from "../components/AdminShell";
 import StudentsTable from "../components/StudentsTable";
 import Pagination from "../components/Pagination";
 import { studentsApi, Student, StudentsResponse } from "../lib/api";
@@ -40,17 +39,12 @@ export default function StudentsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Topbar
-        searchPlaceholder="Quick search students..."
-        onMenuToggle={() => setSidebarOpen((prev) => !prev)}
-        menuOpen={sidebarOpen}
-      />
-
-      <div className="flex">
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-        <main className="min-w-0 flex-1 p-4 sm:p-6">
+    <AdminShell
+      sidebarOpen={sidebarOpen}
+      onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+      onSidebarClose={() => setSidebarOpen(false)}
+      searchPlaceholder="Quick search students..."
+    >
           <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Students Registry</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-500">
             Central directory for student records, enrollment status, and academic
@@ -137,8 +131,6 @@ export default function StudentsPage() {
               </>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

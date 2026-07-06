@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Users, FolderKanban, ClipboardList, ShieldCheck } from "lucide-react";
-import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import AdminShell from "../components/AdminShell";
 import StatCard from "../components/Statcard";
 import ApplicationsTable from "../components/Applicationstable";
 import { dashboardApi, DashboardSummary } from "../lib/api";
@@ -27,16 +26,11 @@ export default function DashboardPage() {
   const pendingCount = summary?.recentApplications.filter((a) => a.status === "PENDING").length ?? "—";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Topbar
-        onMenuToggle={() => setSidebarOpen((prev) => !prev)}
-        menuOpen={sidebarOpen}
-      />
-
-      <div className="flex">
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-        <main className="min-w-0 flex-1 p-4 sm:p-6">
+    <AdminShell
+      sidebarOpen={sidebarOpen}
+      onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+      onSidebarClose={() => setSidebarOpen(false)}
+    >
           {/* Banner */}
           <div className="rounded-lg bg-[#153a75] p-5 text-white sm:p-6">
             <h1 className="text-lg font-bold sm:text-xl">Welcome Back, Admin</h1>
@@ -86,8 +80,6 @@ export default function DashboardPage() {
               <ApplicationsTable applications={summary?.recentApplications ?? []} />
             )}
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

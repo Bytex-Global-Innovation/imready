@@ -1,5 +1,8 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+/** Use mock data when explicitly enabled or when no API URL is configured (local dev). */
+const USE_MOCK =
+  process.env.NEXT_PUBLIC_USE_MOCK === "true" ||
+  (process.env.NEXT_PUBLIC_USE_MOCK !== "false" && BASE_URL === "");
 
 async function request<T>(
   path: string,
@@ -117,3 +120,88 @@ export interface DashboardSummary {
     status: "PENDING" | "APPROVED" | "REJECTED";
   }[];
 }
+
+export interface College {
+  id: string;
+  name: string;
+  studentCount: number;
+  studentCapacity: number;
+  coordinator: string;
+}
+
+export interface CollegesSummary {
+  totalInstitutions: number;
+  enrolledStudents: number;
+  totalSeatCapacity: number;
+}
+
+export interface CollegesResponse {
+  colleges: College[];
+  summary: CollegesSummary;
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+const MOCK_COORDINATORS = ["Dr. Sarah Connor", "Prof. Miles Dyson", "Dr. Elena Vasquez", "Prof. James Kirk"];
+const MOCK_COLLEGE_NAMES = [
+  "CYBERDYNE_INSTITUTE",
+  "NEURALINK_ACADEMY",
+  "SKYNET_UNIVERSITY",
+  "WAYNE_TECH_INSTITUTE",
+  "STARK_INDUSTRIES_COLLEGE",
+  "OSCORP_SCIENCES",
+  "UMBRELLA_ACADEMY",
+  "WAKANDA_TECH",
+  "TYRELL_CORP_INSTITUTE",
+  "APEX_UNIVERSITY",
+  "HORIZON_LABS_COLLEGE",
+  "VAULT_TECH_INSTITUTE",
+];
+
+const mockColleges: College[] = Array.from({ length: 42 }, (_, i) => {
+  const capacity = 800 + (i % 5) * 400;
+  const studentCount = Math.min(capacity, 400 + (i * 137) % (capacity - 100) + 100);
+  return {
+    id: `${String(10000 + i).slice(1)}${String.fromCharCode(65 + (i % 26))}-${String(i % 10)}`,
+    name: MOCK_COLLEGE_NAMES[i % MOCK_COLLEGE_NAMES.length],
+    studentCount,
+    studentCapacity: capacity,
+    coordinator: MOCK_COORDINATORS[i % MOCK_COORDINATORS.length],
+  };
+});
+
+export const collegesApi = {
+  getColleges: async (page = 1, search = ""): Promise<CollegesResponse> => {
+    if (USE_MOCK) {
+      await delay(600);
+      const pageSize = 4;
+      const query = search.trim().toLowerCase();
+      const filtered = query
+        ? mockColleges.filter(
+            (c) =>
+              c.name.toLowerCase().includes(query) || c.id.toLowerCase().includes(query),
+          )
+        : mockColleges;
+      const start = (page - 1) * pageSize;
+      const pagedColleges = filtered.slice(start, start + pageSize);
+      const enrolledStudents = mockColleges.reduce((sum, c) => sum + c.studentCount, 0);
+      const totalSeatCapacity = mockColleges.reduce((sum, c) => sum + c.studentCapacity, 0);
+
+      return {
+        colleges: pagedColleges,
+        summary: {
+          totalInstitutions: mockColleges.length,
+          enrolledStudents,
+          totalSeatCapacity,
+        },
+        page,
+        totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+        total: filtered.length,
+      };
+    }
+    const params = new URLSearchParams({ page: String(page) });
+    if (search.trim()) params.set("search", search.trim());
+    return request<CollegesResponse>(`/admin/colleges?${params.toString()}`);
+  },
+};

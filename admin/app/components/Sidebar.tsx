@@ -33,20 +33,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       {/* Mobile overlay backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-20 bg-black/30 sm:hidden"
+          className="fixed inset-0 z-20 cursor-pointer bg-black/30 sm:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`
-          fixed left-0 top-14 z-30 flex h-[calc(100vh-3.5rem)] w-60 flex-col
-          justify-between border-r border-gray-200 bg-white px-4 py-5
-          transition-transform duration-200
-          sm:static sm:z-auto sm:translate-x-0 sm:transition-none
-          ${open ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}
-        `}
+        className={`fixed left-0 top-14 z-30 flex h-[calc(100vh-3.5rem)] w-60 flex-col justify-between border-r border-gray-200 bg-white px-4 py-5 transition-transform duration-200 ${
+          open ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
+        }`}
       >
         <div>
           <div className="mb-6 flex items-center gap-2 px-2">
@@ -65,7 +61,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   key={href}
                   href={href}
                   onClick={onClose}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-[#153a75] text-white"
                       : "text-gray-600 hover:bg-gray-50"
@@ -83,14 +79,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <Link
             href="/settings"
             onClick={onClose}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
             <Settings className="h-4 w-4" />
             Settings
           </Link>
           <button
             type="button"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+            className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-red-500 hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
             Logout
