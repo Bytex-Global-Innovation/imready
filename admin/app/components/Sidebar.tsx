@@ -8,6 +8,7 @@ import {
   FolderKanban,
   Building2,
   ClipboardList,
+  UserCheck,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { label: "Students",    href: "/students",     icon: Users           },
   { label: "Projects",    href: "/projects",     icon: FolderKanban    },
   { label: "Colleges",    href: "/colleges",     icon: Building2       },
+  { label: "Mentors",     href: "/mentors",      icon: UserCheck       },
   { label: "Assessments", href: "/assessments",  icon: ClipboardList   },
 ];
 
@@ -30,7 +32,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile overlay backdrop */}
+      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 z-20 bg-black/30 sm:hidden"
@@ -41,7 +43,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
       <aside
         className={`
-          fixed left-0 top-14 z-30 flex h-[calc(100vh-3.5rem)] w-60 flex-col
+          fixed left-0 top-0 z-30 flex h-screen w-60 flex-col
           justify-between border-r border-gray-200 bg-white px-4 py-5
           transition-transform duration-200
           sm:static sm:z-auto sm:translate-x-0 sm:transition-none
@@ -53,7 +55,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <div className="h-8 w-8 rounded-md bg-[#153a75]" />
             <div className="leading-tight">
               <p className="text-sm font-semibold text-gray-900">Admin Portal</p>
-              <p className="text-[10px] text-gray-400">IMREADY PLATFORM</p>
+              <p className="text-[10px] text-gray-400">IMReady platform</p>
             </div>
           </div>
 
