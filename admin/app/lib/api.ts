@@ -166,3 +166,104 @@ export const assessmentsApi = {
     return request<AssessmentsResponse>(`/admin/assessments?page=${page}`);
   },
 };
+
+// ─── Mentors ──────────────────────────────────────────────────────────────────
+
+export interface MentorStudent {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+}
+
+export interface Mentor {
+  id: string;
+  mentorId: string;
+  name: string;
+  initials: string;
+  color: string;
+  specialization: string;
+  projectName: string;
+  organization: string;
+  teamType: "Solo" | "Team";
+  students: MentorStudent[];
+}
+
+export interface MentorsResponse {
+  mentors: Mentor[];
+  total: number;
+  page: number;
+  totalPages: number;
+  totalMentors: number;
+  activeProjects: number;
+  soloProjects: number;
+  teamProjects: number;
+  studentsGuided: number;
+  avgStudentsPerMentor: string;
+}
+
+const MOCK_MENTORS: Mentor[] = [
+  {
+    id: "1", mentorId: "MTR-0112-E", name: "Dr. Elena Vasquez", initials: "EV", color: "bg-indigo-500",
+    specialization: "AI Systems",
+    projectName: "Autonomous Threat Detection", organization: "Cyberdyne Institute",
+    teamType: "Team",
+    students: [
+      { id: "s1", name: "Rebecca Jorden", initials: "RJ", color: "bg-blue-500"   },
+      { id: "s2", name: "Dwayne Hicks",   initials: "DH", color: "bg-violet-500" },
+      { id: "s3", name: "Newt Bishop",    initials: "NB", color: "bg-violet-500" },
+    ],
+  },
+  {
+    id: "2", mentorId: "MTR-0087-A", name: "Prof. Marcus Webb", initials: "MW", color: "bg-teal-500",
+    specialization: "Robotics",
+    projectName: "Synthetic Vision Model", organization: "Weyland University",
+    teamType: "Solo",
+    students: [
+      { id: "s4", name: "Gareth Holden", initials: "GH", color: "bg-violet-500" },
+    ],
+  },
+  {
+    id: "3", mentorId: "MTR-0112-B", name: "Dr. Amara Osei", initials: "AO", color: "bg-blue-600",
+    specialization: "Robotics Ethics",
+    projectName: "Compliance Reasoning Engine", organization: "Tyrell Academy",
+    teamType: "Team",
+    students: [
+      { id: "s5", name: "Peter Bogert",   initials: "PB", color: "bg-violet-500" },
+      { id: "s6", name: "Alfred Lanning", initials: "AL", color: "bg-orange-400" },
+    ],
+  },
+  {
+    id: "4", mentorId: "MTR-0233-G", name: "Dr. Raj Patel", initials: "RP", color: "bg-rose-500",
+    specialization: "Bioinformatics",
+    projectName: "Genome Pattern Analysis", organization: "Oscorp Tech",
+    teamType: "Team",
+    students: [
+      { id: "s7",  name: "Becky Driscoll", initials: "BD", color: "bg-blue-400"   },
+      { id: "s8",  name: "Miles Barrow",   initials: "MB", color: "bg-indigo-400" },
+      { id: "s9",  name: "Sara Chen",      initials: "SC", color: "bg-teal-400"   },
+      { id: "s10", name: "Jonas Kade",     initials: "JK", color: "bg-orange-400" },
+    ],
+  },
+];
+
+export const mentorsApi = {
+  getMentors: async (page = 1): Promise<MentorsResponse> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        mentors: MOCK_MENTORS,
+        total: 18,
+        page,
+        totalPages: 5,
+        totalMentors: 18,
+        activeProjects: 24,
+        soloProjects: 8,
+        teamProjects: 12,
+        studentsGuided: 96,
+        avgStudentsPerMentor: "5.3",
+      };
+    }
+    return request<MentorsResponse>(`/admin/mentors?page=${page}`);
+  },
+};
