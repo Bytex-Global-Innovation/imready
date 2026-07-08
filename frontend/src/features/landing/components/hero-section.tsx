@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { PLATFORM_STATS, ROUTES } from "@/constants";
 import { Button } from "@/components/ui";
-import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   return (
@@ -37,20 +36,14 @@ export function HeroSection() {
             </div>
           </div>
 
-          <div
-            id="journey"
-            className="relative flex w-full items-center justify-center lg:justify-end"
-          >
+          <div id="journey" className="relative w-full lg:flex lg:items-center lg:justify-end">
             <Image
               src="/hero-section.png"
               alt="Five-step journey from college learning to placement ready: real projects, mentor review, portfolio building, and career readiness."
-              width={927}
-              height={461}
+              width={1536}
+              height={1024}
               priority
-              className={cn(
-                "h-auto w-full max-w-none object-contain",
-                "lg:max-w-[115%] lg:translate-x-2 xl:max-w-[120%] xl:translate-x-4",
-              )}
+              className="h-auto w-full object-contain object-center lg:object-right"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
