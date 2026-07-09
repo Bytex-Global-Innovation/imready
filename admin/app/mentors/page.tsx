@@ -7,7 +7,7 @@ import Sidebar from "@/app/components/Sidebar";
 import Breadcrumb from "@/app/components/Breadcrumb";
 import MentorStatCard from "@/app/components/MentorStatCard";
 import MentorsTable from "@/app/components/MentorsTable";
-import { mentorsApi, Mentor, MentorsResponse } from "../lib/api";
+import { mentorsApi, Mentor, MentorsResponse } from "@/app/lib/api";
 
 export default function MentorsPage() {
   const [data, setData]               = useState<MentorsResponse | null>(null);

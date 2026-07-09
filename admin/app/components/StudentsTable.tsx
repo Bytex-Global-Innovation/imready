@@ -1,5 +1,5 @@
 import { Eye, Pencil } from "lucide-react";
-import { Student } from "../lib/api";
+import { Student } from "@/app/lib/api";
 
 const STATUS_CONFIG = {
   VERIFIED: { dot: "bg-emerald-500", text: "text-emerald-600", label: "VERIFIED" },

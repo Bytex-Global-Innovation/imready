@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Search, ChevronDown, Plus } from "lucide-react";
-import Topbar from "../components/Topbar";
-import Sidebar from "../components/Sidebar";
-import ProjectsTable from "../components/ProjectsTable";
-import { projectsApi, Project, ProjectsResponse } from "../lib/api";
+import Topbar from "@/app/components/Topbar";
+import Sidebar from "@/app/components/Sidebar";
+import ProjectsTable from "@/app/components/ProjectsTable";
+import { projectsApi, Project, ProjectsResponse } from "@/app/lib/api";
 
 const DOMAINS = [
   "All Domains",

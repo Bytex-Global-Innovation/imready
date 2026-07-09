@@ -6,7 +6,7 @@ import Sidebar from "@/app/components/Sidebar";
 import Topbar from "@/app/components/Topbar";
 import StatCard from "@/app/components/Statcard";
 import ApplicationsTable from "@/app/components/Applicationstable";
-import { dashboardApi, DashboardSummary } from "../lib/api";
+import { dashboardApi, DashboardSummary } from "@/app/lib/api";
 
 export default function DashboardPage() {
   const [summary, setSummary]     = useState<DashboardSummary | null>(null);

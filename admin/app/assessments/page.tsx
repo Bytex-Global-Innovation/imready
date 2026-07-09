@@ -7,7 +7,7 @@ import Sidebar from "@/app/components/Sidebar";
 import Breadcrumb from "@/app/components/Breadcrumb";
 import AssessmentStatCard from "@/app/components/AssessmentStatCard";
 import AssessmentsTable from "@/app/components/AssessmentsTable";
-import { assessmentsApi, Assessment, AssessmentsResponse } from "../lib/api";
+import { assessmentsApi, Assessment, AssessmentsResponse } from "@/app/lib/api";
 
 const DOMAINS  = ["All Domains",  "Computer Science", "Machine Learning", "Infrastructure", "Mainframe", "Cyber Security"];
 const STATUSES = ["All Statuses", "ACTIVE", "DRAFT", "ARCHIVED"];
