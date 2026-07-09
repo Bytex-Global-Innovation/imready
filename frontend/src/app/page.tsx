@@ -1,6 +1,5 @@
 import { Navbar, Footer } from "@/components/layout";
 import {
-  DeviceSelectionSection,
   FaqSection,
   GapSection,
   HeroSection,
@@ -19,8 +18,6 @@ export default function HomePage() {
         <GapSection />
         <SectionDivider />
         <JourneyMapSection />
-        <SectionDivider />
-        <DeviceSelectionSection />
         <SectionDivider />
         <ProjectShowcaseSection />
         <SectionDivider />

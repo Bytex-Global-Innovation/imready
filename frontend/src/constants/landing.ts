@@ -60,7 +60,7 @@ export const HOW_IT_WORKS_STEPS = [
 ] as const;
 
 export const GAP_SECTION = {
-  eyebrow: "Old way vs IMReady way",
+  eyebrow: "Old way vs ImReady way",
   title: "Engineering education is changing",
   titleAccent: "too slowly.",
   description:
@@ -76,7 +76,7 @@ export const GAP_SECTION = {
     shock: "The Placement Reality Shock",
   },
   imready: {
-    title: "The IMReady Pathway",
+    title: "The ImReady Pathway",
     steps: [
       "Guided Industry Projects",
       "Working Industry Mentors",
@@ -87,7 +87,7 @@ export const GAP_SECTION = {
   },
   conclusion: {
     heading: "College rewards marks. Industry rewards capability.",
-    body: "IMReady bridges that gap.",
+    body: "ImReady bridges that gap.",
     accent: "Not in Year 4. From Day One.",
   },
 } as const;
@@ -202,7 +202,7 @@ export const JOURNEY_MAP_STAGES = [
     num: "01",
     name: "Emerging",
     headline: 'You stop being "just another student."',
-    desc: "Instead of waiting until your final year, you begin solving real problems from Day 1 of your IMReady journey.",
+    desc: "Instead of waiting until your final year, you begin solving real problems from Day 1 of your ImReady journey.",
     points: [
       "Complete your first guided industry project",
       "Paired with an industry mentor",
@@ -286,87 +286,13 @@ export const JOURNEY_MAP_STAGES = [
     ],
     mindset: "My portfolio co-files intellectual property in my own name.",
     cards: [
-      "Top 1% of IMReady cohort",
+      "Top 1% of ImReady cohort",
       "Founding team material",
       "Mentoring junior students",
-      "Featured in IMReady showcase",
+      "Featured in ImReady showcase",
     ],
   },
 ] as const;
-
-export const DEVICE_SELECTION = {
-  eyebrow: "Device Selection",
-  title: "Select Your Project Device",
-  description:
-    "Choose a device that fits your project requirements. You'll complete the payment via WhatsApp and get it delivered to your college campus.",
-  whatsappPhone: "919876543210",
-  disclaimer:
-    "Laptops are distributed via campus partner MoUs. Prices include student discount mappings.",
-  benefits: [
-    {
-      title: "Trusted & Verified",
-      description: "Distributed via certified college partners.",
-    },
-    {
-      title: "Student Benefits",
-      description: "Prices include exclusive student discounts.",
-    },
-    {
-      title: "Campus Delivery",
-      description: "Safe delivery directly to your campus.",
-    },
-  ],
-  devices: [
-    {
-      pathBadge: "Path 01 — Direct Entry",
-      tierLabel: "Good Everyday",
-      name: "IdeaPad Slim 3",
-      subtitle: "Lenovo · everyday development",
-      specs: [
-        "8 GB RAM / 512 GB SSD",
-        "Intel Core i3 / AMD Ryzen 3",
-        "Lightweight 1.4kg chassis",
-        "Direct entrance task bypass",
-      ],
-      price: 35000,
-      priceLabel: "₹35,000",
-      whatsappName: "IdeaPad Slim 3",
-      highlighted: false,
-    },
-    {
-      pathBadge: "Recommended Choice",
-      tierLabel: "Best for Projects",
-      name: "IdeaPad Pro 5",
-      subtitle: "Lenovo · high performance design",
-      specs: [
-        "16 GB LPDDR5 RAM / 1 TB SSD",
-        "Premium 120Hz OLED Display",
-        "AMD Ryzen 7 / Intel Core Ultra 5",
-        "Full 4-Year Map Unlocked Instantly",
-      ],
-      price: 55000,
-      priceLabel: "₹55,000",
-      whatsappName: "IdeaPad Pro 5",
-      highlighted: true,
-    },
-    {
-      pathBadge: "Path 01 — Direct Entry",
-      tierLabel: "Workstation Class",
-      name: "Legion / ThinkPad",
-      subtitle: "Lenovo · AI & ML Workloads",
-      specs: [
-        "32 GB RAM / 1 TB Gen4 SSD",
-        "NVIDIA RTX GPU (DLSS support)",
-        "Intel Core i7 / AMD Ryzen 9",
-        "Full 4-Year Map + Patent Path",
-      ],
-      price: 85000,
-      priceLabel: "₹85,000",
-      whatsappName: "Legion/ThinkPad",
-      highlighted: false,
-    },
-  ],
-} as const;
 
 export const LANDING_FAQ = {
   eyebrow: "Common Queries",
@@ -375,12 +301,12 @@ export const LANDING_FAQ = {
     {
       question: "Is this another online course?",
       answer:
-        "No. IMReady is not a course platform. Students do not watch passive lectures. Instead, you work directly on real-world projects with active industry professionals. The output is a verified portfolio—not a certificate of completion.",
+        "No. ImReady is not a course platform. Students do not watch passive lectures. Instead, you work directly on real-world projects with active industry professionals. The output is a verified portfolio—not a certificate of completion.",
     },
     {
       question: "Does it replace college?",
       answer:
-        "Not at all. IMReady is designed to complement your existing college curriculum. It bridges the gap between academic theory and practical business implementation, requiring no changes to your academic structure.",
+        "Not at all. ImReady is designed to complement your existing college curriculum. It bridges the gap between academic theory and practical business implementation, requiring no changes to your academic structure.",
     },
     {
       question: "How much time is needed weekly?",

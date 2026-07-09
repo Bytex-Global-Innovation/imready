@@ -13,7 +13,7 @@ export function HeroSection() {
               <span className="text-hero-accent">college.</span>
             </h1>
             <p className="text-base leading-[1.7] text-hero-body sm:text-lg">
-              IMReady connects college students to real industry projects, working
+              ImReady connects college students to real industry projects, working
               mentors, and a verified portfolio — before Semester 3. The students who
               start in Year 1 are the ones who enter placements with something to show.
             </p>

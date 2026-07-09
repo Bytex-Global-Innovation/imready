@@ -69,7 +69,7 @@ export function AdvantageSection() {
             aria-hidden="true"
           />
           <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            The IMReady Advantage
+            The ImReady Advantage
           </h2>
           <p className="mt-4 text-base text-muted sm:text-lg">
             See how our structured journey compares to relying solely on traditional
@@ -97,7 +97,7 @@ export function AdvantageSection() {
                   scope="col"
                   className="bg-brand-50 px-6 py-4 text-center font-semibold text-brand-700"
                 >
-                  IMReady Journey
+                  ImReady Journey
                 </th>
               </tr>
             </thead>
@@ -151,7 +151,7 @@ export function AdvantageSection() {
                 </div>
                 <div className="bg-brand-50/60 px-4 py-5 text-center">
                   <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
-                    IMReady
+                    ImReady
                   </p>
                   <div className="flex flex-col items-center gap-1 text-sm text-brand-700">
                     <StatusIcon status={row.imready.status} />

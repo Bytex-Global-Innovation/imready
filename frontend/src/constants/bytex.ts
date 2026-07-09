@@ -3,7 +3,7 @@ import { ROUTES } from "./routes";
 export const BYTEX_HERO = {
   title: "Unlock Your Journey with Bytex",
   description:
-    "Experience the next evolution of hardware-enabled learning. Bytex devices seamlessly integrate with the IMReady platform, instantly unlocking advanced educational stages and exclusive features. Equip yourself for success.",
+    "Experience the next evolution of hardware-enabled learning. Bytex devices seamlessly integrate with the ImReady platform, instantly unlocking advanced educational stages and exclusive features. Equip yourself for success.",
   primaryAction: {
     label: "Explore Devices",
     href: ROUTES.productComparison,
@@ -24,7 +24,7 @@ export const BYTEX_HOW_IT_WORKS = {
       step: 2,
       title: "Verify Purchase",
       description:
-        "Link your device serial number to your IMReady account securely.",
+        "Link your device serial number to your ImReady account securely.",
     },
     {
       step: 3,
@@ -50,12 +50,12 @@ export const BYTEX_FAQ = {
     {
       question: "How quickly is Stage 01 unlocked?",
       answer:
-        "Once your device serial number is verified, Stage 01 unlocks instantly on your IMReady account — typically within minutes of linking.",
+        "Once your device serial number is verified, Stage 01 unlocks instantly on your ImReady account — typically within minutes of linking.",
     },
     {
       question: "Do I need to maintain an active subscription?",
       answer:
-        "Your device unlock is tied to your IMReady account. An active platform subscription is required to access ongoing curriculum and mentor features.",
+        "Your device unlock is tied to your ImReady account. An active platform subscription is required to access ongoing curriculum and mentor features.",
     },
     {
       question: "Can I link multiple devices to one account?",

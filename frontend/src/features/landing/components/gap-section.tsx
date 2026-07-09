@@ -1,5 +1,4 @@
 import {
-  ArrowLeftRight,
   Building2,
   Check,
   ChevronDown,
@@ -16,8 +15,7 @@ export function GapSection() {
     <section id="gap" className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-alt px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-hero-accent">
-            <ArrowLeftRight size={14} strokeWidth={2.25} aria-hidden="true" />
+          <p className="inline-flex items-center rounded-full border border-border bg-surface-alt px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-hero-accent">
             {GAP_SECTION.eyebrow}
           </p>
 

@@ -1,5 +1,4 @@
 export { SectionDivider } from "./components/section-divider";
-export { DeviceSelectionSection } from "./components/device-selection-section";
 export { FaqSection } from "./components/faq-section";
 export { GapSection } from "./components/gap-section";
 export { HeroSection } from "./components/hero-section";

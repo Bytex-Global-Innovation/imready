@@ -55,7 +55,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <div className="h-8 w-8 rounded-md bg-[#153a75]" />
             <div className="leading-tight">
               <p className="text-sm font-semibold text-gray-900">Admin Portal</p>
-              <p className="text-[10px] text-gray-400">IMReady platform</p>
+              <p className="text-[10px] text-gray-400">ImReady platform</p>
             </div>
           </div>
 

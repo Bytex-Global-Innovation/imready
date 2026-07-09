@@ -28,7 +28,7 @@ import {
   Check,
   ArrowRight,
   MousePointerClick,
-  ChevronDown,
+  ChevronRight,
   Sparkles,
 } from "lucide-react";
 import { JOURNEY_MAP_SECTION, JOURNEY_MAP_STAGES } from "@/constants";
@@ -173,24 +173,32 @@ const ANIMATION_CSS = `
 `;
 
 /* ─── Connector between stage cards ─── */
-function StageConnector({ segmentIndex, isFilled }: { segmentIndex: number; isFilled: boolean }) {
-  const st = STAGE_STYLES[segmentIndex];
+function StageConnector({
+  segmentIndex,
+  activeStage,
+}: {
+  segmentIndex: number;
+  activeStage: number;
+}) {
+  const isFilled = activeStage > 0 && segmentIndex < activeStage;
+  const activeStyle = STAGE_STYLES[activeStage];
+  const hasPulse = activeStage > 0 && segmentIndex === activeStage - 1;
+
   return (
     <div className="relative flex flex-1 items-center" aria-hidden="true">
-      {/* Track line */}
       <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-border">
         {isFilled && (
-          <div className={cn("absolute inset-0", st.progressBg)}>
+          <div className={cn("absolute inset-0", activeStyle.progressBg)}>
             <div className="imr-shimmer pointer-events-none absolute inset-0 w-2/5 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
           </div>
         )}
       </div>
-      {/* Center dot */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <div
           className={cn(
             "h-2.5 w-2.5 rounded-full border-2 bg-white transition-all duration-500",
-            isFilled ? st.connectorDot : "border-border",
+            isFilled ? activeStyle.connectorDot : "border-border",
+            hasPulse && activeStyle.nodePulseClass,
           )}
         />
       </div>
@@ -234,11 +242,13 @@ export function JourneyMapSection() {
           <p className="mt-1 text-base leading-relaxed text-hero-body sm:text-lg">
             {JOURNEY_MAP_SECTION.subdescription}
           </p>
-          <p className="mt-5 inline-flex items-center justify-center gap-2 text-sm font-medium text-hero-accent sm:mt-6 sm:text-base">
-            <MousePointerClick size={17} strokeWidth={2.25} aria-hidden="true" />
-            {JOURNEY_MAP_SECTION.hint}
-            <ChevronDown size={17} strokeWidth={2.25} aria-hidden="true" />
-          </p>
+          <div className="mt-5 flex justify-center sm:mt-6">
+            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-sm font-medium text-hero-accent shadow-sm sm:px-5 sm:text-base">
+              <MousePointerClick size={17} strokeWidth={2.25} aria-hidden="true" />
+              {JOURNEY_MAP_SECTION.hint}
+              <ChevronRight size={17} strokeWidth={2.25} aria-hidden="true" />
+            </p>
+          </div>
         </div>
 
         {/* ── Stage Track ── */}
@@ -246,7 +256,6 @@ export function JourneyMapSection() {
           <div className="flex min-w-[700px] items-center px-2">
             {JOURNEY_MAP_STAGES.map((s, i) => {
               const isActive = i === active;
-              const isPast = i < active;
               const st = STAGE_STYLES[i];
               const NodeIcon = NODE_ICONS[i];
 
@@ -277,17 +286,11 @@ export function JourneyMapSection() {
                         "flex h-8 w-8 items-center justify-center rounded-full border-2",
                         "font-display text-xs font-bold transition-all duration-300",
                         isActive
-                          ? cn(st.badgeFill, st.nodePulseClass)
-                          : isPast
-                            ? cn(st.badgeFill, "opacity-70")
-                            : "border-border bg-white text-hero-body group-hover:border-hero-accent/30 group-hover:text-hero-accent",
+                          ? st.badgeFill
+                          : "border-border bg-white text-hero-body group-hover:border-hero-accent/30 group-hover:text-hero-accent",
                       )}
                     >
-                      {isPast ? (
-                        <Check size={12} strokeWidth={3} aria-hidden="true" />
-                      ) : (
-                        s.num
-                      )}
+                      {s.num}
                     </div>
 
                     {/* Stage icon */}
@@ -298,9 +301,7 @@ export function JourneyMapSection() {
                         "transition-all duration-300",
                         isActive
                           ? st.accent
-                          : isPast
-                            ? cn(st.accent, "opacity-60")
-                            : "text-hero-body group-hover:text-hero-accent",
+                          : "text-hero-body group-hover:text-hero-accent",
                       )}
                       aria-hidden="true"
                     />
@@ -329,10 +330,7 @@ export function JourneyMapSection() {
 
                   {/* Connector segment */}
                   {i < JOURNEY_MAP_STAGES.length - 1 && (
-                    <StageConnector
-                      segmentIndex={i}
-                      isFilled={i < active}
-                    />
+                    <StageConnector segmentIndex={i} activeStage={active} />
                   )}
                 </React.Fragment>
               );

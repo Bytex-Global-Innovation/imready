@@ -22,7 +22,7 @@ export default function Topbar({ searchPlaceholder, onMenuToggle, menuOpen }: To
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <span className="text-base font-bold text-[#153a75] sm:text-lg">IMReady</span>
+        <span className="text-base font-bold text-[#153a75] sm:text-lg">ImReady</span>
 
         {searchPlaceholder && (
           <div className="relative hidden sm:block">

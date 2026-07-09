@@ -25,7 +25,7 @@ export function HowItWorksSection() {
             <span className="text-hero-accent">Structured to build.</span>
           </h2>
           <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">
-            College gives you the foundation. IMReady gives you the proof. One
+            College gives you the foundation. ImReady gives you the proof. One
             process, guided every step.
           </p>
         </div>
