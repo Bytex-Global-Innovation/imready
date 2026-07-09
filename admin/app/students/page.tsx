@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
-import Topbar from "../components/Topbar";
-import Sidebar from "../components/Sidebar";
-import StudentsTable from "../components/StudentsTable";
-import Pagination from "../components/Pagination";
-import { studentsApi, Student, StudentsResponse } from "../lib/api";
+import Topbar from "@/app/components/Topbar";
+import Sidebar from "@/app/components/Sidebar";
+import StudentsTable from "@/app/components/StudentsTable";
+import Pagination from "@/app/components/Pagination";
+import { studentsApi, Student, StudentsResponse } from "@/app/lib/api";
 
 const COLLEGES = ["All Institutions", "Tech Central Inst.", "Bio Labs Univ.", "Global Arts Acad."];
 const DOMAINS  = ["All Domains", "Cyber Security", "Data Science", "UX Architecture", "Quantum Comp"];

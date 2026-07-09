@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import Topbar from "../components/Topbar";
-import Sidebar from "../components/Sidebar";
-import Breadcrumb from "../components/Breadcrumb";
-import MentorStatCard from "../components/MentorStatCard";
-import MentorsTable from "../components/MentorsTable";
+import Topbar from "@/app/components/Topbar";
+import Sidebar from "@/app/components/Sidebar";
+import Breadcrumb from "@/app/components/Breadcrumb";
+import MentorStatCard from "@/app/components/MentorStatCard";
+import MentorsTable from "@/app/components/MentorsTable";
 import { mentorsApi, Mentor, MentorsResponse } from "../lib/api";
 
 export default function MentorsPage() {
