@@ -1,27 +1,67 @@
 import Link from "next/link";
 import { FOOTER_LINKS, ROUTES, SITE_CONFIG } from "@/constants";
+import { cn } from "@/lib/utils";
 
-export function Footer() {
+interface FooterProps {
+  variant?: "default" | "hero";
+}
+
+export function Footer({ variant = "default" }: FooterProps) {
+  const isHero = variant === "hero";
+
   return (
-    <footer id="contact" className="border-t border-border bg-surface">
+    <footer
+      id="contact"
+      className={cn(
+        "border-t",
+        isHero ? "border-border/60 bg-hero" : "border-border bg-surface",
+      )}
+    >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <Link href={ROUTES.home} className="font-display text-xl font-bold text-brand-700">
+            <Link
+              href={ROUTES.home}
+              className={cn(
+                "cursor-pointer font-display text-xl font-bold",
+                isHero ? "text-hero-heading" : "text-brand-700",
+              )}
+            >
               {SITE_CONFIG.name}
             </Link>
-            <p className="text-sm leading-relaxed text-muted">{SITE_CONFIG.tagline}</p>
-            <p className="text-xs text-muted">{SITE_CONFIG.copyright}</p>
+            <p
+              className={cn(
+                "text-sm leading-relaxed",
+                isHero ? "text-hero-body" : "text-muted",
+              )}
+            >
+              {SITE_CONFIG.tagline}
+            </p>
+            <p className={cn("text-xs", isHero ? "text-hero-body" : "text-muted")}>
+              {SITE_CONFIG.copyright}
+            </p>
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Platform</h3>
+            <h3
+              className={cn(
+                "mb-4 text-sm font-semibold",
+                isHero ? "text-hero-heading" : "text-foreground",
+              )}
+            >
+              Platform
+            </h3>
             <ul className="space-y-3">
               {FOOTER_LINKS.platform.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-foreground"
+                    className={cn(
+                      "cursor-pointer text-sm transition-colors",
+                      isHero
+                        ? "text-hero-body hover:text-hero-heading"
+                        : "text-muted hover:text-foreground",
+                    )}
                   >
                     {link.label}
                   </Link>
@@ -31,13 +71,25 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Programs</h3>
+            <h3
+              className={cn(
+                "mb-4 text-sm font-semibold",
+                isHero ? "text-hero-heading" : "text-foreground",
+              )}
+            >
+              Programs
+            </h3>
             <ul className="space-y-3">
               {FOOTER_LINKS.programs.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-foreground"
+                    className={cn(
+                      "cursor-pointer text-sm transition-colors",
+                      isHero
+                        ? "text-hero-body hover:text-hero-heading"
+                        : "text-muted hover:text-foreground",
+                    )}
                   >
                     {link.label}
                   </Link>
@@ -47,12 +99,24 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Connect</h3>
+            <h3
+              className={cn(
+                "mb-4 text-sm font-semibold",
+                isHero ? "text-hero-heading" : "text-foreground",
+              )}
+            >
+              Connect
+            </h3>
             <ul className="space-y-3">
               <li>
                 <a
                   href={`mailto:${SITE_CONFIG.email}`}
-                  className="text-sm text-muted transition-colors hover:text-foreground"
+                  className={cn(
+                    "cursor-pointer text-sm transition-colors",
+                    isHero
+                      ? "text-hero-body hover:text-hero-heading"
+                      : "text-muted hover:text-foreground",
+                  )}
                 >
                   {SITE_CONFIG.email}
                 </a>
@@ -62,7 +126,12 @@ export function Footer() {
                   href="https://linkedin.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-foreground"
+                  className={cn(
+                    "inline-flex cursor-pointer items-center gap-2 text-sm transition-colors",
+                    isHero
+                      ? "text-hero-body hover:text-hero-heading"
+                      : "text-muted hover:text-foreground",
+                  )}
                   aria-label="IMReady on LinkedIn"
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -75,19 +144,31 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8">
+        <div
+          className={cn(
+            "mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-8",
+            isHero ? "border-border/60" : "border-border",
+          )}
+        >
           <div className="flex flex-wrap gap-6">
             {FOOTER_LINKS.platform.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-muted transition-colors hover:text-foreground"
+                className={cn(
+                  "cursor-pointer text-sm transition-colors",
+                  isHero
+                    ? "text-hero-body hover:text-hero-heading"
+                    : "text-muted hover:text-foreground",
+                )}
               >
                 {link.label}
               </Link>
             ))}
           </div>
-          <p className="text-sm text-muted">{SITE_CONFIG.copyright}</p>
+          <p className={cn("text-sm", isHero ? "text-hero-body" : "text-muted")}>
+            {SITE_CONFIG.copyright}
+          </p>
         </div>
       </div>
     </footer>

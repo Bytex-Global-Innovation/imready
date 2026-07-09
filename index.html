@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMReady — Industry-Ready starting Year 1</title>
+  <meta name="description" content="IMReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.">
+  <script src="theme-init.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Liquid SVG Filter for Toggle -->
+  <svg style="visibility: hidden; position: absolute;" width="0" height="0">
+    <defs>
+      <filter id="gooey">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+
+  <!-- Dynamic Living Background -->
+  <canvas id="canvas-bg"></canvas>
+
+  <!-- Interactive spotlight follow cursor -->
+  <div class="cursor-glow" id="cursor-glow"></div>
+
+  <!-- Header / Nav capsule -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">
+      <img src="./imready logo.png" alt="IMReady Logo" style="height: 24px; width: auto; display: block; filter: var(--logo-filter);">
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <div class="nav-highlight" id="nav-highlight"></div>
+      <li><a href="#gap" class="nav-item">The Gap</a></li>
+      <li><a href="#journey" class="nav-item">Journey</a></li>
+      <li style="display: none;"><a href="#bytex-shop" class="nav-item">ByteX Edu</a></li>
+      <li><a href="#projects" class="nav-item">Projects</a></li>
+      <li><a href="#colleges" class="nav-item">Colleges</a></li>
+      <li><a href="#faq" class="nav-item">FAQ</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle Theme">
+        <div class="toggle-track">
+          <div class="icon-container left">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </div>
+          <div class="icon-container right">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </div>
+          <div class="toggle-slider" id="toggle-slider"></div>
+        </div>
+      </div>
+      <button class="nav-cta-btn" onclick="openLoginModal()">Login</button>
+      
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line class="line-top" x1="4" y1="6" x2="20" y2="6"></line>
+          <line class="line-mid" x1="4" y1="12" x2="20" y2="12"></line>
+          <line class="line-bot" x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <ul class="mobile-nav-links">
+      <li><a href="#gap" onclick="closeMobileMenu()">The Gap</a></li>
+      <li><a href="#journey" onclick="closeMobileMenu()">Journey</a></li>
+      <li style="display: none;"><a href="#bytex-shop" onclick="closeMobileMenu()">ByteX Edu</a></li>
+      <li><a href="#projects" onclick="closeMobileMenu()">Projects</a></li>
+      <li><a href="#colleges" onclick="closeMobileMenu()">Colleges</a></li>
+      <li><a href="#faq" onclick="closeMobileMenu()">FAQ</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Hero -->
+  <section id="hero">
+    <div class="section-inner hero-grid">
+      <div class="reveal" style="--delay: 1">
+        <div class="hero-eyebrow-capsule">
+          <span class="pulse-dot"></span>
+          Pilot Cohort — Now Accepting Applications
+        </div>
+        <h1 class="display-serif hero-headline">
+          Before others<br>even settle<br>into <em>college.</em>
+        </h1>
+        <p class="hero-desc">
+          IMReady connects ambitious engineering students to **real industry projects**, **working mentors**, and a **verified portfolio**—starting in Year 1.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="openLoginModal()">
+            Login
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          <a href="#bytex-shop" class="btn btn-outline" style="display: none;">
+            Unlock via ByteX
+          </a>
+        </div>
+        <div class="hero-stats-strip">
+          <div class="hero-stat-item">
+            <span class="hero-stat-val">Free</span>
+            <span class="hero-stat-lbl">Always, for students</span>
+          </div>
+          <div class="hero-stat-item">
+            <span class="hero-stat-val">9 Months</span>
+            <span class="hero-stat-lbl">L1 to L3 track</span>
+          </div>
+          <div class="hero-stat-item">
+            <span class="hero-stat-val">30–50</span>
+            <span class="hero-stat-lbl">Students per batch</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Interactive Floating Mockups -->
+      <div class="hero-visual reveal" style="--delay: 3" id="hero-visual-3d">
+        <div class="mockup-container" id="mockup-container">
+          
+          <div class="mockup-card m1" data-depth="0.2">
+            <div class="mockup-header-row">
+              <span class="mockup-badge" style="background: rgba(0, 212, 255, 0.1); color: var(--brand-secondary);">Developing — Stage 02</span>
+              <span class="mockup-live">Live Project</span>
+            </div>
+            <h3 class="mockup-title">FMCG Market Dashboard</h3>
+            <p class="mockup-meta">Week 6 of 9 · Data Analytics · Pune Startup</p>
+            <div class="mockup-tags">
+              <span class="mockup-tag">Python</span>
+              <span class="mockup-tag">Streamlit</span>
+            </div>
+            <div class="mockup-progress-row">
+              <span>Milestones</span>
+              <span>68%</span>
+            </div>
+            <div class="mockup-progress-bar">
+              <div class="fill" style="width: 68%;"></div>
+            </div>
+            <div class="mockup-mentor-row">
+              <div class="mockup-avatar">SK</div>
+              <div>
+                <h4 style="font-size: 0.8rem; font-weight: 600;">Sandeep K.</h4>
+                <p style="font-size: 0.65rem; color: var(--text-muted);">Data Lead · Infosys</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mockup-card m2" data-depth="0.1">
+            <span class="mockup-badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); margin-bottom: 0.5rem;">Emerging — Completed</span>
+            <h3 class="mockup-title" style="font-size: 0.9rem;">Campus Event Portal</h3>
+            <p class="mockup-meta" style="margin-bottom: 4px;">Mentor Score: 4.8 / 5</p>
+            <p class="mockup-quote">"Built a custom real-time notification layer nobody asked for."</p>
+          </div>
+
+          <div class="mockup-card m3" data-depth="0.3">
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Student Portfolio Entry</div>
+            <h3 class="mockup-title" style="font-size: 0.95rem; margin-bottom: 4px;">Priya S., Year 2 CS</h3>
+            <span class="mockup-badge" style="background: rgba(0, 212, 255, 0.1); color: var(--brand-secondary); display: inline-block; margin-bottom: 8px;">2 Projects Verified</span>
+            <p style="font-size: 0.7rem; color: var(--text-muted);">Next up: Stage 03 Secured (Assigned Jan)</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Gap (Traditional vs IMReady) -->
+  <section id="gap">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="display-serif section-title">Engineering education is changing too slowly.</h2>
+        <p class="section-desc">
+          Every year, millions of students enter college with ambition. For the first two years, they attend lectures, write exams, and do boilerplate assignments. Then during placements, they're suddenly expected to solve real business problems.
+        </p>
+      </div>
+
+      <div class="gap-contrast-container reveal" style="--delay: 2">
+        <div class="gap-lane">
+          <h3 class="gap-lane-title">The Traditional Route</h3>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <span>Lectures & Exams</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <span>Textbook Assignments</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <span>Rote Memorization</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <span>Final Year Placements</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>The Placement Reality Shock</span>
+          </div>
+        </div>
+
+        <div class="gap-divider-vs">vs</div>
+
+        <div class="gap-lane imready-lane">
+          <h3 class="gap-lane-title">The IMReady Pathway</h3>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Guided Industry Projects</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Working Industry Mentors</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Verifiable Portfolio of Work</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Confidence starting Year 1</span>
+          </div>
+          <div class="gap-step-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Direct Placement Readiness</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gap-conclusion reveal">
+        <h3>College rewards marks. Industry rewards capability.</h3>
+        <p>IMReady bridges that gap. <span class="accent">Not in Year 4. From Day One.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5-Stage Interactive Journey Board -->
+  <section id="journey">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">Interactive Journey Map</span>
+        <h2 class="display-serif section-title">Every student starts somewhere.</h2>
+        <p class="section-desc">
+          The goal isn't to finish a course. It's to become someone industry trusts. Follow our structured 5-stage pathway.
+        </p>
+      </div>
+
+      <!-- Node Track selector -->
+      <div class="journey-node-track reveal" style="--delay: 1">
+        <div class="journey-node-line">
+          <div class="journey-node-line-progress" id="journey-node-line-progress"></div>
+        </div>
+        
+        <div class="journey-node-step active" onclick="activateStage(0, '#1a48ad')">
+          <div class="journey-node-dot">01</div>
+          <span class="journey-node-name">Emerging</span>
+        </div>
+        <div class="journey-node-step" onclick="activateStage(1, '#00d4ff')">
+          <div class="journey-node-dot">02</div>
+          <span class="journey-node-name">Developing</span>
+        </div>
+        <div class="journey-node-step" onclick="activateStage(2, '#7b6ff0')">
+          <div class="journey-node-dot">03</div>
+          <span class="journey-node-name">Secured</span>
+        </div>
+        <div class="journey-node-step" onclick="activateStage(3, '#a78bfa')">
+          <div class="journey-node-dot">04</div>
+          <span class="journey-node-name">Established</span>
+        </div>
+        <div class="journey-node-step" onclick="activateStage(4, '#d4a847')">
+          <div class="journey-node-dot">05</div>
+          <span class="journey-node-name">Distinguished</span>
+        </div>
+      </div>
+
+      <!-- Stage Panels -->
+      <div class="journey-panel-container reveal" style="--delay: 2">
+        
+        <!-- Stage 1 -->
+        <div class="journey-stage-panel active" id="stage-panel-0" style="--color-active: rgb(26, 72, 173); --glow-active: rgba(26, 72, 173, 0.25);">
+          <div>
+            <span class="stage-badge-num">Stage 01 — Emerging</span>
+            <h3 class="display-serif stage-headline">You stop being "just another student."</h3>
+            <p class="stage-desc">
+              Instead of waiting until your final year, you begin solving real problems from Day 1 of your IMReady journey.
+            </p>
+            <ul class="stage-points">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Complete your first guided industry project</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Learn modern collaboration tools (Git, Slack)</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Build foundational code and research confidence</span>
+              </li>
+            </ul>
+            <div class="stage-mindset-box">
+              <div class="label">Mindset Shift</div>
+              <p class="quote">"Maybe I really can build actual industry software."</p>
+            </div>
+          </div>
+          <div class="stage-visuals-deck">
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>First real project scoped and assigned</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>Paired with an industry mentor</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>Portfolio entry #1 created</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>Professional communication practiced</div>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="journey-stage-panel" id="stage-panel-1" style="--color-active: #00d4ff; --glow-active: rgba(0, 212, 255, 0.25);">
+          <div>
+            <span class="stage-badge-num">Stage 02 — Developing</span>
+            <h3 class="display-serif stage-headline">You learn from people who build every day.</h3>
+            <p class="stage-desc">
+              Real feedback from working professionals. Real industry workflows. Real growth.
+            </p>
+            <ul class="stage-points">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Work directly with industry mentors</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Improve professional communication and standups</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Receive structured code feedback cycles</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Learn live industry workflows and deployment pipelines</span>
+              </li>
+            </ul>
+            <div class="stage-mindset-box">
+              <div class="label">Mindset Shift</div>
+              <p class="quote">"I am becoming a capable developer."</p>
+            </div>
+          </div>
+          <div class="stage-visuals-deck">
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>Mentor sessions scheduled weekly</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg></div>Feedback → Revise → Deliver cycle</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>Second project in progress</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>Industry tools adopted</div>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="journey-stage-panel" id="stage-panel-2" style="--color-active: #7b6ff0; --glow-active: rgba(123, 111, 240, 0.25);">
+          <div>
+            <span class="stage-badge-num">Stage 03 — Secured</span>
+            <h3 class="display-serif stage-headline">Your work begins speaking for itself.</h3>
+            <p class="stage-desc">
+              Instead of saying "I know AI" — you say "I built this." Evidence over claims.
+            </p>
+            <ul class="stage-points">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Verified Portfolio created and audited</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Industry validation and badges earned</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Placement-ready proof of work assembled</span>
+              </li>
+            </ul>
+            <div class="stage-mindset-box">
+              <div class="label">Mindset Shift</div>
+              <p class="quote">"I belong in the industry."</p>
+            </div>
+          </div>
+          <div class="stage-visuals-deck">
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></div>Portfolio certified by industry reviewers</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>Projects linked, not just listed</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>Placement confidence secured</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>Work presented to real stakeholders</div>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="journey-stage-panel" id="stage-panel-3" style="--color-active: #a78bfa; --glow-active: rgba(167, 139, 250, 0.25);">
+          <div>
+            <span class="stage-badge-num">Stage 04 — Established</span>
+            <h3 class="display-serif stage-headline">Now you're creating value.</h3>
+            <p class="stage-desc">
+              People begin trusting you with meaningful, paid work. You've crossed from student to contributor.
+            </p>
+            <ul class="stage-points">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Freelancing opportunities open via networks</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Startup project collaborations (Pune area)</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Paid research assignments</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Real-world open-source or company codebase contributions</span>
+              </li>
+            </ul>
+            <div class="stage-mindset-box">
+              <div class="label">Mindset Shift</div>
+              <p class="quote">"I don't just learn. I build and contribute to businesses."</p>
+            </div>
+          </div>
+          <div class="stage-visuals-deck">
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>First client or startup project</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>Earning while still studying</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2zM14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2z"></path></svg></div>Deep expertise in a domain</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>Industry network formed</div>
+          </div>
+        </div>
+
+        <!-- Stage 5 (Special Gold Layout) -->
+        <div class="journey-stage-panel stage-gold" id="stage-panel-4" style="--color-active: #d4a847; --glow-active: rgba(212, 168, 71, 0.35);">
+          <div>
+            <span class="stage-badge-num">Stage 05 — Distinguished</span>
+            <h3 class="display-serif stage-headline">Very few students reach here.</h3>
+            <p class="stage-desc">
+              These students don't wait for opportunities. They create them. Industry knows their name.
+            </p>
+            <ul class="stage-points">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Lead cross-functional engineering teams</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Build innovative, high-impact patented architectures</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Mentor the next junior cohort</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Work on sponsored research with intellectual property co-filing</span>
+              </li>
+            </ul>
+            <div class="stage-mindset-box">
+              <div class="label">Mindset Shift</div>
+              <p class="quote">"My portfolio co-files intellectual property in my own name."</p>
+            </div>
+          </div>
+          <div class="stage-visuals-deck">
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path><path d="M12 2a5 5 0 0 0-5 5v3c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V7a5 5 0 0 0-5-5z"></path></svg></div>Top 1% of IMReady cohort</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg></div>Founding team material</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg></div>Mentoring junior students</div>
+            <div class="stage-visual-card"><div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>Featured in IMReady showcase</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Live activity ticker -->
+  <div class="ticker-container">
+    <div class="ticker-pulse"></div>
+    <span class="ticker-label">Live Projects:</span>
+    <div class="ticker-track" id="ticker-track">
+      <!-- Will be duplicated in JS to ensure seamless loop -->
+      <div class="ticker-item">AI / ML: <b>Student Dropout Predictor</b> · 9 wks · Team of 3</div>
+      <div class="ticker-item">Web Dev: <b>Campus Event Portal</b> · 9 wks · Solo · GitHub</div>
+      <div class="ticker-item">Data Analytics: <b>FMCG Market Dashboard</b> · 9 wks · Industry brief</div>
+      <div class="ticker-item">IoT / Embedded: <b>Smart Energy Monitor</b> · 9 wks · Team of 4</div>
+      <div class="ticker-item">Business Strategy: <b>Go-to-Market · D2C Brand</b> · 9 wks · MBA track</div>
+      <div class="ticker-item">Finance: <b>Equity Research — EV Sector</b> · 9 wks · Finance track</div>
+      <div class="ticker-item">Cybersecurity: <b>Web App Vulnerability Scan</b> · 9 wks · CS track</div>
+      <div class="ticker-item">Product: <b>Feature Roadmap · EdTech</b> · 9 wks · MBA/CS</div>
+      <div class="ticker-item">Operations: <b>Hostel Check-in Redesign</b> · 9 wks · Mgmt · SOP</div>
+    </div>
+  </div>
+
+  <!-- Admission Workspace Portal (Written Task vs ByteX selector) -->
+  <section id="admission-portal">
+    <div class="section-inner portal-layout">
+      
+      <div>
+        <span class="section-eyebrow">Join the Pilot</span>
+        <h2 class="display-serif section-title" style="margin-bottom: 2rem;">Start Your Journey</h2>
+        <p class="stage-desc" style="margin-bottom: 3rem;">
+          We select students based on commitment. You can write a brief task to prove your curiosity, or unlock your path instantly by purchasing your educational laptop through **ByteX Edu**.
+        </p>
+
+        <div class="portal-benefit-item">
+          <div class="portal-benefit-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div>
+            <h4 class="portal-benefit-title">No Prior Experience Needed</h4>
+            <p class="portal-benefit-desc">We match you with projects based on your current year and interest stream.</p>
+          </div>
+        </div>
+
+        <div class="portal-benefit-item">
+          <div class="portal-benefit-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div>
+            <h4 class="portal-benefit-title">Paired With Active Developers</h4>
+            <p class="portal-benefit-desc">Learn industry code standards, git review flows, and sprint standups.</p>
+          </div>
+        </div>
+
+        <div class="portal-benefit-item">
+          <div class="portal-benefit-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div>
+            <h4 class="portal-benefit-title">Free For Accepted Students</h4>
+            <p class="portal-benefit-desc">Our partner colleges MoU covers your entire project ecosystem.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portal Form / Selector Wizard -->
+      <div class="portal-widget" id="portal-form-widget">
+        
+        <div class="path-selector-bar">
+          <button class="path-select-btn active" id="path-btn-written" onclick="togglePortalPath('written')">Written Task</button>
+          <button class="path-select-btn" id="path-btn-bytex" onclick="togglePortalPath('bytex')" style="display: none;">Unlock via ByteX</button>
+        </div>
+
+        <!-- PATH 1: Written Task Wizard -->
+        <div id="written-path-container">
+          
+          <!-- Step 1: Info & Contact -->
+          <div class="portal-step-pane active" id="written-step-0">
+            <h3 class="portal-step-title">Student Profile</h3>
+            <p class="portal-step-desc">Enter your details to generate your custom project task.</p>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-input" id="student-name" placeholder="John Doe">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="student-phone" placeholder="+91 98765 43210">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">College Name</label>
+              <input type="text" class="form-input" id="student-college" placeholder="College of Engineering, Pune">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Year of Study</label>
+                <select class="form-input" id="student-year">
+                  <option value="1">First Year</option>
+                  <option value="2">Second Year</option>
+                  <option value="3">Third Year</option>
+                  <option value="4">Final Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Engineering Stream</label>
+                <select class="form-input" id="student-stream">
+                  <option>Computer Science / IT</option>
+                  <option>Mechanical Engineering</option>
+                  <option>Civil Engineering</option>
+                  <option>Electrical & Electronics</option>
+                  <option>MBA / Management</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="portal-action-row">
+              <div class="portal-widget-steps-indicator">
+                <span class="portal-widget-dot active"></span>
+                <span class="portal-widget-dot"></span>
+                <span class="portal-widget-dot"></span>
+              </div>
+              <button class="btn btn-primary" onclick="proceedWrittenStep(1)">
+                Next: Get Task
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Task Assignment view -->
+          <div class="portal-step-pane" id="written-step-1">
+            <h3 class="portal-step-title">Your Admission Task</h3>
+            <p class="portal-step-desc">Provide your thoughts on the following scenario. There is no template—we reward genuine curiosity.</p>
+            
+            <div class="assignment-box">
+              <div class="assignment-box-title">Scenario brief:</div>
+              <div class="assignment-box-text" id="assignment-desc-box">
+                "Identify one daily process in your campus (e.g. hostel entry, library checkout, canteen ordering) that suffers from operational delays. Briefly describe how you would design a simple system to track and optimize this workflow."
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Your Response</label>
+              <textarea class="form-input form-textarea" id="student-response" placeholder="Type your ideas here... (minimum 2-3 sentences)"></textarea>
+            </div>
+
+            <div class="portal-action-row">
+              <button class="btn btn-outline" onclick="proceedWrittenStep(0)">
+                Back
+              </button>
+              <div class="portal-widget-steps-indicator">
+                <span class="portal-widget-dot"></span>
+                <span class="portal-widget-dot active"></span>
+                <span class="portal-widget-dot"></span>
+              </div>
+              <button class="btn btn-primary" onclick="proceedWrittenStep(2)">
+                Submit Response
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Success & Verification -->
+          <div class="portal-step-pane" id="written-step-2">
+            <div class="verification-status-panel">
+              <div class="success-icon-spin">✓</div>
+              <h3 class="portal-step-title" style="margin-bottom: 0.8rem;">Application Submitted</h3>
+              <p class="portal-step-desc" style="max-width: 320px; margin: 0 auto 2rem;">
+                Thank you, <span id="summary-name" style="color: var(--text-primary); font-weight: 600;">Student</span>! Your response has been registered.
+              </p>
+              <div class="assignment-box" style="text-align: left; font-size: 0.85rem;">
+                <div style="margin-bottom: 4px; color: var(--text-muted);">Registered Phone: <span id="summary-phone" style="color: var(--text-primary);"></span></div>
+                <div style="margin-bottom: 4px; color: var(--text-muted);">College: <span id="summary-college" style="color: var(--text-primary);"></span></div>
+                <div style="color: var(--text-muted);">Status: <b style="color: var(--brand-secondary);">Under Review (Task received)</b></div>
+              </div>
+              <p class="portal-benefit-desc" style="font-size: 0.8rem; font-style: italic;">
+                A reviewer will contact you via WhatsApp/Call within 3 days. Keep an eye on your inbox!
+              </p>
+              <button class="btn btn-outline" style="margin-top: 2rem;" onclick="resetWrittenPortal()">
+                Submit Another Application
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PATH 2: ByteX Edu purchase path -->
+        <div id="bytex-path-container" style="display: none;">
+          <h3 class="portal-step-title">Instantly Unlock the Map</h3>
+          <p class="portal-step-desc" style="margin-bottom: 1.5rem;">
+            Purchase any laptop below through our ByteX partnership to bypass the task and unlock full stage previews + project allocations.
+          </p>
+          
+          <div class="assignment-box" style="background: rgba(212,168,71,0.05); border-color: var(--border-gold); margin-bottom: 2rem;">
+            <div class="assignment-box-title" style="color: var(--brand-accent);">Instant Benefits:</div>
+            <div class="assignment-box-text">
+              • Instant bypass of the admission task<br>
+              • Unlocks real company preview names at Stages 3 & 4<br>
+              • Unlocks typical project earning rates on your dashboard<br>
+              • Pre-allocates you to Stage 5 patent-eligible tracks
+            </div>
+          </div>
+
+          <a href="#bytex-shop" class="btn btn-accent" style="width: 100%; justify-content: center;" onclick="closeModal()">
+            View Student Devices ↓
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ByteX Edu Devices & WhatsApp Checkout -->
+  <section id="bytex-shop">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">ByteX Edu Integration</span>
+        <h2 class="display-serif section-title">Select Your Project Device</h2>
+        <p class="section-desc">
+          Buying through ByteX Edu shows your commitment. Select a device below to initiate WhatsApp manual checkout and delivery to your college campus.
+        </p>
+      </div>
+
+      <div class="device-grid">
+        
+        <!-- Device 1 -->
+        <div class="device-card reveal" style="--delay: 1">
+          <div class="device-header">
+            <div class="device-badge-row">
+              <span class="device-badge">Path 01 — Direct Entry</span>
+              <span style="color: var(--brand-secondary); font-size: 0.75rem; font-weight: 600;">Good Everyday</span>
+            </div>
+            <h3 class="device-name">IdeaPad Slim 3</h3>
+            <span class="device-spec-note">Lenovo · everyday development</span>
+          </div>
+          <ul class="device-spec-list">
+            <li>8 GB RAM / 512 GB SSD</li>
+            <li>Intel Core i3 / AMD Ryzen 3</li>
+            <li>Lightweight 1.4kg chassis</li>
+            <li>Direct entrance task bypass</li>
+          </ul>
+          <div class="device-checkout-row">
+            <span class="device-price">₹35,000</span>
+            <button class="btn btn-outline" style="padding: 0.6rem 1.2rem; font-size: 0.8rem;" onclick="initiateWhatsAppCheckout('IdeaPad Slim 3', 35000)">
+              Buy via WhatsApp →
+            </button>
+          </div>
+        </div>
+
+        <!-- Device 2 (Pro/Highlight) -->
+        <div class="device-card highlight reveal" style="--delay: 2">
+          <div class="device-header">
+            <div class="device-badge-row">
+              <span class="device-badge">Recommended Choice</span>
+              <span style="color: var(--brand-accent); font-size: 0.75rem; font-weight: 700;">Best for Projects</span>
+            </div>
+            <h3 class="device-name">IdeaPad Pro 5</h3>
+            <span class="device-spec-note" style="color: var(--brand-accent);">Lenovo · high performance design</span>
+          </div>
+          <ul class="device-spec-list">
+            <li style="color: var(--text-primary);">16 GB LPDDR5 RAM / 1 TB SSD</li>
+            <li style="color: var(--text-primary);">Premium 120Hz OLED Display</li>
+            <li style="color: var(--text-primary);">AMD Ryzen 7 / Intel Core Ultra 5</li>
+            <li style="color: var(--text-primary);">Full 4-Year Map Unlocked Instantly</li>
+          </ul>
+          <div class="device-checkout-row">
+            <span class="device-price" style="color: var(--brand-accent);">₹55,000</span>
+            <button class="btn btn-accent" style="padding: 0.6rem 1.2rem; font-size: 0.8rem;" onclick="initiateWhatsAppCheckout('IdeaPad Pro 5', 55000)">
+              Buy via WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <!-- Device 3 -->
+        <div class="device-card reveal" style="--delay: 3">
+          <div class="device-header">
+            <div class="device-badge-row">
+              <span class="device-badge">Path 01 — Direct Entry</span>
+              <span style="color: var(--brand-secondary); font-size: 0.75rem; font-weight: 600;">Workstation Class</span>
+            </div>
+            <h3 class="device-name">Legion / ThinkPad</h3>
+            <span class="device-spec-note">Lenovo · AI & ML Workloads</span>
+          </div>
+          <ul class="device-spec-list">
+            <li>32 GB RAM / 1 TB Gen4 SSD</li>
+            <li>NVIDIA RTX GPU (DLSS support)</li>
+            <li>Intel Core i7 / AMD Ryzen 9</li>
+            <li>Full 4-Year Map + Patent Path</li>
+          </ul>
+          <div class="device-checkout-row">
+            <span class="device-price">₹85,000</span>
+            <button class="btn btn-outline" style="padding: 0.6rem 1.2rem; font-size: 0.8rem;" onclick="initiateWhatsAppCheckout('Legion/ThinkPad', 85000)">
+              Buy via WhatsApp →
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="text-align: center; margin-top: 3.5rem; color: var(--text-muted); font-size: 0.85rem;">
+        * Laptops are distributed via campus partner MoUs. Prices include student discount mappings.
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Project Catalog -->
+  <section id="projects">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">Explore Briefs</span>
+        <h2 class="display-serif section-title">Real Projects. Real Domains.</h2>
+        <p class="section-desc">
+          Instead of textbook exercises, work on problems inspired by real industry challenges.
+        </p>
+      </div>
+
+      <!-- Bento Grid layout -->
+      <div class="bento-grid">
+        
+        <!-- Card 1 (Wide AI) -->
+        <div class="bento-card wide reveal" style="--delay: 1" onclick="focusBentoProject('Customer Support Copilot', 'Build an AI assistant that handles tier-1 support tickets for a SaaS company.')">
+          <div class="bento-header">
+            <span class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="card-icon" style="color: var(--brand-secondary);"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg></span>
+            <span class="bento-category-pill" style="background: rgba(26, 72, 173, 0.15); color: var(--brand-secondary);">AI & Machine Learning</span>
+          </div>
+          <div class="bento-body">
+            <h3 class="bento-title">Customer Support Copilot</h3>
+            <p class="bento-desc">Build a context-aware AI assistant that parses SaaS query tickets and auto-suggests replies.</p>
+          </div>
+        </div>
+
+        <!-- Card 2 (Tall Mech) -->
+        <div class="bento-card tall reveal" style="--delay: 2" onclick="focusBentoProject('Production Optimization', 'Identify and reduce bottlenecks in a simulated manufacturing line.')">
+          <div class="bento-header">
+            <span class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="card-icon" style="color: var(--brand-accent);"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>
+            <span class="bento-category-pill" style="background: rgba(212, 168, 71, 0.12); color: var(--brand-accent);">Mechanical</span>
+          </div>
+          <div class="bento-body">
+            <h3 class="bento-title">Production Optimization</h3>
+            <p class="bento-desc">Model a bottleneck-reduction workflow using virtual JIT assembly lines.</p>
+            <span class="mono" style="color: var(--text-muted); display: block; margin-top: 8px;">Duration: 9 Weeks</span>
+          </div>
+        </div>
+
+        <!-- Card 3 (Civil) -->
+        <div class="bento-card reveal" style="--delay: 3" onclick="focusBentoProject('Smart Infrastructure', 'Model traffic flow optimization for a mid-sized urban corridor.')">
+          <div class="bento-header">
+            <span class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="card-icon" style="color: var(--brand-secondary);"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="16"></line><line x1="15" y1="22" x2="15" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path></svg></span>
+            <span class="bento-category-pill" style="background: rgba(0, 212, 255, 0.1); color: var(--brand-secondary);">Civil</span>
+          </div>
+          <div class="bento-body">
+            <h3 class="bento-title">Smart Infrastructure</h3>
+            <p class="bento-desc">Analyze and optimize urban corridor traffic grids.</p>
+          </div>
+        </div>
+
+        <!-- Card 4 (Elec) -->
+        <div class="bento-card reveal" style="--delay: 4" onclick="focusBentoProject('IoT Sensor Network', 'Design a sensor network for real-time environmental monitoring.')">
+          <div class="bento-header">
+            <span class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="card-icon" style="color: var(--brand-secondary);"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><circle cx="12" cy="20" r="1"></circle></svg></span>
+            <span class="bento-category-pill" style="background: rgba(26, 72, 173, 0.15); color: var(--brand-secondary);">Electronics</span>
+          </div>
+          <div class="bento-body">
+            <h3 class="bento-title">IoT Sensor Network</h3>
+            <p class="bento-desc">Build real-time environmental telemetry node systems.</p>
+          </div>
+        </div>
+
+        <!-- Card 5 (Business) -->
+        <div class="bento-card wide reveal" style="--delay: 5" onclick="focusBentoProject('Sales Analytics Dashboard', 'Build a live analytics dashboard connecting CRM data to business KPIs.')">
+          <div class="bento-header">
+            <span class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="card-icon" style="color: var(--brand-accent);"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+            <span class="bento-category-pill" style="background: rgba(212, 168, 71, 0.12); color: var(--brand-accent);">Business Strategy</span>
+          </div>
+          <div class="bento-body">
+            <h3 class="bento-title">Sales Analytics Dashboard</h3>
+            <p class="bento-desc">Connect active CRM datasets to live business pipeline KPIs using clean visualization panels.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="reveal" style="text-align: center; margin-top: 3.5rem;">
+        <button class="btn btn-outline" onclick="openAdmissionPortal()">Find Your Project Brief</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Institution Partnerships (Colleges) -->
+  <section id="colleges" style="background: linear-gradient(180deg, var(--bg-darker) 0%, var(--bg-base) 100%);">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">Campus MoUs</span>
+        <h2 class="display-serif section-title">For Colleges & Institutions</h2>
+        <p class="section-desc">
+          A partnership that produces outcome data your Training & Placement Officer (TPO) can actually use—not just a certificate on the wall.
+        </p>
+      </div>
+
+      <div class="college-grid">
+        <div class="college-card reveal" style="--delay: 1">
+          <span class="college-num">01</span>
+          <h3>NAAC / NIRF Documentation</h3>
+          <p>The MoU counts directly toward industry collaboration metrics. We provide all formatted reports your team needs.</p>
+        </div>
+        <div class="college-card reveal" style="--delay: 2">
+          <span class="college-num">02</span>
+          <h3>TPO Outcome Dashboard</h3>
+          <p>Monthly updates: student progress metrics, active projects, and portfolio completion stats to present to companies.</p>
+        </div>
+        <div class="college-card reveal" style="--delay: 3">
+          <span class="college-num">03</span>
+          <h3>Admissions Differentiator</h3>
+          <p>"Our students work on sponsored industry projects from Day 1." A verifiable, highly marketable claim for your campus.</p>
+        </div>
+        <div class="college-card reveal" style="--delay: 4">
+          <span class="college-num">04</span>
+          <h3>Direct Company Connections</h3>
+          <p>Sponsor briefs bring active companies to your campus, encouraging internships and direct placement pipelines.</p>
+        </div>
+        <div class="college-card reveal" style="--delay: 5">
+          <span class="college-num">05</span>
+          <h3>Faculty Research Pathways</h3>
+          <p>Distinguished-stage students connect faculty coordinators with industry-sponsored research pipelines.</p>
+        </div>
+        <div class="college-card reveal" style="--delay: 6">
+          <span class="college-num">06</span>
+          <h3>Zero Curriculum Disruption</h3>
+          <p>We handle operations, mentorship schedules, and platform support. Only one faculty coordinator is required from your side.</p>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 4rem;" class="reveal">
+        <a href="mailto:pilot@imready.in?subject=Requesting IMReady Campus MoU" class="btn btn-primary">
+          Request a Campus MoU
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Accordion -->
+  <section id="faq">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">Common Queries</span>
+        <h2 class="display-serif section-title">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="faq-list reveal" style="--delay: 1">
+        
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Is this another online course?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              No. IMReady is not a course platform. Students do not watch passive lectures. Instead, you work directly on real-world projects with active industry professionals. The output is a verified portfolio—not a certificate of completion.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Does it replace college?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              Not at all. IMReady is designed to complement your existing college curriculum. It bridges the gap between academic theory and practical business implementation, requiring no changes to your academic structure.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            How much time is needed weekly?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              Around 6–8 hours per week. Projects are structured with clear milestones and checked checkpoints so that you can easily balance them alongside a full academic semester.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Who are the mentors?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              Active industry professionals—product managers, software engineers, data analysts, and startup founders who build products daily. They provide constructive code reviews and project standup critiques.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Is the pilot batch free?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <div class="faq-a">
+            <div class="faq-a-inner">
+              Yes—completely free for students of selected founding partner colleges. We are co-building the pilot batch with our educational partners at this stage.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section id="cta-final">
+    <div class="section-inner">
+      <h2 class="display-serif cta-tagline reveal">Four years <span class="accent">from now.</span></h2>
+      <p class="cta-proof reveal" style="--delay: 1">
+        Thousands of engineering graduates will walk into placements carrying resumes.<br>
+        Some will walk in carrying <span class="highlight">proof</span>.
+      </p>
+      <p class="reveal" style="color: var(--text-secondary); margin-bottom: 2.5rem; --delay: 2;">
+        The difference begins today. Become industry-ready before Semester 3.
+      </p>
+      <div class="hero-actions reveal" style="justify-content: center; --delay: 3;">
+        <button class="btn btn-primary" onclick="openLoginModal()">
+          Login
+        </button>
+        <a href="#bytex-shop" class="btn btn-outline" style="display: none;">
+          Partner via ByteX Edu
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo">
+          <img src="./imready logo.png" alt="IMReady Logo" style="height: 24px; width: auto; display: block; margin-bottom: 1.2rem; filter: var(--logo-filter);">
+        </a>
+        <p>Industry-integrated education for the next generation of engineers. Starting from Year One.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Program</h4>
+        <ul>
+          <li><a href="#journey">Journey Map</a></li>
+          <li><a href="#projects">Project Catalog</a></li>
+          <li><a href="#admission-portal">Admission Portal</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Partnerships</h4>
+        <ul>
+          <li><a href="#colleges">Campus MoU</a></li>
+          <li><a href="mailto:mentors@imready.in?subject=Becoming an IMReady Mentor">Become a Mentor</a></li>
+          <li><a href="https://bytex.global" target="_blank">ByteX Edu ↗</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="mailto:hello@imready.in">Contact Email</a></li>
+          <li><a href="#" target="_blank">LinkedIn</a></li>
+          <li><a href="#" target="_blank">Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Navah & Co. All rights reserved.</span>
+      <a href="#" onclick="resetDemoSite()" style="color: var(--brand-accent); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; margin-left: 1rem;">Reset Demo Data</a>
+      <div class="footer-clock">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span id="local-time-clock">22:04:00</span>
+      </div>
+      <span>1301, Boulevard Towers, Sadhu Vaswani Chowk, Camp, Pune 411001</span>
+    </div>
+  </footer>
+
+  <!-- Project Detail Modal -->
+  <div class="modal-overlay" id="project-detail-modal" onclick="if(event.target===this)closeProjectDetailModal()">
+    <div class="portal-widget" style="width: 90%; max-width: 500px; padding: 2.5rem; margin: auto;">
+      <div class="portal-widget-header">
+        <h3 id="project-modal-title" class="portal-step-title">Project Name</h3>
+        <button onclick="closeProjectDetailModal()" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.2rem;">✕</button>
+      </div>
+      <p id="project-modal-desc" class="portal-step-desc" style="margin-bottom: 2rem;">Project Description goes here.</p>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="openAdmissionPortalFromProject()">Apply to Build This Brief</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="login-modal" onclick="if(event.target===this)closeLoginModal()">
+    <div class="portal-widget" style="width: 90%; max-width: 440px; padding: 2.5rem; margin: auto;">
+      
+      <!-- FORM STATE -->
+      <div id="login-form-state">
+        <div class="portal-widget-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <h3 class="portal-step-title" style="margin-bottom: 0.25rem;">Welcome Back</h3>
+            <p class="portal-step-desc" style="margin-bottom: 0;">Continue your IMReady Journey.</p>
+          </div>
+          <button onclick="closeLoginModal()" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.25rem;">✕</button>
+        </div>
+
+        <!-- Inline Error Msg Container -->
+        <div id="login-error-msg" style="color: #ff4a4a; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; font-family: 'JetBrains Mono', monospace; padding: 0.5rem; background: rgba(255, 74, 74, 0.1); border: 1px solid rgba(255, 74, 74, 0.2); border-radius: 8px;"></div>
+
+        <form id="login-modal-form" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input type="tel" id="login-phone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Password</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="password" id="login-password" class="form-input" style="padding-right: 2.5rem;" placeholder="••••••••" required>
+              <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" style="accent-color: var(--brand-secondary);"> Remember Me
+            </label>
+            <a href="#" onclick="openForgotModal(event)" style="color: var(--brand-secondary); text-decoration: none;">Forgot Password</a>
+          </div>
+
+          <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 1rem; gap: 8px;">
+            <span>Login</span>
+          </button>
+
+          <div style="display: flex; align-items: center; text-align: center; margin-bottom: 1rem;">
+            <hr style="flex-grow: 1; border: none; border-top: 1px solid var(--border-light); opacity: 0.3;">
+            <span style="padding: 0 10px; color: var(--text-muted); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;">OR</span>
+            <hr style="flex-grow: 1; border: none; border-top: 1px solid var(--border-light); opacity: 0.3;">
+          </div>
+
+          <button type="button" class="btn btn-outline" onclick="switchToRegisterModal()" style="width: 100%; justify-content: center; margin-bottom: 1.25rem;">Create Account</button>
+
+          <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center; line-height: 1.4; margin-bottom: 0;">
+            By continuing you agree to the IMReady Terms and Privacy Policy.
+          </p>
+        </form>
+      </div>
+
+      <!-- WELCOME TRANSITION STATE -->
+      <div id="login-welcome-state" style="display: none; text-align: center; padding: 1.5rem 0;">
+        <h3 class="portal-step-title" style="margin-bottom: 0.5rem; font-size: 1.5rem;">Welcome back.</h3>
+        <p class="portal-step-desc" style="margin-bottom: 2rem;">Preparing your IMReady Workspace...</p>
+        
+        <!-- Progress Bar -->
+        <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; overflow: hidden; margin-bottom: 1rem;">
+          <div id="welcome-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--brand-secondary), var(--brand-primary)); transition: width 1s linear; border-radius: 2px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Registration Modal -->
+  <div class="modal-overlay" id="register-modal" onclick="if(event.target===this)closeRegisterModal()">
+    <div class="portal-widget" style="width: 90%; max-width: 460px; padding: 2rem; margin: auto;">
+      
+      <!-- FORM STATE -->
+      <div id="register-form-state">
+        <div class="portal-widget-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <h3 class="portal-step-title" style="margin-bottom: 0.25rem;">Create Account</h3>
+            <p class="portal-step-desc" style="margin-bottom: 0;">Start your IMReady Journey.</p>
+          </div>
+          <button onclick="closeRegisterModal()" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.25rem;">✕</button>
+        </div>
+
+        <form id="register-modal-form" onsubmit="handleRegisterSubmit(event)">
+          <!-- Inline Messages Container -->
+          <div id="register-error-msg" style="color: #ff4a4a; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; font-family: 'JetBrains Mono', monospace; padding: 0.5rem; background: rgba(255, 74, 74, 0.1); border: 1px solid rgba(255, 74, 74, 0.2); border-radius: 8px;"></div>
+          <div id="register-success-msg" style="color: var(--brand-secondary); font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; font-family: 'JetBrains Mono', monospace; padding: 0.5rem; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 8px;"></div>
+
+          <!-- STEP 1: Personal Details (Phone/Name) -->
+          <div id="register-step-1" class="step-pane active">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="register-name" class="form-input" placeholder="John Doe" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label">Mobile Number</label>
+              <input type="tel" id="register-phone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" required>
+            </div>
+            <div id="register-timer-container" class="otp-timer-container" style="display: none;">
+              Resend OTP in <span id="register-countdown" style="color: var(--brand-secondary); font-weight: 600;">00:30</span>
+            </div>
+            <button type="button" id="register-send-otp-btn" onclick="sendRegisterOTP()" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Send OTP</button>
+          </div>
+
+          <!-- STEP 2: OTP Verification -->
+          <div id="register-step-2" class="step-pane" style="display: none; margin-top: 0.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>Enter 6-Digit OTP</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Demo OTP: 101010</span>
+              </label>
+              <div class="otp-inputs-container" data-prefix="register">
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="0" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="1" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="2" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="3" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="4" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="5" required>
+              </div>
+              <input type="hidden" id="register-otp" value="">
+            </div>
+            <button type="button" id="register-verify-otp-btn" onclick="verifyRegisterOTP()" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Verify OTP</button>
+          </div>
+
+          <!-- STEP 3: Create Credentials -->
+          <div id="register-step-3" class="step-pane" style="display: none; margin-top: 0.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="register-email" class="form-input" placeholder="name@college.edu" required>
+            </div>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Create Password</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="register-password" class="form-input" style="padding-right: 2.5rem;" placeholder="••••••••" required>
+                  <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('register-password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Confirm Password</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="register-confirm-password" class="form-input" style="padding-right: 2.5rem;" placeholder="••••••••" required>
+                  <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('register-confirm-password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Password Checklist -->
+            <div id="register-password-checklist" style="margin-top: -0.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; padding: 0.75rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 8px;">
+              <div class="checklist-item" id="rule-length" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>8–20 Characters</span>
+              </div>
+              <div class="checklist-item" id="rule-uppercase" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Uppercase Letter</span>
+              </div>
+              <div class="checklist-item" id="rule-lowercase" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Lowercase Letter</span>
+              </div>
+              <div class="checklist-item" id="rule-number" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Number</span>
+              </div>
+              <div class="checklist-item" id="rule-special" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Special Character</span>
+              </div>
+            </div>
+
+            <div style="font-size: 0.85rem; margin-bottom: 1.5rem;">
+              <label style="display: flex; align-items: flex-start; gap: 8px; color: var(--text-secondary); cursor: pointer; line-height: 1.4;">
+                <input type="checkbox" required style="accent-color: var(--brand-secondary); margin-top: 3px;">
+                <span>I agree to the Terms and Privacy Policy</span>
+              </label>
+            </div>
+
+            <button type="submit" id="register-submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Create Account</button>
+          </div>
+
+          <button type="button" class="btn btn-outline" onclick="switchToLoginModal()" style="width: 100%; justify-content: center;">Back to Login</button>
+        </form>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="register-success-state" style="display: none; text-align: center; padding: 1rem 0;">
+        <div style="width: 60px; height: 60px; background: rgba(0, 212, 255, 0.1); border: 2px solid var(--brand-secondary); color: var(--brand-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.8rem; font-weight: bold; animation: pulse-glow 2s infinite;">
+          ✓
+        </div>
+        <h3 class="portal-step-title" style="margin-bottom: 0.5rem;">Registration Successful</h3>
+        <p class="portal-step-desc" style="max-width: 320px; margin: 0 auto 2rem; line-height: 1.6;">
+          Your account has been created. <br>You can now log in to continue your IMReady Journey.
+        </p>
+        <button type="button" class="btn btn-primary" onclick="handleSuccessContinue()" style="width: 100%; justify-content: center;">Continue to Login</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal-overlay" id="forgot-modal" onclick="if(event.target===this)closeForgotModal()">
+    <div class="portal-widget" style="width: 90%; max-width: 440px; padding: 2.5rem; margin: auto;">
+      
+      <div id="forgot-form-state">
+        <div class="portal-widget-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <h3 class="portal-step-title" style="margin-bottom: 0.25rem;">Reset Password</h3>
+            <p class="portal-step-desc" style="margin-bottom: 0;">Recover your IMReady account.</p>
+          </div>
+          <button onclick="closeForgotModal()" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.25rem;">✕</button>
+        </div>
+
+        <div id="forgot-error-msg" style="color: #ff4a4a; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; font-family: 'JetBrains Mono', monospace; padding: 0.5rem; background: rgba(255, 74, 74, 0.1); border: 1px solid rgba(255, 74, 74, 0.2); border-radius: 8px;"></div>
+        <div id="forgot-success-msg" style="color: var(--brand-secondary); font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; font-family: 'JetBrains Mono', monospace; padding: 0.5rem; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 8px;"></div>
+
+        <form id="forgot-modal-form" onsubmit="handleForgotSubmit(event)">
+          <!-- STEP 1: Enter Phone -->
+          <div id="forgot-step-phone" class="step-pane active">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label">Mobile Number</label>
+              <input type="tel" id="forgot-phone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" required>
+            </div>
+            <div id="forgot-timer-container" class="otp-timer-container" style="display: none;">
+              Resend OTP in <span id="forgot-countdown" style="color: var(--brand-secondary); font-weight: 600;">00:30</span>
+            </div>
+            <button type="button" id="forgot-send-otp-btn" onclick="sendForgotOTP()" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Send OTP</button>
+          </div>
+
+          <!-- STEP 2: OTP Verification -->
+          <div id="forgot-step-otp" class="step-pane" style="display: none; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-bottom: 1.25rem;">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>Enter 6-Digit OTP</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Demo OTP: 101010</span>
+              </label>
+              <div class="otp-inputs-container" data-prefix="forgot">
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="0" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="1" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="2" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="3" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="4" required>
+                <input type="text" class="otp-box" maxlength="1" pattern="\d*" inputmode="numeric" data-index="5" required>
+              </div>
+              <input type="hidden" id="forgot-otp" value="">
+            </div>
+            <button type="button" id="forgot-verify-otp-btn" onclick="verifyForgotOTP()" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Verify OTP</button>
+          </div>
+
+          <!-- STEP 3: Reset Password -->
+          <div id="forgot-step-password" class="step-pane" style="display: none; border-top: 1px solid var(--border-light); padding-top: 1rem; margin-bottom: 1rem;">
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">New Password</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="forgot-new-password" class="form-input" style="padding-right: 2.5rem;" placeholder="••••••••" required>
+                  <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('forgot-new-password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Confirm Password</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="forgot-confirm-password" class="form-input" style="padding-right: 2.5rem;" placeholder="••••••••" required>
+                  <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('forgot-confirm-password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Password Checklist -->
+            <div id="forgot-password-checklist" style="margin-top: -0.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; padding: 0.75rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 8px;">
+              <div class="checklist-item" id="forgot-rule-length" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>8–20 Characters</span>
+              </div>
+              <div class="checklist-item" id="forgot-rule-uppercase" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Uppercase Letter</span>
+              </div>
+              <div class="checklist-item" id="forgot-rule-lowercase" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Lowercase Letter</span>
+              </div>
+              <div class="checklist-item" id="forgot-rule-number" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Number</span>
+              </div>
+              <div class="checklist-item" id="forgot-rule-special" style="color: var(--text-muted); display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
+                <span class="bullet" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s ease;"></span>
+                <span>Special Character</span>
+              </div>
+            </div>
+            <button type="submit" id="forgot-submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Reset Password</button>
+          </div>
+
+          <button type="button" class="btn btn-outline" onclick="closeForgotModal()" style="width: 100%; justify-content: center;">Cancel</button>
+        </form>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="forgot-success-state" style="display: none; text-align: center; padding: 1rem 0;">
+        <div style="width: 60px; height: 60px; background: rgba(0, 212, 255, 0.1); border: 2px solid var(--brand-secondary); color: var(--brand-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.8rem; font-weight: bold; animation: pulse-glow 2s infinite;">
+          ✓
+        </div>
+        <h3 class="portal-step-title" style="margin-bottom: 0.5rem;">Reset Successful</h3>
+        <p class="portal-step-desc" style="max-width: 320px; margin: 0 auto 2rem; line-height: 1.6;">
+          Your password has been reset successfully. You can now login.
+        </p>
+        <button type="button" class="btn btn-primary" onclick="switchToLoginFromForgot()" style="width: 100%; justify-content: center;">Continue to Login</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SVG Filter for Liquid Glass Refraction/Lensing -->
+  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <filter id="liquid-refraction" x="-10%" y="-10%" width="120%" height="120%">
+        <!-- Turbulence generates smooth, organic light displacement values -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" result="noise" />
+        <!-- feDisplacementMap shifts backdrop pixels dynamically using the noise's Red/Green values -->
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <script src="app.js"></script>
+</body>
+</html>

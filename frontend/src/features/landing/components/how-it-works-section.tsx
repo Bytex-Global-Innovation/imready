@@ -16,15 +16,15 @@ function LightningIcon({ className }: { className?: string }) {
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="bg-surface-alt py-16 sm:py-24">
+    <section id="how-it-works" className="bg-hero py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionLabel showAccent={false}>How It Works</SectionLabel>
-          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-hero-heading sm:text-4xl lg:text-5xl">
             Simple to join.{" "}
-            <span className="text-brand-600">Structured to build.</span>
+            <span className="text-hero-accent">Structured to build.</span>
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg">
+          <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">
             College gives you the foundation. IMReady gives you the proof. One
             process, guided every step.
           </p>
@@ -38,15 +38,15 @@ export function HowItWorksSection() {
           <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {HOW_IT_WORKS_STEPS.map((step) => (
               <li key={step.step} className="relative flex flex-col items-center text-center">
-                <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-brand-500 bg-white shadow-sm">
-                  <span className="font-display text-lg font-bold text-brand-600">
+                <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-hero-accent bg-white shadow-sm">
+                  <span className="font-display text-lg font-bold text-hero-accent">
                     {step.step}
                   </span>
                 </div>
-                <h3 className="mt-5 text-base font-bold text-foreground sm:text-lg">
+                <h3 className="mt-5 text-base font-bold text-hero-heading sm:text-lg">
                   {step.title}
                 </h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted">
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-hero-body">
                   {step.description}
                 </p>
               </li>
@@ -56,14 +56,14 @@ export function HowItWorksSection() {
 
         <Card className="mt-14 flex flex-col items-start gap-6 border-border bg-white p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-start gap-4 sm:items-center">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-50">
-              <LightningIcon className="h-6 w-6 text-brand-600" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-alt">
+              <LightningIcon className="h-6 w-6 text-hero-accent" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">
+              <h3 className="text-lg font-bold text-hero-heading">
                 Want to skip the wait?
               </h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted sm:max-w-md">
+              <p className="mt-1 text-sm leading-relaxed text-hero-body sm:max-w-md">
                 Unlock any stage instantly through the ByteX program instead of
                 waiting on assignment review.
               </p>

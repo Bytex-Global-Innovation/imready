@@ -18,7 +18,7 @@ export default function BytexPage() {
           <BytexFaqSection />
         </div>
       </main>
-      <Footer />
+      <Footer variant="hero" />
     </>
   );
 }

@@ -7,11 +7,8 @@ import { cn } from "@/lib/utils";
 
 type DomainTone = (typeof PROJECT_SHOWCASE_ITEMS)[number]["domainTone"];
 
-function domainToneClass(tone: DomainTone): string {
-  if (tone === "blue") return "text-blue-600";
-  if (tone === "emerald") return "text-emerald-600";
-  if (tone === "violet") return "text-violet-600";
-  return "text-amber-600";
+function domainToneClass(_tone: DomainTone): string {
+  return "text-hero-accent";
 }
 
 function ProjectCard({
@@ -30,8 +27,8 @@ function ProjectCard({
       >
         {domain}
       </p>
-      <h3 className="mt-1 text-sm font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 text-xs text-muted">{meta}</p>
+      <h3 className="mt-1 text-sm font-semibold text-hero-heading">{title}</h3>
+      <p className="mt-1 text-xs text-hero-body">{meta}</p>
     </article>
   );
 }
@@ -66,14 +63,14 @@ export function ProjectShowcaseSection() {
   const tickerItems = [...PROJECT_SHOWCASE_ITEMS, ...PROJECT_SHOWCASE_ITEMS];
 
   return (
-    <section id="projects" className="overflow-x-hidden bg-white py-16 sm:py-24">
+    <section id="projects" className="overflow-x-hidden py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel showAccent={false}>What students are building</SectionLabel>
-          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-hero-heading sm:text-4xl">
             Real projects. Real companies. Every domain.
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg">
+          <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">
             AI, data, engineering, finance, operations, product — IMReady projects span
             every stream and every year of college.
           </p>
@@ -82,11 +79,11 @@ export function ProjectShowcaseSection() {
 
       <div className="relative mt-10 sm:mt-12">
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white to-transparent sm:w-20"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-hero to-transparent sm:w-20"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white to-transparent sm:w-20"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-hero to-transparent sm:w-20"
           aria-hidden="true"
         />
         <div

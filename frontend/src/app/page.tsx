@@ -1,24 +1,32 @@
 import { Navbar, Footer } from "@/components/layout";
 import {
+  DeviceSelectionSection,
+  FaqSection,
+  GapSection,
   HeroSection,
-  HowItWorksSection,
+  JourneyMapSection,
   ProjectShowcaseSection,
-  WhyChooseSection,
-  AdvantageSection,
+  SectionDivider,
 } from "@/features/landing";
 
 export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="bg-hero">
         <HeroSection />
-        <HowItWorksSection />
+        <SectionDivider />
+        <GapSection />
+        <SectionDivider />
+        <JourneyMapSection />
+        <SectionDivider />
+        <DeviceSelectionSection />
+        <SectionDivider />
         <ProjectShowcaseSection />
-        <WhyChooseSection />
-        <AdvantageSection />
+        <SectionDivider />
+        <FaqSection />
       </main>
-      <Footer />
+      <Footer variant="hero" />
     </>
   );
 }

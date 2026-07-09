@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 function Logo() {
   return (
-    <Link href={ROUTES.home} className="flex items-center gap-2">
+    <Link href={ROUTES.home} className="flex cursor-pointer items-center gap-2">
       <span
         className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-brand-600"
         aria-hidden="true"
@@ -40,7 +40,7 @@ export function Navbar() {
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="text-sm font-medium text-muted transition-colors hover:text-foreground"
+                className="cursor-pointer text-sm font-medium text-muted transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>
@@ -59,7 +59,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-md p-2 text-muted hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
+          className="inline-flex cursor-pointer items-center justify-center rounded-md p-2 text-muted hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
           aria-expanded={mobileOpen}
           aria-controls="mobile-menu"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -89,7 +89,7 @@ export function Navbar() {
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="block rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface hover:text-foreground"
+                className="block cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface hover:text-foreground"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
