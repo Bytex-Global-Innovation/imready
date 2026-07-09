@@ -267,3 +267,48 @@ export const mentorsApi = {
     return request<MentorsResponse>(`/admin/mentors?page=${page}`);
   },
 };
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+export type ProjectStatus = "ACTIVE" | "PENDING" | "REVIEW" | "ARCHIVED";
+
+export interface Project {
+  id: string;
+  name: string;
+  domain: string;
+  mentorInitials: string;
+  mentorInitialsColor: string;
+  mentorName: string;
+  teamSize: number;
+  status: ProjectStatus;
+}
+
+export interface ProjectsResponse {
+  projects: Project[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+const MOCK_PROJECTS: Project[] = [
+  { id: "1", name: "Neural_Sync_Core",    domain: "AI_ML",        mentorInitials: "SC", mentorInitialsColor: "bg-teal-500",   mentorName: "Dr. S. Chen",  teamSize: 5,  status: "ACTIVE"   },
+  { id: "2", name: "Vortex_Ledger_v4",   domain: "BLOCKCHAIN",   mentorInitials: "MK", mentorInitialsColor: "bg-violet-500", mentorName: "M. Kowalski",  teamSize: 8,  status: "PENDING"  },
+  { id: "3", name: "Secure_Vault_Beta",  domain: "CYBER_SEC",    mentorInitials: "RE", mentorInitialsColor: "bg-blue-500",   mentorName: "R. Evans",     teamSize: 3,  status: "REVIEW"   },
+  { id: "4", name: "Data_Harvester_X",   domain: "CLOUD_COMP",   mentorInitials: "JD", mentorInitialsColor: "bg-orange-500", mentorName: "J. Doe",       teamSize: 12, status: "ACTIVE"   },
+  { id: "5", name: "Quantum_Cipher_7",   domain: "CRYPTOGRAPHY", mentorInitials: "AL", mentorInitialsColor: "bg-rose-500",   mentorName: "A. Lovelace",  teamSize: 4,  status: "ARCHIVED" },
+];
+
+export const projectsApi = {
+  getProjects: async (page = 1): Promise<ProjectsResponse> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        projects: MOCK_PROJECTS,
+        total: 5,
+        page,
+        totalPages: 1,
+      };
+    }
+    return request<ProjectsResponse>(`/admin/projects?page=${page}`);
+  },
+};
