@@ -1,5 +1,5 @@
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { Project } from "../lib/api";
+import { Project } from "@/app/lib/api";
 
 const STATUS_CONFIG = {
   ACTIVE:   { className: "bg-[#153a75] text-white border-transparent"          },

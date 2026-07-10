@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Users, FolderKanban, ClipboardList, ShieldCheck } from "lucide-react";
-import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
-import StatCard from "../components/Statcard";
-import ApplicationsTable from "../components/Applicationstable";
-import { dashboardApi, DashboardSummary } from "../lib/api";
+import Sidebar from "@/app/components/Sidebar";
+import Topbar from "@/app/components/Topbar";
+import StatCard from "@/app/components/Statcard";
+import ApplicationsTable from "@/app/components/Applicationstable";
+import { dashboardApi, DashboardSummary } from "@/app/lib/api";
 
 export default function DashboardPage() {
   const [summary, setSummary]     = useState<DashboardSummary | null>(null);

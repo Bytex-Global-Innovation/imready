@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Search, ChevronDown, Plus } from "lucide-react";
-import Topbar from "../components/Topbar";
-import Sidebar from "../components/Sidebar";
-import Breadcrumb from "../components/Breadcrumb";
-import AssessmentStatCard from "../components/AssessmentStatCard";
-import AssessmentsTable from "../components/AssessmentsTable";
-import { assessmentsApi, Assessment, AssessmentsResponse } from "../lib/api";
+import Topbar from "@/app/components/Topbar";
+import Sidebar from "@/app/components/Sidebar";
+import Breadcrumb from "@/app/components/Breadcrumb";
+import AssessmentStatCard from "@/app/components/AssessmentStatCard";
+import AssessmentsTable from "@/app/components/AssessmentsTable";
+import { assessmentsApi, Assessment, AssessmentsResponse } from "@/app/lib/api";
 
 const DOMAINS  = ["All Domains",  "Computer Science", "Machine Learning", "Infrastructure", "Mainframe", "Cyber Security"];
 const STATUSES = ["All Statuses", "ACTIVE", "DRAFT", "ARCHIVED"];
