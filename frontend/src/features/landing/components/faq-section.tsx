@@ -41,7 +41,7 @@ export function FaqSection() {
                   aria-controls={panelId}
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                 >
-                  <span className="font-display text-base font-semibold text-hero-heading sm:text-lg">
+                  <span className="font-display text-base font-semibold text-hero-heading/98 sm:text-lg">
                     {item.question}
                   </span>
                   <Plus

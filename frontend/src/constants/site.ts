@@ -1,9 +1,9 @@
 export const NAV_LINKS = [
-  { label: "Why ImReady", href: "#why-imready" },
-  { label: "5-Stage Journey", href: "#journey" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "For Colleges", href: "/for-colleges" },
-  { label: "Contact", href: "#contact" },
+  { label: "The Gap", href: "#gap" },
+  { label: "Journey", href: "#journey" },
+  { label: "Projects", href: "#projects" },
+  { label: "Colleges", href: "/for-colleges" },
+  { label: "FAQ", href: "#faq" },
 ] as const;
 
 export const FOOTER_LINKS = {

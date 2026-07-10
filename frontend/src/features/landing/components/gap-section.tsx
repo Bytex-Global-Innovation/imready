@@ -1,7 +1,6 @@
 import {
   Building2,
   Check,
-  ChevronDown,
   Rocket,
   Star,
   X,
@@ -31,7 +30,7 @@ export function GapSection() {
 
         <div className="relative mt-12 lg:mt-16">
           <div className="flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-stretch md:gap-8">
-            <article className="rounded-2xl border border-border bg-surface-alt p-6 sm:p-8">
+            <article className="rounded-2xl border border-muted/40 bg-surface-alt p-6 sm:p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-hero-body shadow-sm">
                   <Building2 size={18} strokeWidth={2} aria-hidden="true" />
@@ -44,7 +43,7 @@ export function GapSection() {
               <ul className="space-y-4">
                 {traditional.steps.map((step) => (
                   <li key={step} className="flex items-center gap-3 text-sm text-hero-body">
-                    <ChevronDown
+                    <Check
                       size={18}
                       strokeWidth={2.5}
                       className="shrink-0 text-muted"

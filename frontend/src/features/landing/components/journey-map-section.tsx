@@ -29,15 +29,12 @@ import {
   ArrowRight,
   MousePointerClick,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { JOURNEY_MAP_SECTION, JOURNEY_MAP_STAGES } from "@/constants";
 import { cn } from "@/lib/utils";
 
-/* ─── Representative icon per stage (shown in the track card) ─── */
 const NODE_ICONS: LucideIcon[] = [Leaf, BarChart2, ShieldCheck, Briefcase, Trophy];
 
-/* ─── Lucide icons per stage panel card (5 stages × 4 cards) ─── */
 const CARD_ICONS: LucideIcon[][] = [
   [Target, Users, FolderOpen, MessageSquare],
   [CalendarDays, RefreshCw, BarChart2, Wrench],
@@ -46,133 +43,6 @@ const CARD_ICONS: LucideIcon[][] = [
   [Trophy, Rocket, GraduationCap, Star],
 ];
 
-/* ─── Per-stage static colour tokens ─── */
-const STAGE_STYLES = [
-  {
-    nodeActive: "bg-brand-600 text-white border-brand-600",
-    nodePulseClass: "imr-node-pulse-0",
-    progressBg: "bg-brand-600",
-    progressWidth: "w-0",
-    accent: "text-brand-600",
-    cardActiveBorder: "border-brand-600",
-    cardActiveBg: "bg-brand-50",
-    cardActiveShadow: "shadow-brand-100",
-    badgeFill: "bg-brand-600 border-brand-600 text-white",
-    badgeBg: "bg-brand-50 text-brand-700",
-    badgeBorder: "border-brand-100",
-    mindsetBg: "bg-brand-50 border-brand-100",
-    cardIconBg: "bg-brand-50 text-brand-600",
-    connectorDot: "border-brand-300 bg-white",
-  },
-  {
-    nodeActive: "bg-cyan-500 text-white border-cyan-500",
-    nodePulseClass: "imr-node-pulse-1",
-    progressBg: "bg-cyan-500",
-    progressWidth: "w-1/4",
-    accent: "text-cyan-600",
-    cardActiveBorder: "border-cyan-500",
-    cardActiveBg: "bg-cyan-50",
-    cardActiveShadow: "shadow-cyan-100",
-    badgeFill: "bg-cyan-500 border-cyan-500 text-white",
-    badgeBg: "bg-cyan-50 text-cyan-700",
-    badgeBorder: "border-cyan-100",
-    mindsetBg: "bg-cyan-50 border-cyan-100",
-    cardIconBg: "bg-cyan-50 text-cyan-600",
-    connectorDot: "border-cyan-300 bg-white",
-  },
-  {
-    nodeActive: "bg-violet-500 text-white border-violet-500",
-    nodePulseClass: "imr-node-pulse-2",
-    progressBg: "bg-violet-500",
-    progressWidth: "w-1/2",
-    accent: "text-violet-600",
-    cardActiveBorder: "border-violet-500",
-    cardActiveBg: "bg-violet-50",
-    cardActiveShadow: "shadow-violet-100",
-    badgeFill: "bg-violet-500 border-violet-500 text-white",
-    badgeBg: "bg-violet-50 text-violet-700",
-    badgeBorder: "border-violet-100",
-    mindsetBg: "bg-violet-50 border-violet-100",
-    cardIconBg: "bg-violet-50 text-violet-600",
-    connectorDot: "border-violet-300 bg-white",
-  },
-  {
-    nodeActive: "bg-purple-400 text-white border-purple-400",
-    nodePulseClass: "imr-node-pulse-3",
-    progressBg: "bg-purple-400",
-    progressWidth: "w-3/4",
-    accent: "text-purple-600",
-    cardActiveBorder: "border-purple-400",
-    cardActiveBg: "bg-purple-50",
-    cardActiveShadow: "shadow-purple-100",
-    badgeFill: "bg-purple-400 border-purple-400 text-white",
-    badgeBg: "bg-purple-50 text-purple-700",
-    badgeBorder: "border-purple-100",
-    mindsetBg: "bg-purple-50 border-purple-100",
-    cardIconBg: "bg-purple-50 text-purple-600",
-    connectorDot: "border-purple-300 bg-white",
-  },
-  {
-    nodeActive: "bg-amber-500 text-white border-amber-500",
-    nodePulseClass: "imr-node-pulse-4",
-    progressBg: "bg-amber-500",
-    progressWidth: "w-full",
-    accent: "text-amber-600",
-    cardActiveBorder: "border-amber-500",
-    cardActiveBg: "bg-amber-50",
-    cardActiveShadow: "shadow-amber-100",
-    badgeFill: "bg-amber-500 border-amber-500 text-white",
-    badgeBg: "bg-amber-50 text-amber-700",
-    badgeBorder: "border-amber-100",
-    mindsetBg: "bg-amber-50 border-amber-100",
-    cardIconBg: "bg-amber-50 text-amber-600",
-    connectorDot: "border-amber-300 bg-white",
-  },
-] as const;
-
-/* ─── Scoped animation keyframes (no globals.css touch) ─── */
-const ANIMATION_CSS = `
-  @keyframes imr-node-pulse-0 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(21,58,117,0.45); }
-    55%     { box-shadow: 0 0 0 10px rgba(21,58,117,0); }
-  }
-  @keyframes imr-node-pulse-1 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(6,182,212,0.45); }
-    55%     { box-shadow: 0 0 0 10px rgba(6,182,212,0); }
-  }
-  @keyframes imr-node-pulse-2 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.45); }
-    55%     { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
-  }
-  @keyframes imr-node-pulse-3 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(192,132,252,0.45); }
-    55%     { box-shadow: 0 0 0 10px rgba(192,132,252,0); }
-  }
-  @keyframes imr-node-pulse-4 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.45); }
-    55%     { box-shadow: 0 0 0 10px rgba(245,158,11,0); }
-  }
-  .imr-node-pulse-0 { animation: imr-node-pulse-0 2.2s ease-in-out infinite; }
-  .imr-node-pulse-1 { animation: imr-node-pulse-1 2.2s ease-in-out infinite; }
-  .imr-node-pulse-2 { animation: imr-node-pulse-2 2.2s ease-in-out infinite; }
-  .imr-node-pulse-3 { animation: imr-node-pulse-3 2.2s ease-in-out infinite; }
-  .imr-node-pulse-4 { animation: imr-node-pulse-4 2.2s ease-in-out infinite; }
-
-  @keyframes imr-shimmer {
-    0%   { transform: translateX(-140%); }
-    100% { transform: translateX(240%); }
-  }
-  .imr-shimmer { animation: imr-shimmer 2.6s ease-in-out infinite; }
-
-  @keyframes imr-panel-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .imr-panel-in { animation: imr-panel-in 0.38s cubic-bezier(0.4,0,0.2,1) both; }
-
-`;
-
-/* ─── Connector between stage cards ─── */
 function StageConnector({
   segmentIndex,
   activeStage,
@@ -181,15 +51,23 @@ function StageConnector({
   activeStage: number;
 }) {
   const isFilled = activeStage > 0 && segmentIndex < activeStage;
-  const activeStyle = STAGE_STYLES[activeStage];
   const hasPulse = activeStage > 0 && segmentIndex === activeStage - 1;
 
   return (
     <div className="relative flex flex-1 items-center" aria-hidden="true">
-      <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-border">
+      <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-border">
         {isFilled && (
-          <div className={cn("absolute inset-0", activeStyle.progressBg)}>
-            <div className="imr-shimmer pointer-events-none absolute inset-0 w-2/5 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+          <div
+            className={cn(
+              "absolute inset-0",
+              activeStage === 0 && "bg-brand-600",
+              activeStage === 1 && "bg-cyan-500",
+              activeStage === 2 && "bg-violet-500",
+              activeStage === 3 && "bg-purple-400",
+              activeStage === 4 && "bg-amber-500",
+            )}
+          >
+            <div className="pointer-events-none absolute inset-0 w-2/5 animate-pulse bg-gradient-to-r from-transparent via-white/70 to-transparent" />
           </div>
         )}
       </div>
@@ -197,8 +75,13 @@ function StageConnector({
         <div
           className={cn(
             "h-2.5 w-2.5 rounded-full border-2 bg-white transition-all duration-500",
-            isFilled ? activeStyle.connectorDot : "border-border",
-            hasPulse && activeStyle.nodePulseClass,
+            !isFilled && "border-border",
+            isFilled && activeStage === 0 && "border-brand-300",
+            isFilled && activeStage === 1 && "border-cyan-300",
+            isFilled && activeStage === 2 && "border-violet-300",
+            isFilled && activeStage === 3 && "border-purple-300",
+            isFilled && activeStage === 4 && "border-amber-300",
+            hasPulse && "animate-pulse",
           )}
         />
       </div>
@@ -206,7 +89,6 @@ function StageConnector({
   );
 }
 
-/* ─── Main section ─── */
 export function JourneyMapSection() {
   const [active, setActive] = useState(0);
   const [panelKey, setPanelKey] = useState(0);
@@ -218,19 +100,13 @@ export function JourneyMapSection() {
   }
 
   const stage = JOURNEY_MAP_STAGES[active];
-  const styles = STAGE_STYLES[active];
   const ActiveCardIcons = CARD_ICONS[active];
 
   return (
     <section id="journey" className="py-16 sm:py-24">
-      <style dangerouslySetInnerHTML={{ __html: ANIMATION_CSS }} />
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
-        {/* ── Header ── */}
         <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-hero-accent">
-            <Sparkles size={14} strokeWidth={2.25} aria-hidden="true" />
+          <p className="inline-flex items-center text-xs font-semibold uppercase tracking-widest text-hero-accent">
             {JOURNEY_MAP_SECTION.eyebrow}
           </p>
           <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-hero-heading sm:text-4xl lg:text-5xl">
@@ -251,84 +127,106 @@ export function JourneyMapSection() {
           </div>
         </div>
 
-        {/* ── Stage Track ── */}
-        <div className="mt-12 overflow-x-auto pb-2">
-          <div className="flex min-w-[700px] items-center px-2">
+        <div
+          className={cn(
+            "mt-12 overflow-x-scroll pb-3",
+            "[-webkit-overflow-scrolling:touch]",
+            "[scrollbar-width:thin]",
+            "[scrollbar-color:var(--border)_var(--surface-alt)]",
+            "[&::-webkit-scrollbar]:h-1.5",
+            "[&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-surface-alt",
+            "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border",
+          )}
+        >
+          <div className="flex min-w-[560px] items-center px-2 lg:min-w-[700px]">
             {JOURNEY_MAP_STAGES.map((s, i) => {
               const isActive = i === active;
-              const st = STAGE_STYLES[i];
               const NodeIcon = NODE_ICONS[i];
 
               return (
                 <React.Fragment key={s.num}>
-                  {/* Stage card */}
                   <button
+                    type="button"
                     onClick={() => handleStageChange(i)}
                     className={cn(
-                      "group relative flex w-[130px] shrink-0 cursor-pointer flex-col items-center gap-2.5 rounded-2xl border-2 px-3 py-4",
+                      "group relative flex w-[100px] shrink-0 cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3",
+                      "lg:w-[130px] lg:gap-2.5 lg:rounded-2xl lg:px-3 lg:py-4",
                       "transition-all duration-300 ease-out",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-hero-accent focus-visible:ring-offset-2",
-                      isActive
-                        ? cn(
-                            "shadow-md",
-                            st.cardActiveBorder,
-                            st.cardActiveBg,
-                            st.cardActiveShadow,
-                          )
-                        : "border-border bg-white hover:border-border/80 hover:bg-hero hover:shadow-sm",
+                      !isActive &&
+                        "border-border bg-white hover:border-border/80 hover:bg-hero hover:shadow-sm",
+                      isActive && i === 0 && "border-brand-600 bg-brand-50 shadow-md shadow-brand-100",
+                      isActive && i === 1 && "border-cyan-500 bg-cyan-50 shadow-md shadow-cyan-100",
+                      isActive && i === 2 && "border-violet-500 bg-violet-50 shadow-md shadow-violet-100",
+                      isActive && i === 3 && "border-purple-400 bg-purple-50 shadow-md shadow-purple-100",
+                      isActive && i === 4 && "border-amber-500 bg-amber-50 shadow-md shadow-amber-100",
                     )}
                     aria-pressed={isActive}
                     aria-label={`Stage ${s.num} — ${s.name}`}
                   >
-                    {/* Number badge */}
                     <div
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full border-2",
-                        "font-display text-xs font-bold transition-all duration-300",
-                        isActive
-                          ? st.badgeFill
-                          : "border-border bg-white text-hero-body group-hover:border-hero-accent/30 group-hover:text-hero-accent",
+                        "flex h-6 w-6 items-center justify-center rounded-full border-2 lg:h-8 lg:w-8",
+                        "font-display text-[10px] font-bold transition-all duration-300 lg:text-xs",
+                        !isActive &&
+                          "border-border bg-white text-hero-body group-hover:border-hero-accent/30 group-hover:text-hero-accent",
+                        isActive && i === 0 && "border-brand-600 bg-brand-600 text-white",
+                        isActive && i === 1 && "border-cyan-500 bg-cyan-500 text-white",
+                        isActive && i === 2 && "border-violet-500 bg-violet-500 text-white",
+                        isActive && i === 3 && "border-purple-400 bg-purple-400 text-white",
+                        isActive && i === 4 && "border-amber-500 bg-amber-500 text-white",
                       )}
                     >
                       {s.num}
                     </div>
 
-                    {/* Stage icon */}
                     <NodeIcon
                       size={30}
                       strokeWidth={1.75}
                       className={cn(
-                        "transition-all duration-300",
-                        isActive
-                          ? st.accent
-                          : "text-hero-body group-hover:text-hero-accent",
+                        "h-5 w-5 transition-all duration-300 lg:h-[30px] lg:w-[30px]",
+                        !isActive && "text-hero-body group-hover:text-hero-accent",
+                        isActive && i === 0 && "text-brand-600",
+                        isActive && i === 1 && "text-cyan-600",
+                        isActive && i === 2 && "text-violet-600",
+                        isActive && i === 3 && "text-purple-600",
+                        isActive && i === 4 && "text-amber-600",
                       )}
                       aria-hidden="true"
                     />
 
-                    {/* Stage name */}
                     <span
                       className={cn(
-                        "text-sm font-bold tracking-tight transition-colors duration-300",
-                        isActive ? st.accent : "text-hero-heading",
+                        "text-xs font-bold tracking-tight transition-colors duration-300 lg:text-sm",
+                        !isActive && "text-hero-heading",
+                        isActive && i === 0 && "text-brand-600",
+                        isActive && i === 1 && "text-cyan-600",
+                        isActive && i === 2 && "text-violet-600",
+                        isActive && i === 3 && "text-purple-600",
+                        isActive && i === 4 && "text-amber-600",
                       )}
                     >
                       {s.name}
                     </span>
 
-                    {/* Explore Stage → */}
                     <span
                       className={cn(
-                        "flex items-center gap-0.5 text-[11px] font-semibold transition-colors duration-300",
-                        isActive ? st.accent : "text-hero-body group-hover:text-hero-heading",
+                        "flex items-center gap-0.5 text-[10px] font-semibold transition-colors duration-300 lg:text-xs",
+                        !isActive && "text-hero-body group-hover:text-hero-heading",
+                        isActive && i === 0 && "text-brand-600",
+                        isActive && i === 1 && "text-cyan-600",
+                        isActive && i === 2 && "text-violet-600",
+                        isActive && i === 3 && "text-purple-600",
+                        isActive && i === 4 && "text-amber-600",
                       )}
                     >
-                      Explore Stage
-                      <ArrowRight size={11} strokeWidth={2.5} aria-hidden="true" />
+                      {isActive ? "Current Stage" : "Explore Stage"}
+                      {!isActive && (
+                        <ArrowRight size={11} strokeWidth={2.5} aria-hidden="true" />
+                      )}
                     </span>
                   </button>
 
-                  {/* Connector segment */}
                   {i < JOURNEY_MAP_STAGES.length - 1 && (
                     <StageConnector segmentIndex={i} activeStage={active} />
                   )}
@@ -338,29 +236,37 @@ export function JourneyMapSection() {
           </div>
         </div>
 
-        {/* ── Stage Detail Panel ── */}
         <div
           key={panelKey}
-          className="imr-panel-in mt-8 overflow-hidden rounded-2xl border border-border bg-white shadow-sm"
+          className="mt-8 overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-opacity duration-300"
         >
-          {/* Coloured top accent stripe */}
-          <div className={cn("h-[3px] w-full transition-colors duration-500", styles.progressBg)} />
+          <div
+            className={cn(
+              "h-0.5 w-full transition-colors duration-500",
+              active === 0 && "bg-brand-600",
+              active === 1 && "bg-cyan-500",
+              active === 2 && "bg-violet-500",
+              active === 3 && "bg-purple-400",
+              active === 4 && "bg-amber-500",
+            )}
+          />
 
           <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_280px] lg:gap-10">
-
-            {/* Left — content */}
             <div>
               <span
                 className={cn(
                   "inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-widest",
-                  styles.badgeBg,
-                  styles.badgeBorder,
+                  active === 0 && "border-brand-100 bg-brand-50 text-brand-700",
+                  active === 1 && "border-cyan-100 bg-cyan-50 text-cyan-700",
+                  active === 2 && "border-violet-100 bg-violet-50 text-violet-700",
+                  active === 3 && "border-purple-100 bg-purple-50 text-purple-700",
+                  active === 4 && "border-amber-100 bg-amber-50 text-amber-700",
                 )}
               >
                 Stage {stage.num} — {stage.name}
               </span>
 
-              <h3 className="mt-4 font-display text-2xl font-bold tracking-tight text-hero-heading sm:text-[1.75rem] sm:leading-snug">
+              <h3 className="mt-4 font-display text-2xl font-bold tracking-tight text-hero-heading sm:text-3xl sm:leading-snug">
                 {stage.headline}
               </h3>
 
@@ -371,7 +277,16 @@ export function JourneyMapSection() {
               <ul className="mt-5 space-y-2.5">
                 {stage.points.map((point) => (
                   <li key={point} className="flex items-start gap-2.5">
-                    <span className={cn("mt-0.5 shrink-0", styles.accent)}>
+                    <span
+                      className={cn(
+                        "mt-0.5 shrink-0",
+                        active === 0 && "text-brand-600",
+                        active === 1 && "text-cyan-600",
+                        active === 2 && "text-violet-600",
+                        active === 3 && "text-purple-600",
+                        active === 4 && "text-amber-600",
+                      )}
+                    >
                       <Check size={15} strokeWidth={2.8} aria-hidden="true" />
                     </span>
                     <span className="text-sm leading-relaxed text-hero-heading">
@@ -381,18 +296,34 @@ export function JourneyMapSection() {
                 ))}
               </ul>
 
-              {/* Mindset quote */}
-              <div className={cn("mt-6 rounded-xl border px-4 py-4", styles.mindsetBg)}>
-                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-hero-body">
+              <div
+                className={cn(
+                  "mt-6 rounded-xl border px-4 py-4",
+                  active === 0 && "border-brand-100 bg-brand-50",
+                  active === 1 && "border-cyan-100 bg-cyan-50",
+                  active === 2 && "border-violet-100 bg-violet-50",
+                  active === 3 && "border-purple-100 bg-purple-50",
+                  active === 4 && "border-amber-100 bg-amber-50",
+                )}
+              >
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-hero-body">
                   Mindset Shift
                 </p>
-                <p className={cn("text-sm font-semibold leading-relaxed italic", styles.accent)}>
+                <p
+                  className={cn(
+                    "text-sm font-semibold leading-relaxed italic",
+                    active === 0 && "text-brand-600",
+                    active === 1 && "text-cyan-600",
+                    active === 2 && "text-violet-600",
+                    active === 3 && "text-purple-600",
+                    active === 4 && "text-amber-600",
+                  )}
+                >
                   &ldquo;{stage.mindset}&rdquo;
                 </p>
               </div>
             </div>
 
-            {/* Right — visual cards */}
             <div className="flex flex-col gap-2.5">
               {stage.cards.map((label, cardIdx) => {
                 const Icon = ActiveCardIcons[cardIdx];
@@ -405,7 +336,11 @@ export function JourneyMapSection() {
                       className={cn(
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                         "transition-transform duration-200 group-hover/card:scale-110",
-                        styles.cardIconBg,
+                        active === 0 && "bg-brand-50 text-brand-600",
+                        active === 1 && "bg-cyan-50 text-cyan-600",
+                        active === 2 && "bg-violet-50 text-violet-600",
+                        active === 3 && "bg-purple-50 text-purple-600",
+                        active === 4 && "bg-amber-50 text-amber-600",
                       )}
                     >
                       {Icon && <Icon size={15} strokeWidth={2} aria-hidden="true" />}
@@ -417,10 +352,8 @@ export function JourneyMapSection() {
                 );
               })}
             </div>
-
           </div>
         </div>
-
       </div>
     </section>
   );
