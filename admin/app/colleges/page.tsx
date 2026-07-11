@@ -11,14 +11,6 @@ import { collegesApi, type CollegesResponse } from "@/app/lib/api";
 
 const PAGE_SIZE = 4;
 
-function toAbsoluteAdminUrl(path: string): string {
-  if (!path) return path;
-  if (/^https?:\/\//i.test(path)) return path;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  return origin ? `${origin}${normalized}` : normalized;
-}
-
 export default function CollegesPage() {
   const [data, setData] = useState<CollegesResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +68,7 @@ export default function CollegesPage() {
         className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#153a75]"
       >
         <Link
-          href={toAbsoluteAdminUrl("/dashboard")}
+          href="/dashboard"
           className="flex cursor-pointer items-center text-[#153a75] transition-colors hover:text-[#153a75]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#153a75] focus-visible:ring-offset-2"
           aria-label="Go to dashboard"
         >

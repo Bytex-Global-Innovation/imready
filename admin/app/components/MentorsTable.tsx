@@ -1,4 +1,4 @@
-import { Mentor } from "../lib/api";
+import { Mentor } from "@/app/lib/api";
 
 interface MentorsTableProps {
   mentors: Mentor[];

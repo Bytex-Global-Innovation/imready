@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Mail, Lock } from "lucide-react";
-import { loginSchema, LoginFormValues } from "../lib/validation/loginSchema";
-import { authApi } from "../lib/api";
+import { loginSchema, LoginFormValues } from "@/app/lib/validation/loginSchema";
+import { authApi } from "@/app/lib/api";
 
 export default function LoginForm() {
   const router = useRouter();

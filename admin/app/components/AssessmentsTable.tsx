@@ -1,5 +1,5 @@
 import { Pencil, Eye, Trash2, RotateCcw } from "lucide-react";
-import { Assessment } from "../lib/api";
+import { Assessment } from "@/app/lib/api";
 
 const STATUS_CONFIG = {
   ACTIVE:   { dot: "bg-emerald-500", text: "text-emerald-600", label: "ACTIVE"    },

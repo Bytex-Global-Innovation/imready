@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DashboardSummary } from "../lib/api";
+import { DashboardSummary } from "@/app/lib/api";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-50 text-amber-600",
