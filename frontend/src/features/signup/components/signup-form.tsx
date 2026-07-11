@@ -129,7 +129,7 @@ export function SignupForm({ step: currentStep }: SignupFormProps) {
     <div className="mx-auto w-full max-w-3xl">
       <header className="mb-8 text-center sm:mb-10">
         <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          Join IMReady
+          Join ImReady
         </h1>
         <p className="mt-2 text-sm text-muted sm:text-base">
           Start your journey to career readiness.

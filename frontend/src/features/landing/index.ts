@@ -1,5 +1,6 @@
-export { HeroSection } from "./components/hero-section";
-export { HowItWorksSection } from "./components/how-it-works-section";
-export { WhyChooseSection } from "./components/why-choose-section";
-export { AdvantageSection } from "./components/advantage-section";
-export { FeatureIcon } from "./components/feature-icon";
+export { SectionDivider } from "@/features/landing/components/section-divider";
+export { FaqSection } from "@/features/landing/components/faq-section";
+export { GapSection } from "@/features/landing/components/gap-section";
+export { HeroSection } from "@/features/landing/components/hero-section";
+export { JourneyMapSection } from "@/features/landing/components/journey-map-section";
+export { ProjectShowcaseSection } from "@/features/landing/components/project-showcase-section";

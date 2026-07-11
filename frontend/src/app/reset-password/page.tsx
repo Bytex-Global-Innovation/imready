@@ -6,7 +6,7 @@ import { ROUTES, SITE_CONFIG } from "@/constants";
 
 export const metadata: Metadata = {
   title: `Reset Password — ${SITE_CONFIG.name}`,
-  description: "Set a new password for your IMReady account.",
+  description: "Set a new password for your ImReady account.",
 };
 
 interface ResetPasswordPageProps {

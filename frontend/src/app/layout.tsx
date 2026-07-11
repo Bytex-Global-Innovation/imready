@@ -15,9 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "IMReady — Before others even settle into college",
+  title: "ImReady — Before others even settle into college",
   description:
-    "IMReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.",
+    "ImReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.",
 };
 
 export default function RootLayout({

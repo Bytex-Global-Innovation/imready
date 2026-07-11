@@ -14,9 +14,9 @@ export function SectionLabel({
   return (
     <div className={cn("flex flex-col items-center gap-3", className)}>
       {showAccent && (
-        <span className="h-1 w-10 rounded-full bg-accent" aria-hidden="true" />
+        <span className="h-1 w-10 rounded-full bg-hero-accent" aria-hidden="true" />
       )}
-      <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">
+      <p className="text-xs font-semibold uppercase tracking-widest text-hero-accent">
         {children}
       </p>
     </div>

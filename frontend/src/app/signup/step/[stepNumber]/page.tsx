@@ -25,7 +25,7 @@ export async function generateMetadata({
   return {
     title: `Join ${SITE_CONFIG.name} — ${stepTitle}`,
     description:
-      "Create your IMReady account and start building real industry experience before Semester 3.",
+      "Create your ImReady account and start building real industry experience before Semester 3.",
   };
 }
 

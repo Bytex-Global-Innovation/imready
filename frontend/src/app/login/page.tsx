@@ -5,7 +5,7 @@ import { SITE_CONFIG } from "@/constants";
 
 export const metadata: Metadata = {
   title: `Log In — ${SITE_CONFIG.name}`,
-  description: "Sign in to your IMReady account and continue building industry-ready experience.",
+  description: "Sign in to your ImReady account and continue building industry-ready experience.",
 };
 
 export default function LoginPage() {

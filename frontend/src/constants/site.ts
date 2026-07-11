@@ -21,9 +21,9 @@ export const FOOTER_LINKS = {
 } as const;
 
 export const SITE_CONFIG = {
-  name: "IMReady",
+  name: "ImReady",
   tagline:
     "Bridging the gap between academic learning and industry expectations through hands-on experience.",
   email: "hello@imready.com",
-  copyright: "© 2024 IMReady. All rights reserved.",
+  copyright: "© 2024 ImReady. All rights reserved.",
 } as const;
