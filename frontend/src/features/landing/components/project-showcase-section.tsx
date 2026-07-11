@@ -14,7 +14,7 @@ function domainToneClass(_tone: DomainTone): string {
 function ProjectCard({
   domain,
   title,
-  meta,
+  subtitle,
   domainTone,
 }: (typeof PROJECT_SHOWCASE_ITEMS)[number]) {
   return (
@@ -28,7 +28,7 @@ function ProjectCard({
         {domain}
       </p>
       <h3 className="mt-1 text-sm font-semibold text-hero-heading">{title}</h3>
-      <p className="mt-1 text-xs text-hero-body">{meta}</p>
+      <p className="mt-1 text-xs text-hero-body">{subtitle}</p>
     </article>
   );
 }
