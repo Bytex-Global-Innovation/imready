@@ -32,17 +32,17 @@ export function Navbar() {
     <>
       <header className="fixed inset-x-0 top-0 z-[100] bg-hero px-4 pb-3 pt-3 sm:px-6 lg:px-8">
         <nav
-          className="relative z-[100] mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-full border border-border bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-5 sm:py-2.5"
+          className="relative z-[100] mx-auto flex max-w-7xl items-center gap-3 rounded-full border border-border bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-5 sm:py-2.5 lg:gap-6 lg:px-6"
           aria-label="Main navigation"
         >
         <Logo />
 
-        <ul className="hidden items-center gap-6 lg:flex xl:gap-8">
+        <ul className="hidden min-w-0 flex-1 items-center justify-center gap-8 px-4 lg:flex xl:gap-10 xl:px-6">
           {NAV_LINKS.map((link) => (
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="cursor-pointer text-sm font-medium text-muted transition-colors hover:text-foreground"
+                className="cursor-pointer whitespace-nowrap px-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>
@@ -50,7 +50,7 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-3 lg:flex lg:gap-4">
+        <div className="ml-auto hidden shrink-0 items-center gap-3 lg:flex lg:gap-4">
           <Button variant="ghost" size="sm" href={ROUTES.login}>
             Log In
           </Button>
@@ -61,7 +61,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="inline-flex cursor-pointer items-center justify-center rounded-full p-2 text-muted hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
+          className="ml-auto inline-flex cursor-pointer items-center justify-center rounded-full p-2 text-muted hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
           aria-expanded={mobileOpen}
           aria-controls="mobile-menu"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}

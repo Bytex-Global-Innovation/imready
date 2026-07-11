@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FOOTER_LINKS, ROUTES, SITE_CONFIG } from "@/constants";
 
@@ -7,8 +8,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <Link href={ROUTES.home} className="font-display text-xl font-bold text-brand-700">
-              {SITE_CONFIG.name}
+            <Link href={ROUTES.home} className="inline-flex cursor-pointer items-center">
+              <Image
+                src="/imready_logo.jpeg"
+                alt={`${SITE_CONFIG.name} logo`}
+                width={120}
+                height={40}
+                className="h-8 w-auto object-contain sm:h-9"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-muted">{SITE_CONFIG.tagline}</p>
             <p className="text-xs text-muted">{SITE_CONFIG.copyright}</p>
