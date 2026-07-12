@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { BYTEX_HERO } from "@/constants";
-import { Button } from "@/components/ui";
+import { BYTEX_HERO } from "@/constants/bytex";
+import { Button } from "@/components/ui/button";
 import { ArrowRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
 

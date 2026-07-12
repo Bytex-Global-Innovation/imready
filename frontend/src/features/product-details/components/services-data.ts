@@ -1,5 +1,5 @@
-import { Briefcase, Lock, RefreshCw, Shield, Truck } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Briefcase, Lock, RefreshCw, Shield, Truck } from "@/components/icons";
+import type { LucideIcon } from "@/components/icons";
 import type { ProductSpecs } from "@/constants/product-detail";
 
 const WARRANTY_CARRY_IN =

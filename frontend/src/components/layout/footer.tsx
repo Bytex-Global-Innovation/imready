@@ -1,9 +1,23 @@
 import Link from "next/link";
-import { FOOTER_LINKS, ROUTES, SITE_CONFIG } from "@/constants";
+import { FOOTER_LINKS, SITE_CONFIG } from "@/constants/site";
+import { ROUTES } from "@/constants/routes";
+import { cn } from "@/lib/utils";
 
-export function Footer() {
+type FooterVariant = "default" | "hero";
+
+type FooterProps = {
+  variant?: FooterVariant;
+};
+
+export function Footer({ variant = "default" }: FooterProps) {
   return (
-    <footer id="contact" className="border-t border-border bg-surface">
+    <footer
+      id="contact"
+      className={cn(
+        "border-t border-border",
+        variant === "hero" ? "bg-hero" : "bg-surface",
+      )}
+    >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">

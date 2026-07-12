@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { BYTEX_FAQ } from "@/constants";
-import { Button } from "@/components/ui";
+import { BYTEX_FAQ } from "@/constants/bytex";
+import { Button } from "@/components/ui/button";
 import { Plus } from "@/components/icons";
 import { cn } from "@/lib/utils";
 

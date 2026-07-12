@@ -1,4 +1,4 @@
-import { BYTEX_HOW_IT_WORKS } from "@/constants";
+import { BYTEX_HOW_IT_WORKS } from "@/constants/bytex";
 
 export function HowBytexWorksSection() {
   return (

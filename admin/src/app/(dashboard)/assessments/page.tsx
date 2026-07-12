@@ -1,0 +1,138 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { Search, ChevronDown, Plus, ClipboardList, ShieldCheck } from "@/components/icons";
+import Breadcrumb from "@/components/ui/breadcrumb";
+import Pagination from "@/components/ui/pagination";
+import StatCard from "@/components/ui/stat-card";
+import AssessmentsTable from "@/components/tables/assessments-table";
+import { assessmentsApi, type AssessmentsResponse } from "@/lib/api";
+
+const BREADCRUMBS = [
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Assessments" },
+];
+
+export default function AssessmentsPage() {
+  const [data, setData] = useState<AssessmentsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = useCallback(async (page: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await assessmentsApi.getAssessments(page);
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load assessments.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData(1);
+  }, [loadData]);
+
+  return (
+    <>
+      <Breadcrumb items={BREADCRUMBS} />
+
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="admin-page-title">Assessments</h1>
+          <p className="admin-page-subtitle">Manage curriculum evaluations, domain tests, and pass rates.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="admin-btn-primary gap-2">
+            <Plus className="h-4 w-4" />
+            Create Assessment
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {isLoading && !data ? (
+          <>
+            <div className="admin-skeleton h-28" />
+            <div className="admin-skeleton h-28" />
+            <div className="admin-skeleton h-28" />
+            <div className="admin-skeleton h-28" />
+          </>
+        ) : (
+          <>
+            <StatCard
+              label="Total Assessments"
+              value={data?.total ?? 0}
+              icon={ClipboardList}
+            />
+            <StatCard
+              label="Added This Month"
+              value={`+${data?.totalThisMonth ?? 0}`}
+              subtitleColor="green"
+            />
+            <StatCard
+              label="Active Sessions"
+              value={data?.activeSessions ?? 0}
+            />
+            <StatCard
+              label="Avg. Pass Rate"
+              value={data?.avgPassRate ?? "0%"}
+              icon={ShieldCheck}
+            />
+          </>
+        )}
+      </div>
+
+      <div className="admin-card">
+        {/* Filters/Search */}
+        <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search assessments..."
+              className="admin-input-icon w-full"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="admin-btn-outline gap-2 bg-gray-50/50">
+              <span className="text-gray-500">Domain:</span> All
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
+            <button className="admin-btn-outline gap-2 bg-gray-50/50">
+              <span className="text-gray-500">Status:</span> All
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-4 text-sm text-red-500">{error}</div>
+        )}
+
+        <div className="p-0">
+          {isLoading ? (
+            <div className="p-10 text-center text-sm text-gray-400 animate-pulse">Loading assessments...</div>
+          ) : (
+            <AssessmentsTable assessments={data?.assessments ?? []} />
+          )}
+        </div>
+
+        {!isLoading && (data?.total ?? 0) > 0 && (
+          <div className="p-4">
+            <Pagination
+              currentPage={data?.page ?? 1}
+              totalPages={data?.totalPages ?? 1}
+              totalEntries={data?.total ?? 0}
+              pageSize={5} // from mock
+              onPageChange={loadData}
+              entryLabel="assessments"
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

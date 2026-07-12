@@ -1,7 +1,8 @@
 "use client";
 
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
-import { Input, Label } from "@/components/ui";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { COUNTRY_CODES, type SignupFormValues } from "../schemas/signup-schemas";
 
 interface PersonalInfoStepProps {

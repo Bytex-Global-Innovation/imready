@@ -7,7 +7,7 @@ import type {
   UseFormSetValue,
 } from "react-hook-form";
 import { cn } from "@/lib/utils";
-import { ROUTES } from "@/constants";
+import { ROUTES } from "@/constants/routes";
 import { CAREER_DOORS } from "../constants/career-doors";
 import type { SignupFormValues } from "../schemas/signup-schemas";
 

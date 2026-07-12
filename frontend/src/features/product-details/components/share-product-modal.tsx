@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 
 interface ShareProductModalProps {
   isOpen: boolean;

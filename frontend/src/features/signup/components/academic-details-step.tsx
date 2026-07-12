@@ -1,7 +1,7 @@
 "use client";
 
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
-import { Label } from "@/components/ui";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
   GRADUATION_YEARS,

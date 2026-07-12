@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { X } from "@/components/icons";
-import type { Product } from "@/constants";
+import type { Product } from "@/constants/product-comparison";
 
 interface ProductImagePreviewModalProps {
   product: Product | null;

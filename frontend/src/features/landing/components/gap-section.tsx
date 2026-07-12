@@ -4,8 +4,8 @@ import {
   Rocket,
   Star,
   X,
-} from "lucide-react";
-import { GAP_SECTION } from "@/constants";
+} from "@/components/icons";
+import { GAP_SECTION } from "@/constants/landing";
 
 export function GapSection() {
   const { traditional, imready, conclusion } = GAP_SECTION;

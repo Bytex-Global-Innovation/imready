@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Lock, Tag } from "lucide-react";
-import { Button } from "@/components/ui";
-import { COMPARE_PRICING_CTA } from "@/constants";
+import { Lock, Tag } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { COMPARE_PRICING_CTA } from "@/constants/product-comparison";
 import type { ProductSubVariant } from "@/constants/product-detail";
 import { cn } from "@/lib/utils";
 

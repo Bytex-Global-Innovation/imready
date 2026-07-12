@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { NAV_LINKS, ROUTES, SITE_CONFIG } from "@/constants";
-import { Button } from "@/components/ui";
+import { NAV_LINKS, SITE_CONFIG } from "@/constants/site";
+import { ROUTES } from "@/constants/routes";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function Logo() {

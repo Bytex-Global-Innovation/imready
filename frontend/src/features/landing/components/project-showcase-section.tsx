@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { PROJECT_SHOWCASE_ITEMS, ROUTES } from "@/constants";
-import { Button, SectionLabel } from "@/components/ui";
+import { PROJECT_SHOWCASE_ITEMS } from "@/constants/landing";
+import { ROUTES } from "@/constants/routes";
+import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/section-label";
 import { cn } from "@/lib/utils";
 
 type DomainTone = (typeof PROJECT_SHOWCASE_ITEMS)[number]["domainTone"];

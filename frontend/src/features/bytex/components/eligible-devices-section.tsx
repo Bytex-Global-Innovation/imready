@@ -1,13 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  BYTEX_DEVICES,
-  PRODUCTS_INVENTORY,
-  ROUTES,
-  getProcessorLogoUrl,
-} from "@/constants";
+import { BYTEX_DEVICES } from "@/constants/bytex";
+import { PRODUCTS_INVENTORY, getProcessorLogoUrl } from "@/constants/product-comparison";
+import { ROUTES } from "@/constants/routes";
 import { ArrowRight } from "@/components/icons";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { getDisplayPrice, getFirstComment } from "@/lib/product-utils";
 
 export function EligibleDevicesSection() {

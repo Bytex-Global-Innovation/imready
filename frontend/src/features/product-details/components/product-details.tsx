@@ -15,8 +15,9 @@ import {
   Heart,
   Share2,
   X,
-} from "lucide-react";
-import { COMPARE_PRICING_CTA, ROUTES } from "@/constants";
+} from "@/components/icons";
+import { COMPARE_PRICING_CTA } from "@/constants/product-comparison";
+import { ROUTES } from "@/constants/routes";
 import type {
   ProductDetailsData,
   ProductSubVariant,

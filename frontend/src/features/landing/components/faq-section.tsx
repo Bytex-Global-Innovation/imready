@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { HelpCircle, Plus } from "lucide-react";
-import { LANDING_FAQ } from "@/constants";
+import { HelpCircle, Plus } from "@/components/icons";
+import { LANDING_FAQ } from "@/constants/landing";
 import { cn } from "@/lib/utils";
 export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);

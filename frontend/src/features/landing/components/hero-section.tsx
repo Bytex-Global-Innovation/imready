@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { ROUTES } from "@/constants";
-import { Button } from "@/components/ui";
+import { ROUTES } from "@/constants/routes";
+import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (

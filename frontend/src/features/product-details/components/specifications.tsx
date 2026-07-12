@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 import type { ProductSpecs, ProductSubVariant } from "@/constants/product-detail";
 import { cn } from "@/lib/utils";
 

@@ -64,3 +64,80 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+@layer utilities {
+  /* Layout utilities */
+  .page-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .section-container {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+  .auth-page {
+    @apply flex min-h-screen items-center justify-center bg-surface p-4 sm:p-6 lg:p-8;
+  }
+
+  /* Typography utilities */
+  .heading-lg {
+    @apply font-display text-4xl font-bold tracking-tight text-hero-heading sm:text-5xl lg:text-6xl;
+  }
+  .heading-md {
+    @apply font-display text-3xl font-bold tracking-tight text-hero-heading sm:text-4xl;
+  }
+  .heading-sm {
+    @apply font-display text-2xl font-semibold text-foreground sm:text-3xl;
+  }
+  .body-text {
+    @apply text-base text-hero-body sm:text-lg;
+  }
+  .body-sm {
+    @apply text-sm text-muted;
+  }
+  .caption {
+    @apply text-xs font-medium text-muted;
+  }
+
+  /* Component utilities */
+  .card {
+    @apply rounded-xl bg-white shadow-sm;
+  }
+  .card-bordered {
+    @apply rounded-xl border border-border bg-white shadow-sm;
+  }
+  .divider {
+    @apply my-6 border-t border-border;
+  }
+
+  /* Form utilities */
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium text-foreground;
+  }
+  .form-input {
+    @apply w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:bg-gray-50;
+  }
+  .form-error {
+    @apply mt-1 text-xs text-red-500;
+  }
+  .form-group {
+    @apply mb-4 sm:mb-5;
+  }
+
+  /* Button utilities */
+  .btn-primary {
+    @apply flex items-center justify-center rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-outline {
+    @apply flex items-center justify-center rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
+  }
+
+  /* Badge utility */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .status-dot {
+    @apply mr-1.5 h-1.5 w-1.5 rounded-full;
+  }
+}

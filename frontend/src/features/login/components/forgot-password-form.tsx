@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, Card, Input, Label } from "@/components/ui";
-import { ROUTES } from "@/constants";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ROUTES } from "@/constants/routes";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,

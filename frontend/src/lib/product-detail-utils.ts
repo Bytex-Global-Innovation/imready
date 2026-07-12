@@ -1,6 +1,6 @@
 import type { ProductSpecs, ProductSubVariant } from "@/constants/product-detail";
-import type { LucideIcon } from "lucide-react";
-import { BadgeCheck, Cpu, Gpu, MemoryStick, Monitor, RefreshCw } from "lucide-react";
+import type { LucideIcon } from "@/components/icons";
+import { BadgeCheck, Cpu, Gpu, MemoryStick, Monitor, RefreshCw } from "@/components/icons";
 
 export function formatNumberWithCommas(value: number | string | undefined | null): string {
   if (value == null || value === "") return "—";

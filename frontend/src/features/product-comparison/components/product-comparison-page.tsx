@@ -15,17 +15,8 @@ import {
   Maximize2,
   Truck,
 } from "@/components/icons";
-import { Button } from "@/components/ui";
-import {
-  COMPARE_BREADCRUMBS,
-  COMPARE_MOBILE_SCROLL_HINT,
-  COMPARE_PRICING_CTA,
-  COMPARE_SPEC_ROWS,
-  KEY_SPEC_FIELDS,
-  PRODUCTS_INVENTORY,
-  getProcessorLogoUrl,
-  type Product,
-} from "@/constants";
+import { Button } from "@/components/ui/button";
+import { COMPARE_BREADCRUMBS, COMPARE_MOBILE_SCROLL_HINT, COMPARE_PRICING_CTA, COMPARE_SPEC_ROWS, KEY_SPEC_FIELDS, PRODUCTS_INVENTORY, getProcessorLogoUrl, type Product } from "@/constants/product-comparison";
 import {
   getDisplayPrice,
   getSpecValue,

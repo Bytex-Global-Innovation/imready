@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/components/icons";
 import {
   Leaf,
   BarChart2,
@@ -29,8 +29,8 @@ import {
   ArrowRight,
   MousePointerClick,
   ChevronRight,
-} from "lucide-react";
-import { JOURNEY_MAP_SECTION, JOURNEY_MAP_STAGES } from "@/constants";
+} from "@/components/icons";
+import { JOURNEY_MAP_SECTION, JOURNEY_MAP_STAGES } from "@/constants/landing";
 import { cn } from "@/lib/utils";
 
 type StageTone = {

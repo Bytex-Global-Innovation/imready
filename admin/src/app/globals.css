@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-admin-primary: var(--admin-primary);
+  --color-admin-primary-hover: var(--admin-primary-hover);
+  --color-admin-bg: var(--admin-bg);
+  --color-admin-border: var(--admin-border);
+  --color-admin-text-main: var(--admin-text-main);
+  --color-admin-text-muted: var(--admin-text-muted);
+}
+
+:root {
+  --admin-primary: #153a75;
+  --admin-primary-hover: #1e4f9c;
+  --admin-bg: #f9fafb; /* gray-50 */
+  --admin-border: #e5e7eb; /* gray-200 */
+  --admin-text-main: #111827; /* gray-900 */
+  --admin-text-muted: #6b7280; /* gray-500 */
+}
+
+@layer utilities {
+  /* Layout & Typography */
+  .admin-page-title {
+    @apply text-xl font-bold text-gray-900 sm:text-2xl;
+  }
+
+  .admin-page-subtitle {
+    @apply mt-1 text-sm text-gray-500;
+  }
+
+  .admin-section-label {
+    @apply text-[11px] font-semibold uppercase tracking-wide text-gray-400;
+  }
+
+  /* Cards */
+  .admin-card {
+    @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  .admin-stat-card {
+    @apply rounded-xl border border-gray-200 bg-white p-5 shadow-sm;
+  }
+
+  /* Forms & Inputs */
+  .admin-input {
+    @apply rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
+  }
+
+  /* Left padding reserved for an absolutely positioned leading icon */
+  .admin-input-icon {
+    @apply rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
+  }
+
+  /* Buttons */
+  .admin-btn-primary {
+    @apply flex items-center justify-center rounded-md bg-admin-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-admin-primary-hover focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .admin-btn-outline {
+    @apply flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .admin-icon-btn {
+    @apply rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-admin-primary;
+  }
+
+  /* Tables */
+  .admin-table-header {
+    @apply text-[11px] font-semibold uppercase tracking-wide text-gray-500;
+  }
+
+  .admin-table-row {
+    @apply transition-colors hover:bg-gray-50;
+  }
+
+  /* Status Badges */
+  .admin-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* Utilities */
+  .admin-skeleton {
+    @apply animate-pulse rounded-lg bg-gray-200;
+  }
+}
+
+body {
+  background-color: var(--admin-bg);
+  color: var(--admin-text-main);
+}
