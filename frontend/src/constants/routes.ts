@@ -17,7 +17,22 @@ export const ROUTES = {
   terms: "/terms",
   cookies: "/cookies",
   faq: "/faq",
+  dashboard: "/dashboard",
+  assessment: "/assessment",
+  assessmentSubmitted: "/assessment/submitted",
 } as const;
+
+/** Routes that use the authenticated app shell (no marketing navbar). */
+export const APP_ROUTE_PREFIXES = [
+  ROUTES.dashboard,
+  ROUTES.assessment,
+] as const;
+
+export function isAppRoute(pathname: string): boolean {
+  return APP_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export function isSignupStep(value: number): value is SignupStep {
   return SIGNUP_STEP_NUMBERS.includes(value as SignupStep);

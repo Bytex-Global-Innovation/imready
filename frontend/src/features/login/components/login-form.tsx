@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const defaultValues: LoginFormValues = {
 };
 
 export function LoginForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -36,6 +38,7 @@ export function LoginForm() {
     try {
       console.log("Login data:", data);
       await new Promise((resolve) => setTimeout(resolve, 800));
+      router.push(ROUTES.dashboard);
     } finally {
       setIsSubmitting(false);
     }
