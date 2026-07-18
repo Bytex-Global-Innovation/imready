@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
+  FolderKanban,
   HelpCircle,
   LayoutDashboard,
+  Lock,
   LogOut,
   Menu,
   X,
@@ -18,19 +20,32 @@ import { ROUTES } from "@/constants/routes";
 import { SITE_CONFIG } from "@/constants/site";
 import { cn } from "@/lib/utils";
 
+const PROJECTS_LOCKED_MESSAGE =
+  "To unlock the benefits, please clear the test or buy an exclusive premium plan.";
+
 const NAV_ITEMS = [
   {
     label: "Dashboard",
     href: ROUTES.dashboard,
     icon: LayoutDashboard,
+    locked: false,
     match: (pathname: string) =>
       pathname === ROUTES.dashboard ||
       pathname.startsWith(ROUTES.assessment),
   },
   {
+    label: "Projects",
+    href: ROUTES.projects,
+    icon: FolderKanban,
+    locked: true,
+    match: (pathname: string) =>
+      pathname === ROUTES.projects || pathname.startsWith(`${ROUTES.projects}/`),
+  },
+  {
     label: "Notifications",
     href: "#",
     icon: Bell,
+    locked: false,
     match: () => false,
   },
 ] as const;
@@ -42,6 +57,32 @@ interface AppSidebarProps {
 
 export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
   const pathname = usePathname();
+  const [showProjectsTooltip, setShowProjectsTooltip] = useState(false);
+  const projectsItemRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showProjectsTooltip) return;
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const target = event.target as Node;
+      if (projectsItemRef.current && !projectsItemRef.current.contains(target)) {
+        setShowProjectsTooltip(false);
+      }
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowProjectsTooltip(false);
+    }, 4000);
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [showProjectsTooltip]);
 
   return (
     <>
@@ -100,6 +141,51 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = item.match(pathname);
+
+            if (item.locked) {
+              return (
+                <div key={item.label} ref={projectsItemRef} className="relative">
+                  <button
+                    type="button"
+                    aria-describedby={
+                      showProjectsTooltip ? "projects-locked-tooltip" : undefined
+                    }
+                    onClick={() => setShowProjectsTooltip((open) => !open)}
+                    className={cn(
+                      "flex w-full cursor-pointer items-center gap-3 rounded-[var(--radius-button)] px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                      active
+                        ? "bg-primary text-white"
+                        : "text-foreground hover:bg-white",
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    <Lock
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0",
+                        active ? "text-white/80" : "text-muted",
+                      )}
+                      aria-hidden
+                    />
+                  </button>
+
+                  {showProjectsTooltip ? (
+                    <div
+                      id="projects-locked-tooltip"
+                      role="tooltip"
+                      className="absolute bottom-full left-0 z-[60] mb-1.5 w-[min(240px,calc(100vw-2rem))] rounded-md border border-red-200 bg-white px-3 py-2 text-xs leading-relaxed text-red-600 shadow-md"
+                    >
+                      <span
+                        className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-r border-b border-red-200 bg-white"
+                        aria-hidden
+                      />
+                      {PROJECTS_LOCKED_MESSAGE}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.label}
@@ -113,7 +199,7 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
               </Link>
             );
           })}

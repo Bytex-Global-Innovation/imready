@@ -20,12 +20,14 @@ export const ROUTES = {
   dashboard: "/dashboard",
   assessment: "/assessment",
   assessmentSubmitted: "/assessment/submitted",
+  projects: "/projects",
 } as const;
 
 /** Routes that use the authenticated app shell (no marketing navbar). */
 export const APP_ROUTE_PREFIXES = [
   ROUTES.dashboard,
   ROUTES.assessment,
+  ROUTES.projects,
 ] as const;
 
 export function isAppRoute(pathname: string): boolean {

@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "bytex-uex-production.s3.ap-south-1.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },
