@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "migration:run": "node migrations/migrate.js"
+    "migration:run": "npx sequelize-cli db:migrate",
+    "migration:undo": "npx sequelize-cli db:migrate:undo"
   },
   "license": "ISC",
   "type": "commonjs",
@@ -14,7 +15,6 @@
     "node": ">=18"
   },
   "_moduleAliases": {
-    "@config": "config",
     "@src": "src",
     "@connections": "src/connections",
     "@container": "src/container",
@@ -31,5 +31,8 @@
     "module-alias": "^2.2.3",
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.5"
   }
 }

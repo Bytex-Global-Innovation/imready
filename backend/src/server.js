@@ -1,16 +1,24 @@
 'use strict';
 
 require('module-alias/register');
+require('dotenv').config();
 
 const app = require('@src/app');
-const config = require('@config/config');
 const sequelize = require('@connections/sequelize');
 
+const port = Number(process.env.PORT) || 4000;
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 async function start() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret || jwtSecret.trim().length < 32) {
+    throw new Error('JWT_SECRET must be set and at least 32 characters');
+  }
+
   await sequelize.authenticate();
 
-  const server = app.listen(config.port, () => {
-    console.log(`IMReady API on :${config.port} (${config.nodeEnv})`);
+  const server = app.listen(port, () => {
+    console.log(`IMReady API on :${port} (${nodeEnv})`);
   });
 
   const shutdown = (signal) => {

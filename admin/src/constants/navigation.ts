@@ -4,7 +4,6 @@ import {
   Users,
   FolderKanban,
   Building2,
-  UserCheck,
   ClipboardList,
 } from "@/components/icons";
 
@@ -19,6 +18,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Students",    href: "/students",     icon: Users           },
   { label: "Projects",    href: "/projects",     icon: FolderKanban    },
   { label: "Colleges",    href: "/colleges",     icon: Building2       },
-  { label: "Mentors",     href: "/mentors",      icon: UserCheck       },
   { label: "Assessments", href: "/assessments",  icon: ClipboardList   },
 ];
