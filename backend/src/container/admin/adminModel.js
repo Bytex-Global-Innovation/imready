@@ -28,7 +28,6 @@ const Admin = sequelize.define(
   },
   {
     tableName: 'admins',
-    underscored: true,
   },
 );
 

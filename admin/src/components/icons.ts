@@ -23,7 +23,6 @@ export {
   Settings,
   ShieldCheck,
   Trash2,
-  UserCheck,
   Users,
   X,
 } from "lucide-react";
