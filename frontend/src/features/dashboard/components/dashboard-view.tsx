@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, Circle, Play } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,18 @@ import {
   DASHBOARD_USER,
   INTRO_VIDEO,
 } from "@/constants/dashboard";
+import { ActiveProjectDashboard } from "./active-project-dashboard";
 import { AssessmentInstructionsModal } from "./assessment-instructions-modal";
 import { JourneyPath } from "./journey-path";
 
 export function DashboardView() {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const hasActiveProject = searchParams.get("applied") === "true";
+
+  if (hasActiveProject) {
+    return <ActiveProjectDashboard />;
+  }
 
   return (
     <>

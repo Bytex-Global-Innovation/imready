@@ -118,3 +118,112 @@ export const INTRO_VIDEO = {
   duration: "2:45",
   submittedDuration: "6:42",
 } as const;
+
+/**
+ * ── Active project dashboard (shown after a student applies for a project) ──
+ */
+
+export type StageStatus = "completed" | "active" | "locked";
+
+export interface StageProgressStep {
+  id: string;
+  stageNumber: number;
+  label: string;
+  subtitle: string;
+  caption: string | null;
+  status: StageStatus;
+}
+
+export const STAGE_PROGRESS_STEPS: StageProgressStep[] = [
+  {
+    id: "stage-0",
+    stageNumber: 0,
+    label: "Stage 0",
+    subtitle: "Foundations (Passed)",
+    caption: null,
+    status: "completed",
+  },
+  {
+    id: "stage-1",
+    stageNumber: 1,
+    label: "Stage 1",
+    subtitle: "Projects (Active)",
+    caption: "Hands-on projects in your domain",
+    status: "active",
+  },
+  {
+    id: "stage-2",
+    stageNumber: 2,
+    label: "Stage 2",
+    subtitle: "Mentorship",
+    caption: "Expert guidance session",
+    status: "locked",
+  },
+  {
+    id: "stage-3",
+    stageNumber: 3,
+    label: "Stage 3",
+    subtitle: "Research",
+    caption: "Paper publication phase",
+    status: "locked",
+  },
+  {
+    id: "stage-4",
+    stageNumber: 4,
+    label: "Stage 4",
+    subtitle: "Industry",
+    caption: "Career readiness final prep",
+    status: "locked",
+  },
+];
+
+export interface ActiveProject {
+  title: string;
+  domain: string;
+  progress: number;
+  dueDate: string;
+  status: string;
+}
+
+export const ACTIVE_PROJECT: ActiveProject = {
+  title: "AI-Powered Study Assistant",
+  domain: "AI/ML",
+  progress: 65,
+  dueDate: "10 Aug 2025",
+  status: "In Progress",
+};
+
+export type NotificationIcon = "briefcase" | "check" | "update";
+
+export interface DashboardNotification {
+  id: string;
+  icon: NotificationIcon;
+  title: string;
+  description: string;
+  time: string;
+}
+
+export const RECENT_NOTIFICATIONS: DashboardNotification[] = [
+  {
+    id: "new-project",
+    icon: "briefcase",
+    title: "New Project Assigned",
+    description:
+      "You have been assigned a new project in Web Development domain.",
+    time: "2h ago",
+  },
+  {
+    id: "assessment-passed",
+    icon: "check",
+    title: "Assessment Passed",
+    description: "Congratulations! You have passed the Stage 0 assessment.",
+    time: "1d ago",
+  },
+  {
+    id: "project-update",
+    icon: "update",
+    title: "Project Update",
+    description: "Your project AI Chatbot documentation has been reviewed.",
+    time: "2d ago",
+  },
+];
