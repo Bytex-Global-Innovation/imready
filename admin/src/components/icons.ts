@@ -20,9 +20,9 @@ export {
   Plus,
   RotateCcw,
   Search,
-  Settings,
   ShieldCheck,
   Trash2,
+  User,
   Users,
   X,
 } from "lucide-react";
