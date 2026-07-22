@@ -15,7 +15,6 @@ export default function DashboardLayout({
       sidebarOpen={sidebarOpen}
       onMenuToggle={toggleSidebar}
       onSidebarClose={closeSidebar}
-      searchPlaceholder="Search students, projects..."
     >
       {children}
     </AdminShell>
