@@ -163,17 +163,19 @@ export const STAGE_PROGRESS_STEPS: StageProgressStep[] = [
     id: "stage-3",
     stageNumber: 3,
     label: "Stage 3",
-    subtitle: "Research",
-    caption: "Paper publication phase",
+    subtitle: "Industry",
+    caption: "Career readiness final prep",
     status: "locked",
+    
   },
   {
     id: "stage-4",
     stageNumber: 4,
     label: "Stage 4",
-    subtitle: "Industry",
-    caption: "Career readiness final prep",
+    subtitle: "Research",
+    caption: "Paper publication phase",
     status: "locked",
+    
   },
 ];
 

@@ -119,9 +119,9 @@ export function AssessmentInstructionsModal({
             Go Back
           </Button>
           <Button onClick={handleStart} className="sm:min-w-[200px]">
-            <Zap className="h-4 w-4" />
-            I&apos;m Ready, Start Test
-          </Button>
+  <Zap className="h-4 w-4" />
+  I&apos;m Ready, Let&apos;s Start
+</Button>
         </div>
       </div>
     </div>

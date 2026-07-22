@@ -1,14 +1,20 @@
+import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle2,
   Clock,
-  Info,
+  Lock,
   Play,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_USER, INTRO_VIDEO } from "@/constants/dashboard";
+import { PROJECTS } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
-import Link from "next/link";
+
+const LOCKED_PROJECTS = PROJECTS.filter(
+  (project) => project.category === "artificial-intelligence",
+).slice(0, 2);
 
 export function AssessmentSubmittedView() {
   return (
@@ -47,32 +53,50 @@ export function AssessmentSubmittedView() {
             </Button>
           </section>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm">
-              <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-surface text-primary">
-                <Clock className="h-4 w-4" />
-              </span>
+          <section>
+            <div className="mb-4 flex items-center gap-2">
+              <Lock className="h-4 w-4 text-muted" />
               <h3 className="font-display text-base font-bold text-foreground">
-                What&apos;s Next?
+                Stage 01: Locked Projects
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                Once evaluation is complete, Stage 01 projects and curriculum
-                unlock automatically on your dashboard.
-              </p>
             </div>
-            <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm">
-              <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-surface text-primary">
-                <Info className="h-4 w-4" />
-              </span>
-              <h3 className="font-display text-base font-bold text-foreground">
-                Retry Policy
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                If you do not pass, you may retake the Stage 0 assessment after a
-                15-day waiting period.
-              </p>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {LOCKED_PROJECTS.map((project) => (
+                <article
+                  key={project.id}
+                  className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-sm"
+                >
+                  <div className="relative aspect-[16/9] overflow-hidden">
+                    <Image
+                      src={project.imageSrc}
+                      alt={project.imageAlt}
+                      fill
+                      className="object-cover grayscale"
+                      sizes="(max-width: 768px) 100vw, 30vw"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-foreground/40">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md">
+                        <Lock className="h-4 w-4 text-foreground" />
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-4 sm:p-4.5">
+                    <h4 className="font-display text-base font-bold text-foreground">
+                      {project.title}
+                    </h4>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted sm:text-sm">
+                      <span className="line-clamp-2">{project.description}</span>{" "}
+                      <span className="font-medium text-foreground">
+                        Locked until Stage 01.
+                      </span>
+                    </p>
+                  </div>
+                </article>
+              ))}
             </div>
-          </div>
+          </section>
         </div>
 
         <aside className="space-y-4">
