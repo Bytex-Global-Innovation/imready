@@ -225,3 +225,72 @@ export const LANDING_FAQ = {
     },
   ],
 } as const;
+
+
+export const MENTORSHIP_SECTION = {
+  eyebrow: "Mentorship Excellence",
+  title: "Learn from the best to achieve",
+  titleAccent: "your best.",
+  description:
+    "Our elite team of industry experts and alumni from world-class institutions are dedicated to guiding your educational transition with precision and clarity.",
+  academicMentorsTitle: "Academic Mentors",
+  academicMentorsSubtitle: "Top institution alumni guiding your core path.",
+  successfulExplorersTitle: "Successful Explorers",
+  successfulExplorersSubtitle:
+    "Meet the students who have transformed their careers through our mentorship program.",
+} as const;
+
+export interface MentorshipPerson {
+  name: string;
+  role: string;
+  imageSrc: string;
+  imageAlt: string;
+}
+
+export const ACADEMIC_MENTORS: MentorshipPerson[] = [
+  {
+    name: "Dr. Arjan Singh",
+    role: "IIT Delhi Alumnus • Physics Lead",
+    imageSrc:
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Dr. Arjan Singh",
+  },
+  {
+    name: "Meera Krishnan",
+    role: "Stanford Scholar • Career Strategist",
+    imageSrc:
+      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Meera Krishnan",
+  },
+  {
+    name: "Rahul Varma",
+    role: "Ex-Amazon • Senior Systems Guide",
+    imageSrc:
+      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Rahul Varma",
+  },
+];
+
+export const SUCCESSFUL_EXPLORERS: MentorshipPerson[] = [
+  {
+    name: "Sriram Teja",
+    role: "Senior Developer at Google",
+    imageSrc:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Sriram Teja",
+  },
+  {
+    name: "Pranavi R.",
+    role: "Machine Learning Scientist • Apple",
+    imageSrc:
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Pranavi R.",
+  },
+  {
+    name: "Rakesh Misra",
+    role: "Founder, Uhana • Stanford Alumnus",
+    imageSrc:
+      "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?auto=format&fit=crop&w=400&q=80",
+    imageAlt: "Portrait of Rakesh Misra",
+  },
+];
