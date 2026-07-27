@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_LINKS, SITE_CONFIG } from "@/constants/site";
-import { ROUTES, isAppRoute } from "@/constants/routes";
+import { ROUTES, isAppRoute, isAuthRoute } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,9 +31,9 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (isAppRoute(pathname)) {
-    return null;
-  }
+  if (isAppRoute(pathname) || isAuthRoute(pathname)) {
+  return null;
+}
 
   return (
     <>

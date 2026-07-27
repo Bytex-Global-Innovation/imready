@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, Info } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { ApplySuccessModal } from "@/features/projects/components/apply-success-modal";
 import {
   PROJECT_CATEGORIES,
   PROJECTS,
@@ -15,13 +14,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 
-function ProjectCard({
-  project,
-  onApply,
-}: {
-  project: ProjectItem;
-  onApply: (title: string) => void;
-}) {
+function ProjectCard({ project }: { project: ProjectItem }) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-sm">
       <div className="relative aspect-[16/9] overflow-hidden">
@@ -84,7 +77,7 @@ function ProjectCard({
         <Button
           size="sm"
           className="mt-4 w-full"
-          onClick={() => onApply(project.title)}
+          href={ROUTES.projectDetail(project.id)}
         >
           Apply for Project
           <ArrowRight className="h-3.5 w-3.5" />
@@ -98,13 +91,6 @@ export function ProjectsView() {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(
     "artificial-intelligence",
   );
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [appliedProjectTitle, setAppliedProjectTitle] = useState("");
-
-  function handleApply(title: string) {
-    setAppliedProjectTitle(title);
-    setIsSuccessOpen(true);
-  }
 
   const filteredProjects = useMemo(
     () => PROJECTS.filter((project) => project.category === activeCategory),
@@ -154,7 +140,7 @@ export function ProjectsView() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
         {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} onApply={handleApply} />
+          <ProjectCard key={project.id} project={project} />
         ))}
       </div>
 
@@ -177,12 +163,6 @@ export function ProjectsView() {
           </Link>
         </p>
       </aside>
-
-      <ApplySuccessModal
-        isOpen={isSuccessOpen}
-        onClose={() => setIsSuccessOpen(false)}
-        projectTitle={appliedProjectTitle}
-      />
     </div>
   );
 }

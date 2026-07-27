@@ -21,6 +21,7 @@ export const ROUTES = {
   assessment: "/assessment",
   assessmentSubmitted: "/assessment/submitted",
   projects: "/projects",
+  projectDetail: (id: string) => `/projects/${id}`,
 } as const;
 
 /** Routes that use the authenticated app shell (no marketing navbar). */
@@ -35,6 +36,21 @@ export function isAppRoute(pathname: string): boolean {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
+
+/** Routes that use the standalone auth shell (no marketing navbar). */
+export const AUTH_ROUTE_PREFIXES = [
+  ROUTES.login,
+  ROUTES.signup,
+  ROUTES.forgotPassword,
+  ROUTES.resetPassword,
+] as const;
+
+export function isAuthRoute(pathname: string): boolean {
+  return AUTH_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 
 export function isSignupStep(value: number): value is SignupStep {
   return SIGNUP_STEP_NUMBERS.includes(value as SignupStep);

@@ -15,9 +15,9 @@ export default function HomePage() {
         <SectionDivider />
         <GapSection />
         <SectionDivider />
-        <MentorshipSection />
-        <SectionDivider />
         <JourneyMapSection />
+        <SectionDivider />
+        <MentorshipSection />
         <SectionDivider />
         <ProjectShowcaseSection />
         <SectionDivider />
