@@ -3,6 +3,7 @@ import { FaqSection } from "@/features/landing/components/faq-section";
 import { GapSection } from "@/features/landing/components/gap-section";
 import { HeroSection } from "@/features/landing/components/hero-section";
 import { JourneyMapSection } from "@/features/landing/components/journey-map-section";
+import { MentorshipSection } from "@/features/landing/components/mentorship-section";
 import { ProjectShowcaseSection } from "@/features/landing/components/project-showcase-section";
 import { SectionDivider } from "@/features/landing/components/section-divider";
 
@@ -15,6 +16,8 @@ export default function HomePage() {
         <GapSection />
         <SectionDivider />
         <JourneyMapSection />
+        <SectionDivider />
+        <MentorshipSection />
         <SectionDivider />
         <ProjectShowcaseSection />
         <SectionDivider />

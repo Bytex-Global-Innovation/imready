@@ -76,6 +76,8 @@ export {
   WifiOff,
   Wrench,
   X,
+  FileText,
+  Download,
   Zap,
 } from "lucide-react";
 
