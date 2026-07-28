@@ -24,18 +24,19 @@ export const JOURNEY_PATH_STEPS = [
     status: "locked" as const,
   },
   {
-    id: "research",
-    label: "Research",
-    subtitle: "Publishing",
-    status: "locked" as const,
-  },
-  {
     id: "industry",
     label: "Industry",
     subtitle: "Professional",
     status: "locked" as const,
   },
+  {
+    id: "research",
+    label: "Research",
+    subtitle: "Publishing",
+    status: "locked" as const,
+  },
 ] as const;
+
 
 export const ASSESSMENT_CHECKLIST = [
   {

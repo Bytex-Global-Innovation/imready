@@ -9,6 +9,19 @@ export const COUNTRY_CODES = [
   { code: "+81", label: "JP +81" },
 ] as const;
 
+export const COLLEGE_OPTIONS = [
+  "Indian Institute of Technology (IIT) Bombay",
+  "Indian Institute of Technology (IIT) Delhi",
+  "Vellore Institute of Technology (VIT)",
+  "Birla Institute of Technology and Science (BITS) Pilani",
+  "Manipal Institute of Technology",
+  "SRM Institute of Science and Technology",
+  "PES University",
+  "National Institute of Technology (NIT) Trichy",
+  "Delhi Technological University (DTU)",
+  "Other",
+] as const;
+
 export const STREAM_OPTIONS = [
   { value: "cse", label: "Computer Science & Engineering" },
   { value: "ece", label: "Electronics & Communication" },
@@ -72,7 +85,8 @@ export const academicDetailsSchema = yup.object({
   college: yup
     .string()
     .trim()
-    .required("College or institution is required"),
+    .required("College or institution is required")
+    .oneOf([...COLLEGE_OPTIONS], "Please select a valid college"),
   streamMajor: yup.string().required("Please select your stream or major"),
   graduationYear: yup
     .string()
