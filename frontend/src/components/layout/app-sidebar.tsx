@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Mail,
   Menu,
   X,
 } from "@/components/icons";
@@ -22,6 +23,8 @@ import { cn } from "@/lib/utils";
 
 const PROJECTS_LOCKED_MESSAGE =
   "To unlock the benefits, please clear the test or buy an exclusive premium plan.";
+
+const HELP_CENTER_EMAIL = "support@imready.io";
 
 const NAV_ITEMS = [
   {
@@ -50,29 +53,24 @@ const NAV_ITEMS = [
   },
 ] as const;
 
-interface AppSidebarProps {
-  mobileOpen: boolean;
-  onClose: () => void;
-}
-
-export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
-  const pathname = usePathname();
-  const [showProjectsTooltip, setShowProjectsTooltip] = useState(false);
-  const projectsItemRef = useRef<HTMLDivElement>(null);
+/** Shared behavior for a click-to-open, auto-dismissing sidebar tooltip. */
+function useAutoDismissTooltip(timeoutMs = 4000) {
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!showProjectsTooltip) return;
+    if (!isOpen) return;
 
     function handlePointerDown(event: MouseEvent | TouchEvent) {
       const target = event.target as Node;
-      if (projectsItemRef.current && !projectsItemRef.current.contains(target)) {
-        setShowProjectsTooltip(false);
+      if (anchorRef.current && !anchorRef.current.contains(target)) {
+        setIsOpen(false);
       }
     }
 
     const timeoutId = window.setTimeout(() => {
-      setShowProjectsTooltip(false);
-    }, 4000);
+      setIsOpen(false);
+    }, timeoutMs);
 
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("touchstart", handlePointerDown);
@@ -82,7 +80,24 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
     };
-  }, [showProjectsTooltip]);
+  }, [isOpen, timeoutMs]);
+
+  return {
+    isOpen,
+    toggle: () => setIsOpen((open) => !open),
+    anchorRef,
+  } as const;
+}
+
+interface AppSidebarProps {
+  mobileOpen: boolean;
+  onClose: () => void;
+}
+
+export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
+  const pathname = usePathname();
+  const projectsTooltip = useAutoDismissTooltip();
+  const helpTooltip = useAutoDismissTooltip();
 
   return (
     <>
@@ -144,13 +159,13 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
 
             if (item.locked) {
               return (
-                <div key={item.label} ref={projectsItemRef} className="relative">
+                <div key={item.label} ref={projectsTooltip.anchorRef} className="relative">
                   <button
                     type="button"
                     aria-describedby={
-                      showProjectsTooltip ? "projects-locked-tooltip" : undefined
+                      projectsTooltip.isOpen ? "projects-locked-tooltip" : undefined
                     }
-                    onClick={() => setShowProjectsTooltip((open) => !open)}
+                    onClick={projectsTooltip.toggle}
                     className={cn(
                       "flex w-full cursor-pointer items-center gap-3 rounded-[var(--radius-button)] px-3 py-2.5 text-left text-sm font-medium transition-colors",
                       active
@@ -169,7 +184,7 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                     />
                   </button>
 
-                  {showProjectsTooltip ? (
+                  {projectsTooltip.isOpen ? (
                     <div
                       id="projects-locked-tooltip"
                       role="tooltip"
@@ -209,14 +224,40 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
           <Button className="w-full" size="sm">
             Upgrade Plan
           </Button>
-          <Link
-            href={ROUTES.faq}
-            onClick={onClose}
-            className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-button)] px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-white hover:text-foreground"
-          >
-            <HelpCircle className="h-4 w-4" />
-            Help Center
-          </Link>
+
+          <div ref={helpTooltip.anchorRef} className="relative">
+            <button
+              type="button"
+              aria-describedby={helpTooltip.isOpen ? "help-center-tooltip" : undefined}
+              onClick={helpTooltip.toggle}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[var(--radius-button)] px-3 py-2 text-left text-sm font-medium text-muted transition-colors hover:bg-white hover:text-foreground"
+            >
+              <HelpCircle className="h-4 w-4" />
+              Help Center
+            </button>
+
+            {helpTooltip.isOpen ? (
+              <div
+                id="help-center-tooltip"
+                role="tooltip"
+                className="absolute bottom-full left-0 z-[60] mb-1.5 w-[min(240px,calc(100vw-2rem))] rounded-md border border-brand-100 bg-white px-3 py-2.5 text-xs leading-relaxed text-foreground shadow-md"
+              >
+                <span
+                  className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-r border-b border-brand-100 bg-white"
+                  aria-hidden
+                />
+                <p>Have a question? Reach out and we&apos;ll get back to you.</p>
+                <a
+                  href={`mailto:${HELP_CENTER_EMAIL}`}
+                  className="mt-1.5 flex cursor-pointer items-center gap-1.5 font-semibold text-primary hover:text-primary-hover"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {HELP_CENTER_EMAIL}
+                </a>
+              </div>
+            ) : null}
+          </div>
+
           <Link
             href={ROUTES.login}
             onClick={onClose}

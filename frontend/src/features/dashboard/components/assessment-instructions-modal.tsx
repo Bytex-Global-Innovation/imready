@@ -40,7 +40,7 @@ export function AssessmentInstructionsModal({
         aria-labelledby="assessment-instructions-title"
         className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-xl sm:p-7"
       >
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4 sm:mb-5">
           <h2
             id="assessment-instructions-title"
             className="font-display text-xl font-bold text-foreground sm:text-2xl"
@@ -57,7 +57,7 @@ export function AssessmentInstructionsModal({
           </button>
         </div>
 
-        <div className="mb-6 flex gap-3 rounded-[var(--radius-card)] border border-brand-100 border-l-4 border-l-primary bg-surface px-4 py-3">
+        <div className="mb-4 flex gap-3 rounded-[var(--radius-card)] border border-brand-100 border-l-4 border-l-primary bg-surface px-4 py-3 sm:mb-6">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm text-foreground">
             This assessment evaluates your creative baseline and helps us tailor
@@ -65,20 +65,29 @@ export function AssessmentInstructionsModal({
           </p>
         </div>
 
-        <div className="mb-6">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <div className="mb-4 sm:mb-6">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground sm:mb-3">
             <TableProperties className="h-4 w-4 text-primary" />
             Key Instructions
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
             {ASSESSMENT_PARTS.map((part) => (
               <div
                 key={part.part}
-                className="rounded-[var(--radius-card)] border border-border bg-surface p-4"
+                className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2.5 sm:block sm:px-4 sm:py-4"
               >
-                <p className="text-sm font-bold text-foreground">{part.part}</p>
-                <p className="mt-1 text-sm text-muted">{part.title}</p>
-                <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary">
+                <div className="flex items-center gap-1.5 sm:hidden">
+                  <p className="text-sm font-bold text-foreground">{part.part}</p>
+                  <span className="text-xs text-muted" aria-hidden>
+                    ·
+                  </span>
+                  <p className="text-sm text-muted">{part.title}</p>
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-bold text-foreground">{part.part}</p>
+                  <p className="mt-1 text-sm text-muted">{part.title}</p>
+                </div>
+                <p className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary sm:mt-3">
                   <Clock className="h-3.5 w-3.5" />
                   {part.duration}
                 </p>
@@ -87,7 +96,7 @@ export function AssessmentInstructionsModal({
           </div>
         </div>
 
-        <ul className="mb-7 space-y-3">
+        <ul className="mb-5 space-y-2.5 sm:mb-7 sm:space-y-3">
           {ASSESSMENT_NOTICES.map((notice) => {
             const Icon =
               notice.icon === "clock"
@@ -119,9 +128,9 @@ export function AssessmentInstructionsModal({
             Go Back
           </Button>
           <Button onClick={handleStart} className="sm:min-w-[200px]">
-  <Zap className="h-4 w-4" />
-  I&apos;m Ready, Let&apos;s Start
-</Button>
+            <Zap className="h-4 w-4" />
+            I&apos;m Ready, Let&apos;s Start
+          </Button>
         </div>
       </div>
     </div>
