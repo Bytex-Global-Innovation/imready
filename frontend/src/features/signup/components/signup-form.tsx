@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
@@ -32,6 +32,40 @@ const defaultValues: SignupFormValues = {
   careerDoor: "",
   agreedToTerms: false,
 };
+
+/**
+ * Each step (/signup/step/1, /2, /3) is a separate page route, so this
+ * component fully unmounts and remounts between steps. We persist the
+ * in-progress form data to sessionStorage so values from earlier steps
+ * survive that navigation and are still present when the final step
+ * validates and submits the whole form.
+ */
+const DRAFT_STORAGE_KEY = "imready-signup-draft";
+
+function loadDraft(): Partial<SignupFormValues> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<SignupFormValues>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(values: SignupFormValues) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
+  } catch {
+    // Ignore storage failures (e.g. private browsing quota) — worst case
+    // the person just has to re-enter earlier steps.
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+}
 
 function ArrowForwardIcon() {
   return (
@@ -88,13 +122,19 @@ export function SignupForm({ step: currentStep }: SignupFormProps) {
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema) as Resolver<SignupFormValues>,
-    defaultValues,
+    defaultValues: { ...defaultValues, ...loadDraft() },
     mode: "onTouched",
   });
 
   const selectedDoor = watch("careerDoor");
   const selectedDomain = watch("targetDomain");
   const agreedToTerms = watch("agreedToTerms");
+  const watchedValues = watch();
+
+  // Keep the draft in sync as the person types/selects, on every step.
+  useEffect(() => {
+    saveDraft(watchedValues);
+  }, [watchedValues]);
 
   function goToStep(step: SignupStep) {
     router.push(ROUTES.signupStep(step), { scroll: false });
@@ -121,6 +161,15 @@ export function SignupForm({ step: currentStep }: SignupFormProps) {
     try {
       console.log("Signup data:", data);
       await new Promise((resolve) => setTimeout(resolve, 800));
+
+      clearDraft();
+
+      // Route students to the right place based on the door they chose.
+      if (data.careerDoor === "bytex-unlock") {
+        router.push(ROUTES.bytex);
+      } else {
+        router.push(ROUTES.dashboard);
+      }
     } finally {
       setIsSubmitting(false);
     }
