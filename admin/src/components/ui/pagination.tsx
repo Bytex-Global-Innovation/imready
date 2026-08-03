@@ -4,7 +4,7 @@ interface PaginationProps {
   totalEntries: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  /** Label for entries, e.g. "entries", "projects", "mentors". Defaults to "entries". */
+  /** Label for entries, e.g. "entries", "projects". Defaults to "entries". */
   entryLabel?: string;
 }
 

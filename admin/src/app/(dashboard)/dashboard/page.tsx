@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, FolderKanban, ClipboardList, ShieldCheck } from "@/components/icons";
+import { Users, FolderKanban, ClipboardList } from "@/components/icons";
 import StatCard from "@/components/ui/stat-card";
 import ApplicationsTable from "@/components/tables/applications-table";
 import { dashboardApi, type DashboardSummary } from "@/lib/api";
@@ -21,11 +21,13 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const pendingCount = summary?.recentApplications.filter((a) => a.status === "PENDING").length ?? "—";
+  const pendingCount =
+    summary?.pendingApprovals ??
+    summary?.recentApplications.filter((a) => a.status === "PENDING").length ??
+    "—";
 
   return (
     <>
-      {/* Banner */}
       <div className="rounded-lg bg-[#153a75] p-5 text-white sm:p-6">
         <h1 className="text-lg font-bold sm:text-xl">Welcome Back, Admin</h1>
         <p className="mt-1 max-w-xl text-sm text-blue-100">
@@ -50,23 +52,20 @@ export default function DashboardPage() {
         <p className="mt-4 text-sm text-red-500" role="alert">{loadError}</p>
       )}
 
-      {/* Stat cards — 1 col mobile, 2 col sm, 4 col lg */}
       {isLoading ? (
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
             <div key={i} className="admin-skeleton h-28" />
           ))}
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard id="001" label="Students"       value={summary?.studentsCount      ?? 0} icon={Users}         />
-          <StatCard id="002" label="Projects"       value={summary?.projectsCount      ?? 0} icon={FolderKanban}  />
-          <StatCard id="003" label="Assessments"    value={summary?.assessmentsCount   ?? 0} icon={ClipboardList} />
-          <StatCard id="005" label="Active Mentors" value={summary?.activeMentorsCount ?? 0} icon={ShieldCheck} footnote="Verified access" />
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard id="001" label="Students" value={summary?.studentsCount ?? 0} icon={Users} />
+          <StatCard id="002" label="Projects" value={summary?.projectsCount ?? 0} icon={FolderKanban} />
+          <StatCard id="003" label="Assessments" value={summary?.assessmentsCount ?? 0} icon={ClipboardList} />
         </div>
       )}
 
-      {/* Applications table */}
       <div className="mt-5">
         {isLoading ? (
           <div className="admin-skeleton h-64" />

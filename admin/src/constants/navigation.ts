@@ -3,8 +3,9 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
-  Building2,
+  Tags,
   ClipboardList,
+  ClipboardCheck,
 } from "@/components/icons";
 
 export interface NavItem {
@@ -14,9 +15,10 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard",   href: "/dashboard",   icon: LayoutDashboard },
-  { label: "Students",    href: "/students",     icon: Users           },
-  { label: "Projects",    href: "/projects",     icon: FolderKanban    },
-  { label: "Colleges",    href: "/colleges",     icon: Building2       },
-  { label: "Assessments", href: "/assessments",  icon: ClipboardList   },
+  { label: "Dashboard",           href: "/dashboard",           icon: LayoutDashboard },
+  { label: "Students",            href: "/students",            icon: Users           },
+  { label: "Projects",            href: "/projects",            icon: FolderKanban    },
+  { label: "Project Categories",  href: "/project-categories",  icon: Tags            },
+  { label: "Assessments",         href: "/assessments",         icon: ClipboardList   },
+  { label: "Assessment Results",  href: "/assessment-results",  icon: ClipboardCheck  },
 ];

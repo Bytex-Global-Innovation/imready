@@ -8,6 +8,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ROUTES, type SignupStep } from "@/constants/routes";
+import { authApi } from "@/lib/api";
 import { RegistrationStepper } from "./registration-stepper";
 import { PersonalInfoStep } from "./personal-info-step";
 import { AcademicDetailsStep } from "./academic-details-step";
@@ -78,6 +79,7 @@ interface SignupFormProps {
 export function SignupForm({ step: currentStep }: SignupFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -117,10 +119,36 @@ export function SignupForm({ step: currentStep }: SignupFormProps) {
 
   async function onSubmit(data: SignupFormValues) {
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      console.log("Signup data:", data);
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const result = await authApi.signup({
+        fullName: data.fullName,
+        email: data.email,
+        countryCode: data.countryCode,
+        phone: data.phone,
+        password: data.password,
+        college: data.college,
+        streamMajor: data.streamMajor,
+        graduationYear: data.graduationYear,
+        targetDomain: data.targetDomain,
+        careerDoor: data.careerDoor,
+        agreedToTerms: data.agreedToTerms,
+      });
+
+      if (typeof window !== "undefined" && result.token) {
+        window.localStorage.setItem("imready_student_token", result.token);
+      }
+
+      if (data.careerDoor === "bytex-unlock") {
+        router.push(ROUTES.bytex);
+      } else {
+        router.push(result.redirectTo || ROUTES.dashboard);
+      }
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to create account.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -143,6 +171,12 @@ export function SignupForm({ step: currentStep }: SignupFormProps) {
 
       <Card className="border-border/80 p-5 shadow-md sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          {submitError && (
+            <p className="mb-4 text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
+
           {currentStep === 1 && (
             <PersonalInfoStep register={register} errors={errors} />
           )}

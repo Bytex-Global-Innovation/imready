@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, User, LogOut, ChevronDown } from "@/components/icons";
+import { authApi } from "@/lib/api";
 
 interface TopbarProps {
   onMenuToggle?: () => void;
@@ -41,6 +42,7 @@ export default function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
 
   function handleLogout() {
     setProfileOpen(false);
+    authApi.logout();
     router.push("/");
   }
 

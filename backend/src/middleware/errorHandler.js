@@ -18,6 +18,7 @@ function errorHandler(err, req, res, next) {
       status >= 500 && isProd
         ? 'Internal server error'
         : err.message || 'Internal server error',
+    ...(Array.isArray(err.errors) && err.errors.length ? { errors: err.errors } : {}),
   });
 }
 

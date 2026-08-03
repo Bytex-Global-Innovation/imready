@@ -27,7 +27,7 @@ const Admin = sequelize.define(
     },
   },
   {
-    tableName: 'admins',
+    tableName: 'admin_users',
   },
 );
 

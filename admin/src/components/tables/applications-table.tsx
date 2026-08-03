@@ -26,8 +26,8 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
     <div className="admin-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900">Recent Applications</h2>
-        <Link href="/applications" className="text-xs font-medium text-violet-600 hover:underline">
-          View all applications
+        <Link href="/projects" className="text-xs font-medium text-violet-600 hover:underline">
+          View projects
         </Link>
       </div>
 
@@ -50,7 +50,7 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
                   </span>
                   <span className="text-gray-800">{app.studentName}</span>
                 </td>
-                <td className="text-gray-500">{app.projectId}</td>
+                <td className="text-gray-500">{app.projectTitle || app.projectId}</td>
                 <td className="text-gray-500">{app.submittedAt}</td>
                 <td>
                   <span

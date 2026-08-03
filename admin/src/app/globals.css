@@ -46,6 +46,17 @@
     @apply rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
   }
 
+  select.admin-input {
+    @apply cursor-pointer;
+  }
+
+  button:not(:disabled),
+  a.admin-btn-primary,
+  a.admin-btn-outline,
+  a.admin-icon-btn {
+    @apply cursor-pointer;
+  }
+
   /* Left padding reserved for an absolutely positioned leading icon */
   .admin-input-icon {
     @apply rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
@@ -53,15 +64,15 @@
 
   /* Buttons */
   .admin-btn-primary {
-    @apply flex items-center justify-center rounded-md bg-admin-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-admin-primary-hover focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex cursor-pointer items-center justify-center rounded-md bg-admin-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-admin-primary-hover focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .admin-btn-outline {
-    @apply flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex cursor-pointer items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-admin-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .admin-icon-btn {
-    @apply rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-admin-primary;
+    @apply cursor-pointer rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-admin-primary;
   }
 
   /* Tables */

@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const app = require('@src/app');
 const sequelize = require('@connections/sequelize');
+const { ensureAdminFromEnv } = require('@container/admin/adminBootstrap');
 
 const port = Number(process.env.PORT) || 4000;
 const nodeEnv = process.env.NODE_ENV || 'development';
@@ -16,6 +17,7 @@ async function start() {
   }
 
   await sequelize.authenticate();
+  await ensureAdminFromEnv();
 
   const server = app.listen(port, () => {
     console.log(`IMReady API on :${port} (${nodeEnv})`);
@@ -37,3 +39,4 @@ start().catch((err) => {
   console.error('Failed to start:', err.message);
   process.exit(1);
 });
+
