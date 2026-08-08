@@ -1,28 +1,27 @@
 export const GAP_SECTION = {
   eyebrow: "Old way vs ImReady way",
-  title: "Engineering education is changing",
-  titleAccent: "too slowly.",
-  description:
-    "Every year, millions of students enter college with ambition. For the first two years, they attend lectures, write exams, and do boilerplate assignments. Then during placements, they're suddenly expected to solve real business problems.",
+  title: "From Classroom Learning to",
+titleAccent: "Industry Readiness.",
+  description: "There's a gap between learning how something works and knowing how to use it in the real world. ImReady helps students close that gap before placements begin.",
   traditional: {
-    title: "The Traditional Route",
+   title: "TRADITIONAL COLLEGE JOURNEY",
     steps: [
-      "Lectures & Exams",
-      "Textbook Assignments",
-      "Rote Memorization",
-      "Final Year Placements",
-    ],
-    shock: "The Placement Reality Shock",
+  "Lectures & Exams",
+  "Academic Assignments",
+  "Theoretical Learning",
+  "Placement Preparation in Final Year",
+],
+    shock: "Limited Industry Experience",
   },
   imready: {
-    title: "The ImReady Pathway",
+    title: "IMREADY JOURNEY",
     steps: [
-      "Guided Industry Projects",
-      "Working Industry Mentors",
-      "Verifiable Portfolio of Work",
-      "Confidence starting Year 1",
-      "Direct Placement Readiness",
-    ],
+  "Guided Industry Projects",
+  "Industry Mentorship",
+  "Practical Skill Building",
+  "Portfolio of Real Work",
+  "Industry Exposure From Year 1",
+],
   },
   conclusion: {
     heading: "College rewards marks. Industry rewards capability.",
@@ -89,11 +88,10 @@ export const PROJECT_SHOWCASE_ITEMS = [
 ] as const;
 
 export const JOURNEY_MAP_SECTION = {
-  eyebrow: "Interactive Journey",
-  title: "Every student starts somewhere.",
-  description:
-    "The goal isn't to finish a course. It's to become someone industry trusts.",
-  subdescription: "Follow our structured 5-stage pathway.",
+  eyebrow: "YOUR INDUSTRY JOURNEY",
+  title: "From Where You Are to Where Industry Needs You to Be.",
+  description: "You don't need to have it all figured out today. Follow a structured 5-stage journey that helps you discover your strengths, build practical skills, gain real experience, and become industry-ready.",
+  subdescription: "",
   hint: "Click any stage to explore what you'll unlock",
 } as const;
 

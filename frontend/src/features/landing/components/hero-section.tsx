@@ -8,15 +8,15 @@ export function HeroSection() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16 xl:py-18">
         <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 xl:gap-12">
           <h1 className="order-1 font-display text-[2rem] font-bold leading-[1.15] tracking-tight text-hero-heading sm:text-5xl lg:col-start-1 lg:max-w-[560px] lg:text-[3.25rem] xl:text-[3.5rem]">
-            Before others even settle into,{" "}
-            <span className="text-hero-accent">college.</span>
-          </h1>
+  Graduate With Skills. Not Just a Degree.
+</h1>
 
-          <p className="order-2 text-base leading-[1.7] text-hero-body sm:text-lg lg:col-start-1 lg:max-w-[560px]">
-            ImReady connects college students to real industry projects, working
-            mentors, and a verified portfolio — before Semester 3. The students who
-            start in Year 1 are the ones who enter placements with something to show.
-          </p>
+         <p className="order-2 text-base leading-[1.7] text-hero-body sm:text-lg lg:col-start-1 lg:max-w-[560px]">
+  Bridge the gap between what you learn and what the industry expects.
+  ImReady connects students with practical projects, industry mentors, and
+  portfolio-building experiences that transform academic knowledge into
+  job-ready skills.
+</p>
 
           <div className="relative order-3 min-w-0 lg:order-none lg:col-start-2 lg:row-span-4 lg:row-start-1">
             <div
