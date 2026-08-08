@@ -2,7 +2,6 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const config = require('@config/config');
 const Admin = require('@container/admin/adminModel');
 
 function unauthorized() {
@@ -27,11 +26,11 @@ async function login(email, password) {
 
   const token = jwt.sign(
     { id: String(admin.id), email: admin.email, role: 'admin' },
-    config.jwt.secret,
+    process.env.JWT_SECRET,
     {
       algorithm: 'HS256',
-      expiresIn: config.jwt.expiresIn,
-      issuer: config.jwt.issuer,
+      expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+      issuer: process.env.JWT_ISSUER || 'imready-admin',
     },
   );
 

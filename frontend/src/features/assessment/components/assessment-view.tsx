@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,9 +11,15 @@ import {
   Send,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { ASSESSMENT_QUESTIONS } from "@/constants/dashboard";
+import { DASHBOARD_USER } from "@/constants/dashboard";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils";
+import { RearrangeableOptions } from "@/features/assessment/components/rearrangeable-options";
+import {
+  assessmentApi,
+  type ActiveAssessment,
+  type AssessmentQuestion,
+} from "@/lib/api";
 
 function countWords(value: string) {
   const trimmed = value.trim();
@@ -21,20 +27,81 @@ function countWords(value: string) {
   return trimmed.split(/\s+/).length;
 }
 
+function defaultOrderFor(question: AssessmentQuestion) {
+  return question.options.map((option) => option.id);
+}
+
+function needsJumbled(answerType: AssessmentQuestion["answerType"] | undefined) {
+  return answerType === "JUMBLED" || answerType === "BOTH" || !answerType;
+}
+
+function needsPersonal(answerType: AssessmentQuestion["answerType"] | undefined) {
+  return answerType === "PERSONAL" || answerType === "BOTH" || !answerType;
+}
+
 export function AssessmentView() {
   const router = useRouter();
+  const [assessment, setAssessment] = useState<ActiveAssessment | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [optionOrders, setOptionOrders] = useState<Record<number, string[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const question = ASSESSMENT_QUESTIONS[questionIndex];
-  const total = ASSESSMENT_QUESTIONS.length;
-  const answer = answers[question.id] ?? "";
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const data = await assessmentApi.getActive();
+        if (cancelled) return;
+        setAssessment(data);
+        const initialOrders: Record<number, string[]> = {};
+        data.questions.forEach((q) => {
+          if (needsJumbled(q.answerType)) {
+            initialOrders[q.id] = defaultOrderFor(q);
+          }
+        });
+        setOptionOrders(initialOrders);
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(
+            err instanceof Error ? err.message : "Failed to load assessment.",
+          );
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const questions = assessment?.questions ?? [];
+  const question = questions[questionIndex];
+  const total = questions.length;
+  const answer = question ? (answers[question.id] ?? "") : "";
+  const optionOrder = question
+    ? (optionOrders[question.id] ?? defaultOrderFor(question))
+    : [];
   const wordCount = useMemo(() => countWords(answer), [answer]);
-  const progress = ((questionIndex + 1) / total) * 100;
+  const progress = total > 0 ? ((questionIndex + 1) / total) * 100 : 0;
+  const showJumbled = question ? needsJumbled(question.answerType) : false;
+  const showPersonal = question ? needsPersonal(question.answerType) : false;
 
   function updateAnswer(value: string) {
+    if (!question) return;
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
+  }
+
+  function updateOptionOrder(nextOrder: string[]) {
+    if (!question) return;
+    setOptionOrders((prev) => ({ ...prev, [question.id]: nextOrder }));
   }
 
   function goPrevious() {
@@ -52,13 +119,61 @@ export function AssessmentView() {
   }
 
   async function handleSubmit() {
+    if (!assessment || questions.length === 0) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await assessmentApi.submit(assessment.id, {
+        studentName: DASHBOARD_USER.name,
+        email: "alex.rivers@imready.com",
+        collegeName: "Partner College",
+        answers: questions.map((q) => ({
+          questionId: q.id,
+          optionOrder: needsJumbled(q.answerType)
+            ? (optionOrders[q.id] ?? defaultOrderFor(q))
+            : [],
+          personalResponse: needsPersonal(q.answerType) ? (answers[q.id] ?? "") : "",
+        })),
+      });
       router.push(ROUTES.assessmentSubmitted);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to submit assessment.",
+      );
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-6xl py-16 text-center text-sm text-muted">
+        Loading assessment…
+      </div>
+    );
+  }
+
+  if (loadError || !assessment || !question) {
+    return (
+      <div className="mx-auto max-w-6xl py-16">
+        <div className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
+          <h1 className="font-display text-xl font-bold text-foreground">
+            Assessment unavailable
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {loadError || "No active assessment is available right now."}
+          </p>
+          <Button
+            variant="secondary"
+            className="mt-4"
+            onClick={() => router.push(ROUTES.dashboard)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to dashboard
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -93,37 +208,61 @@ export function AssessmentView() {
           <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
             {question.title}
           </h2>
+          <p className="mt-1 text-xs font-semibold tracking-wider text-primary uppercase">
+            {question.category}
+            {question.answerType ? ` · ${question.answerType}` : ""}
+          </p>
           <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            {question.prompt}{" "}
+            {question.prompt ? (
+              <>
+                {question.prompt}{" "}
+              </>
+            ) : null}
             <span className="font-semibold text-foreground">
               {question.question}
             </span>
           </p>
 
-          <label
-            htmlFor="assessment-answer"
-            className="mt-6 mb-2 block text-xs font-semibold tracking-wider text-muted uppercase"
-          >
-            Your Detailed Response
-          </label>
-          <textarea
-            id="assessment-answer"
-            value={answer}
-            onChange={(e) => updateAnswer(e.target.value)}
-            rows={8}
-            placeholder="Type your answer here... (minimum 100 words recommended for high score)"
-            className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          {showJumbled && (
+            <RearrangeableOptions
+              options={question.options}
+              order={optionOrder}
+              onChange={updateOptionOrder}
+            />
+          )}
 
-          <div className="mt-2 flex flex-col gap-1 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-center gap-1.5">
-              <Info className="h-3.5 w-3.5" />
-              Auto-saving draft...
-            </p>
-            <p>
-              {wordCount} {wordCount === 1 ? "word" : "words"}
-            </p>
-          </div>
+          {showPersonal && (
+            <>
+              <label
+                htmlFor="assessment-answer"
+                className="mt-6 mb-2 block text-xs font-semibold tracking-wider text-muted uppercase"
+              >
+                Your Detailed Response
+              </label>
+              <textarea
+                id="assessment-answer"
+                value={answer}
+                onChange={(e) => updateAnswer(e.target.value)}
+                rows={4}
+                placeholder="Type your answer here... (minimum 100 words recommended for high score)"
+                className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+
+              <div className="mt-2 flex flex-col gap-1 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-center gap-1.5">
+                  <Info className="h-3.5 w-3.5" />
+                  Auto-saving draft...
+                </p>
+                <p>
+                  {wordCount} {wordCount === 1 ? "word" : "words"}
+                </p>
+              </div>
+            </>
+          )}
+
+          {submitError && (
+            <p className="mt-3 text-sm text-red-600">{submitError}</p>
+          )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button

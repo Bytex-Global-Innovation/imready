@@ -8,7 +8,6 @@ interface AdminShellProps {
   sidebarOpen: boolean;
   onMenuToggle: () => void;
   onSidebarClose: () => void;
-  searchPlaceholder?: string;
 }
 
 export default function AdminShell({
@@ -16,15 +15,10 @@ export default function AdminShell({
   sidebarOpen,
   onMenuToggle,
   onSidebarClose,
-  searchPlaceholder,
 }: AdminShellProps) {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
-      <Topbar
-        searchPlaceholder={searchPlaceholder}
-        onMenuToggle={onMenuToggle}
-        menuOpen={sidebarOpen}
-      />
+      <Topbar onMenuToggle={onMenuToggle} menuOpen={sidebarOpen} />
 
       <div className="flex min-h-0 flex-1">
         <Sidebar open={sidebarOpen} onClose={onSidebarClose} />

@@ -2,29 +2,100 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowRight, Info } from "@/components/icons";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Brain,
+  CircuitBoard,
+  Cloud,
+  Cpu,
+  Database,
+  Info,
+  Layers,
+  Monitor,
+  type LucideIcon,
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   PROJECT_CATEGORIES,
   PROJECTS,
   type ProjectCategory,
+  type ProjectCategoryTab,
   type ProjectItem,
 } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
+import {
+  projectsApi,
+  resolveMediaUrl,
+  type ApiProjectItem,
+} from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+const TECH_ICONS: Record<string, LucideIcon> = {
+  python: Brain,
+  tensorflow: Layers,
+  react: Monitor,
+  node: Cpu,
+  aws: Cloud,
+  sql: Database,
+  default: CircuitBoard,
+};
+
+const CATEGORY_ICONS = [Brain, Layers, CircuitBoard, Cpu, Database, Monitor, Cloud];
+
+function iconForTech(label: string): LucideIcon {
+  const key = label.toLowerCase();
+  for (const [token, icon] of Object.entries(TECH_ICONS)) {
+    if (key.includes(token)) return icon;
+  }
+  return TECH_ICONS.default;
+}
+
+function mapApiProject(project: ApiProjectItem): ProjectItem {
+  return {
+    id: project.id,
+    category: project.category,
+    badge: project.badge,
+    title: project.title,
+    description: project.description,
+    imageSrc:
+      resolveMediaUrl(project.imageSrc) || "/images/projects/placeholder.jpg",
+    imageAlt: project.imageAlt || project.title,
+    requirements: project.requirements || [],
+    techStack: (project.techStack || []).map((tech) => ({
+      label: tech.label,
+      icon: iconForTech(tech.label),
+    })),
+    estimatedTime: project.estimatedTime,
+    level: project.level,
+    overview: project.overview,
+    briefRequirements: project.briefRequirements,
+    deliverables: project.deliverables,
+    evaluationCriteria: project.evaluationCriteria,
+    resources: (project.resources || []).map((resource) => ({
+      ...resource,
+      href: resolveMediaUrl(resource.href) || resource.href,
+    })),
+  };
+}
+
 function ProjectCard({ project }: { project: ProjectItem }) {
+  const isRemote =
+    project.imageSrc.startsWith("http") || project.imageSrc.startsWith("blob:");
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-sm">
-      <div className="relative aspect-[16/9] overflow-hidden">
-        <Image
-          src={project.imageSrc}
-          alt={project.imageAlt}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 40vw"
-        />
+      <div className="relative aspect-[16/9] overflow-hidden bg-surface">
+        {project.imageSrc ? (
+          <Image
+            src={project.imageSrc}
+            alt={project.imageAlt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 40vw"
+            unoptimized={isRemote}
+          />
+        ) : null}
         <span className="absolute bottom-2.5 left-2.5 rounded-[var(--radius-button)] bg-primary px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
           {project.badge}
         </span>
@@ -88,13 +159,65 @@ function ProjectCard({ project }: { project: ProjectItem }) {
 }
 
 export function ProjectsView() {
+  const [categories, setCategories] =
+    useState<ProjectCategoryTab[]>(PROJECT_CATEGORIES);
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(
-    "artificial-intelligence",
+    PROJECT_CATEGORIES[0]?.id || "",
   );
+  const [projects, setProjects] = useState<ProjectItem[]>(PROJECTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [categoriesData, projectsData] = await Promise.all([
+          projectsApi.listCategories(),
+          projectsApi.list(),
+        ]);
+        if (cancelled) return;
+
+        if (categoriesData.categories.length > 0) {
+          const mapped = categoriesData.categories.map((category, index) => ({
+            id: category.slug,
+            label: category.name,
+            icon: CATEGORY_ICONS[index % CATEGORY_ICONS.length],
+          }));
+          setCategories(mapped);
+          setActiveCategory((current) =>
+            mapped.some((item) => item.id === current)
+              ? current
+              : mapped[0].id,
+          );
+        }
+
+        if (projectsData.projects.length > 0) {
+          setProjects(projectsData.projects.map(mapApiProject));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Could not load projects from server. Showing local catalog.",
+          );
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredProjects = useMemo(
-    () => PROJECTS.filter((project) => project.category === activeCategory),
-    [activeCategory],
+    () => projects.filter((project) => project.category === activeCategory),
+    [projects, activeCategory],
   );
 
   return (
@@ -114,7 +237,7 @@ export function ProjectsView() {
         role="tablist"
         aria-label="Project categories"
       >
-        {PROJECT_CATEGORIES.map((category) => {
+        {categories.map((category) => {
           const Icon = category.icon;
           const active = category.id === activeCategory;
           return (
@@ -138,13 +261,23 @@ export function ProjectsView() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
-        {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </div>
+      {error && (
+        <p className="mb-4 text-sm text-amber-700" role="status">
+          {error}
+        </p>
+      )}
 
-      {filteredProjects.length === 0 ? (
+      {isLoading ? (
+        <p className="py-10 text-center text-sm text-muted">Loading projects…</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && filteredProjects.length === 0 ? (
         <p className="mt-8 text-center text-sm text-muted">
           No projects available in this category yet.
         </p>

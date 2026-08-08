@@ -9,10 +9,7 @@ import {
   Monitor,
 } from "@/components/icons";
 
-export type ProjectCategory =
-  | "artificial-intelligence"
-  | "machine-learning"
-  | "electronics";
+export type ProjectCategory = string;
 
 export interface ProjectCategoryTab {
   id: ProjectCategory;

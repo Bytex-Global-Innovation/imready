@@ -96,6 +96,12 @@ export const ASSESSMENT_QUESTIONS = [
       "Explain who the target beneficiaries are",
       "Mention a metric of success",
     ],
+    options: [
+      { id: "q1-o3", label: "Share learning resources through an accessible digital platform" },
+      { id: "q1-o1", label: "Identify local learning gaps with short community surveys" },
+      { id: "q1-o4", label: "Track engagement and improve content based on results" },
+      { id: "q1-o2", label: "Train peer mentors to support first-time learners" },
+    ],
   },
   {
     id: 2,
@@ -108,6 +114,12 @@ export const ASSESSMENT_QUESTIONS = [
       "Name concrete skills, not vague goals",
       "Describe a realistic practice routine",
       "Include a checkpoint within 30–60 days",
+    ],
+    options: [
+      { id: "q2-o2", label: "Practice weekly with small, measurable goals" },
+      { id: "q2-o4", label: "Review progress every 30 days and adjust your plan" },
+      { id: "q2-o1", label: "Choose 1–2 priority skills tied to your career door" },
+      { id: "q2-o3", label: "Build a simple portfolio piece that shows those skills" },
     ],
   },
 ] as const;

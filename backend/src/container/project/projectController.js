@@ -1,0 +1,99 @@
+'use strict';
+
+const projectService = require('@container/project/projectService');
+
+async function listAdminProjects(req, res, next) {
+  try {
+    const page = Number(req.query.page) || 1;
+    const search = req.query.search ? String(req.query.search) : undefined;
+    const result = await projectService.listAdminProjects({ page, search });
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function createProject(req, res, next) {
+  try {
+    const result = await projectService.createProject(req.body);
+    return res.status(201).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getAdminProject(req, res, next) {
+  try {
+    const result = await projectService.getAdminProject(req.params.id);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function updateProject(req, res, next) {
+  try {
+    const result = await projectService.updateProject(req.params.id, req.body);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function deleteProject(req, res, next) {
+  try {
+    const result = await projectService.deleteProject(req.params.id);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function listPublicProjects(req, res, next) {
+  try {
+    const category = req.query.category ? String(req.query.category) : undefined;
+    const result = await projectService.listPublicProjects({ category });
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getPublicProject(req, res, next) {
+  try {
+    const result = await projectService.getPublicProjectBySlug(req.params.slug);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function applyToProject(req, res, next) {
+  try {
+    const result = await projectService.applyToProject(req.params.slug, req.body);
+    return res.status(201).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getDashboardSummary(req, res, next) {
+  try {
+    const result = await projectService.getDashboardSummary();
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  listAdminProjects,
+  createProject,
+  getAdminProject,
+  updateProject,
+  deleteProject,
+  listPublicProjects,
+  getPublicProject,
+  applyToProject,
+  getDashboardSummary,
+};

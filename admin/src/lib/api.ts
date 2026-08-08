@@ -1,23 +1,47 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+import { clearAdminToken, getAdminToken, setAdminToken } from "@/lib/auth";
+
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
 /** Use mock data when explicitly enabled or when no API URL is configured (local dev). */
 const USE_MOCK =
   process.env.NEXT_PUBLIC_USE_MOCK === "true" ||
   (process.env.NEXT_PUBLIC_USE_MOCK !== "false" && BASE_URL === "");
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const token = getAdminToken();
+  const headers = new Headers(options.headers || {});
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+
+  if (!isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
     ...options,
+    headers,
   });
+
+  if (res.status === 401) {
+    clearAdminToken();
+  }
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => null);
-    throw new Error(errorBody?.message || "Something went wrong. Please try again.");
+    const error = new Error(
+      errorBody?.message || "Something went wrong. Please try again.",
+    ) as Error & { errors?: unknown };
+    if (Array.isArray(errorBody?.errors)) {
+      error.errors = errorBody.errors;
+    }
+    throw error;
   }
 
   return res.json();
@@ -31,23 +55,40 @@ export const authApi = {
     if (USE_MOCK) {
       await delay(600);
       if (email === "admin@imready.io" && password === "password123") {
-        return { token: "mock-token-123" };
+        const mock = { token: "mock-token-123" };
+        setAdminToken(mock.token);
+        return mock;
       }
       throw new Error("Invalid email or password");
     }
-    return request<{ token: string }>("/auth/admin/login", {
+
+    const result = await request<{ token: string }>("/auth/admin/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
+    setAdminToken(result.token);
+    return result;
+  },
+  logout: () => {
+    clearAdminToken();
   },
 };
 
 export interface Student {
   id: string;
+  uuid?: string;
   studentName: string;
+  email: string;
+  phone?: string;
   college: string;
+  collegeName?: string;
+  streamMajor?: string;
+  graduationYear?: string;
   domain: string;
+  level: string;
+  careerDoor?: string;
   status: "VERIFIED" | "PENDING" | "FLAGGED";
+  createdAt?: string;
 }
 
 export interface StudentsResponse {
@@ -58,16 +99,19 @@ export interface StudentsResponse {
 }
 
 const mockStudents: Student[] = [
-  { id: "STU-1001", studentName: "Ava Patel", college: "Tech Central Inst.", domain: "Cyber Security", status: "VERIFIED" },
-  { id: "STU-1002", studentName: "Mia Chen", college: "Bio Labs Univ.", domain: "Data Science", status: "PENDING" },
-  { id: "STU-1003", studentName: "Noah Brooks", college: "Global Arts Acad.", domain: "UX Architecture", status: "FLAGGED" },
-  { id: "STU-1004", studentName: "Liam Ortiz", college: "Tech Central Inst.", domain: "Quantum Comp", status: "VERIFIED" },
-  { id: "STU-1005", studentName: "Sophia Reed", college: "Bio Labs Univ.", domain: "Cyber Security", status: "PENDING" },
-  { id: "STU-1006", studentName: "Ethan Cole", college: "Global Arts Acad.", domain: "Data Science", status: "VERIFIED" },
+  { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED" },
+  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING" },
+  { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED" },
+  { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED" },
+  { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING" },
+  { id: "STU-1006", studentName: "Ethan Cole", email: "ethan@example.com", college: "Global Arts Acad.", domain: "Data Science", level: "Beginner", status: "VERIFIED" },
 ];
 
 export const studentsApi = {
-  getStudents: async (page = 1): Promise<StudentsResponse> => {
+  getStudents: async (
+    page = 1,
+    opts?: { search?: string; status?: string },
+  ): Promise<StudentsResponse> => {
     if (USE_MOCK) {
       await delay(600);
       const pageSize = 4;
@@ -80,7 +124,10 @@ export const studentsApi = {
         total: mockStudents.length,
       };
     }
-    return request<StudentsResponse>(`/admin/students?page=${page}`);
+    const params = new URLSearchParams({ page: String(page) });
+    if (opts?.search) params.set("search", opts.search);
+    if (opts?.status && opts.status !== "ALL") params.set("status", opts.status);
+    return request<StudentsResponse>(`/admin/students?${params.toString()}`);
   },
 };
 
@@ -92,7 +139,6 @@ export const dashboardApi = {
         studentsCount: 520,
         projectsCount: 24,
         assessmentsCount: 8,
-        activeMentorsCount: 15,
         recentApplications: [
           { id: "1", studentName: "Alexander Vance", projectId: "PRJ-2941", submittedAt: "Oct 25, 2023", status: "PENDING" },
           { id: "2", studentName: "Sarah Jenkins", projectId: "PRJ-3012", submittedAt: "Oct 24, 2023", status: "APPROVED" },
@@ -110,11 +156,12 @@ export interface DashboardSummary {
   studentsCount: number;
   projectsCount: number;
   assessmentsCount: number;
-  activeMentorsCount: number;
+  pendingApprovals?: number;
   recentApplications: {
     id: string;
     studentName: string;
     projectId: string;
+    projectTitle?: string;
     submittedAt: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
   }[];
@@ -214,6 +261,12 @@ export const collegesApi = {
 // ─── Assessments ─────────────────────────────────────────────────────────────
 
 export type AssessmentStatus = "ACTIVE" | "DRAFT" | "ARCHIVED";
+export type QuestionOrderMode = "sequential" | "random" | "jumbled";
+export type QuestionCategory = "OBSERVATION" | "THINKING" | "BUILDING";
+export type WeightingMode = "EQUAL" | "INDIVIDUAL";
+export type AnswerType = "JUMBLED" | "PERSONAL" | "BOTH";
+export type SubmissionResult = "PASS" | "FAIL" | null;
+export type SubmissionStatus = "SUBMITTED" | "PARTIALLY_EVALUATED" | "EVALUATED";
 
 export interface Assessment {
   id: string;
@@ -222,6 +275,69 @@ export interface Assessment {
   domain: string;
   passMarks: string;
   status: AssessmentStatus;
+  questionCount?: number;
+  questionOrderMode?: QuestionOrderMode;
+  jumbledOptionsMarks?: number;
+  personalResponseMarks?: number;
+  passMarksValue?: number;
+}
+
+const MOCK_ASSESSMENTS: Assessment[] = [
+  { id: "1", uuid: "147ac10b-98cc-4372-a867", name: "Data Structures V4",         domain: "Computer Science", passMarks: "75/100", status: "ACTIVE"   },
+  { id: "2", uuid: "b923d11c-22ff-11ee-978f", name: "Neural Net Basics",           domain: "Machine Learning", passMarks: "80/100", status: "DRAFT"    },
+  { id: "3", uuid: "a0eabc99-9c0b-4e18-b86d", name: "Cloud Arch Professional",     domain: "Infrastructure",   passMarks: "90/100", status: "ACTIVE"   },
+  { id: "4", uuid: "c81e7289-694c-11e1-9b23", name: "Legacy Systems Deprecated",   domain: "Mainframe",        passMarks: "60/100", status: "ARCHIVED" },
+  { id: "5", uuid: "28672166-4654-4638-953e", name: "Quantum Crypt Sec L3",        domain: "Cyber Security",   passMarks: "85/100", status: "ACTIVE"   },
+];
+
+export interface AssessmentOptionInput {
+  label: string;
+  correctOrder: number;
+}
+
+export interface AssessmentQuestionInput {
+  title: string;
+  prompt: string;
+  question: string;
+  tips: string[];
+  answerType: AnswerType;
+  options: AssessmentOptionInput[];
+  category: QuestionCategory;
+  jumbledOptionsMarks?: number;
+  personalResponseMarks?: number;
+  weightingMode?: WeightingMode;
+}
+
+export interface AssessmentDetail extends Assessment {
+  questions: AssessmentQuestionBankItem[];
+}
+
+export interface AssessmentQuestionBankItem {
+  id: number;
+  uuid: string;
+  title: string;
+  prompt: string;
+  question: string;
+  tips: string[];
+  answerType?: AnswerType;
+  category?: QuestionCategory;
+  jumbledOptionsMarks?: number | null;
+  personalResponseMarks?: number | null;
+  options: { id: string; label: string; correctOrder: number }[];
+}
+
+export interface CreateAssessmentPayload {
+  name: string;
+  domain: string;
+  status: AssessmentStatus;
+  questionCount: number;
+  questionOrderMode: QuestionOrderMode;
+  jumbledOptionsMarks: number;
+  personalResponseMarks: number;
+  weightingMode: WeightingMode;
+  passMarks: number;
+  questionIds: number[];
+  questions: AssessmentQuestionInput[];
 }
 
 export interface AssessmentsResponse {
@@ -234,13 +350,61 @@ export interface AssessmentsResponse {
   avgPassRate: string;
 }
 
-const MOCK_ASSESSMENTS: Assessment[] = [
-  { id: "1", uuid: "147ac10b-98cc-4372-a867", name: "Data Structures V4",         domain: "Computer Science", passMarks: "75/100", status: "ACTIVE"   },
-  { id: "2", uuid: "b923d11c-22ff-11ee-978f", name: "Neural Net Basics",           domain: "Machine Learning", passMarks: "80/100", status: "DRAFT"    },
-  { id: "3", uuid: "a0eabc99-9c0b-4e18-b86d", name: "Cloud Arch Professional",     domain: "Infrastructure",   passMarks: "90/100", status: "ACTIVE"   },
-  { id: "4", uuid: "c81e7289-694c-11e1-9b23", name: "Legacy Systems Deprecated",   domain: "Mainframe",        passMarks: "60/100", status: "ARCHIVED" },
-  { id: "5", uuid: "28672166-4654-4638-953e", name: "Quantum Crypt Sec L3",        domain: "Cyber Security",   passMarks: "85/100", status: "ACTIVE"   },
-];
+export interface AssessmentResultListItem {
+  id: string;
+  uuid: string;
+  studentName: string;
+  email: string;
+  collegeName: string;
+  assessmentName: string;
+  domain: string;
+  status: SubmissionStatus;
+  result: SubmissionResult;
+  jumbledScore: number;
+  personalScore: number | null;
+  totalScore: number | null;
+  maxScore: number;
+  submittedAt: string;
+}
+
+export interface AssessmentResultsResponse {
+  results: AssessmentResultListItem[];
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export interface AssessmentResultDetail {
+  id: string;
+  uuid: string;
+  studentName: string;
+  email: string;
+  collegeName: string;
+  status: SubmissionStatus;
+  result: SubmissionResult;
+  jumbledScore: number;
+  personalScore: number | null;
+  totalScore: number | null;
+  maxScore: number;
+  passMarksValue: number;
+  assessment: Assessment | null;
+  answers: {
+    id: string;
+    questionId: number;
+    category: QuestionCategory;
+    answerType: AnswerType;
+    title: string;
+    prompt: string;
+    question: string;
+    optionOrder: { id: string; label: string }[];
+    correctOrder: { id: string; label: string; correctOrder: number }[];
+    personalResponse: string;
+    jumbledScore: number;
+    personalScore: number | null;
+    jumbledMax: number;
+    personalMax: number;
+  }[];
+}
 
 export const assessmentsApi = {
   getAssessments: async (page = 1): Promise<AssessmentsResponse> => {
@@ -258,120 +422,423 @@ export const assessmentsApi = {
     }
     return request<AssessmentsResponse>(`/admin/assessments?page=${page}`);
   },
-};
 
-// ─── Mentors ──────────────────────────────────────────────────────────────────
-
-export interface MentorStudent {
-  id: string;
-  name: string;
-  initials: string;
-  color: string;
-}
-
-export interface Mentor {
-  id: string;
-  mentorId: string;
-  name: string;
-  initials: string;
-  color: string;
-  specialization: string;
-  projectName: string;
-  organization: string;
-  teamType: "Solo" | "Team";
-  students: MentorStudent[];
-}
-
-export interface MentorsResponse {
-  mentors: Mentor[];
-  total: number;
-  page: number;
-  totalPages: number;
-  totalMentors: number;
-  activeProjects: number;
-  soloProjects: number;
-  teamProjects: number;
-  studentsGuided: number;
-  avgStudentsPerMentor: string;
-}
-
-const MOCK_MENTORS: Mentor[] = [
-  {
-    id: "1", mentorId: "MTR-0112-E", name: "Dr. Elena Vasquez", initials: "EV", color: "bg-indigo-500",
-    specialization: "AI Systems",
-    projectName: "Autonomous Threat Detection", organization: "Cyberdyne Institute",
-    teamType: "Team",
-    students: [
-      { id: "s1", name: "Rebecca Jorden", initials: "RJ", color: "bg-blue-500"   },
-      { id: "s2", name: "Dwayne Hicks",   initials: "DH", color: "bg-violet-500" },
-      { id: "s3", name: "Newt Bishop",    initials: "NB", color: "bg-violet-500" },
-    ],
-  },
-  {
-    id: "2", mentorId: "MTR-0087-A", name: "Prof. Marcus Webb", initials: "MW", color: "bg-teal-500",
-    specialization: "Robotics",
-    projectName: "Synthetic Vision Model", organization: "Weyland University",
-    teamType: "Solo",
-    students: [
-      { id: "s4", name: "Gareth Holden", initials: "GH", color: "bg-violet-500" },
-    ],
-  },
-  {
-    id: "3", mentorId: "MTR-0112-B", name: "Dr. Amara Osei", initials: "AO", color: "bg-blue-600",
-    specialization: "Robotics Ethics",
-    projectName: "Compliance Reasoning Engine", organization: "Tyrell Academy",
-    teamType: "Team",
-    students: [
-      { id: "s5", name: "Peter Bogert",   initials: "PB", color: "bg-violet-500" },
-      { id: "s6", name: "Alfred Lanning", initials: "AL", color: "bg-orange-400" },
-    ],
-  },
-  {
-    id: "4", mentorId: "MTR-0233-G", name: "Dr. Raj Patel", initials: "RP", color: "bg-rose-500",
-    specialization: "Bioinformatics",
-    projectName: "Genome Pattern Analysis", organization: "Oscorp Tech",
-    teamType: "Team",
-    students: [
-      { id: "s7",  name: "Becky Driscoll", initials: "BD", color: "bg-blue-400"   },
-      { id: "s8",  name: "Miles Barrow",   initials: "MB", color: "bg-indigo-400" },
-      { id: "s9",  name: "Sara Chen",      initials: "SC", color: "bg-teal-400"   },
-      { id: "s10", name: "Jonas Kade",     initials: "JK", color: "bg-orange-400" },
-    ],
-  },
-];
-
-export const mentorsApi = {
-  getMentors: async (page = 1): Promise<MentorsResponse> => {
+  createAssessment: async (payload: CreateAssessmentPayload): Promise<Assessment> => {
     if (USE_MOCK) {
       await delay(500);
       return {
-        mentors: MOCK_MENTORS,
-        total: 18,
-        page,
-        totalPages: 5,
-        totalMentors: 18,
-        activeProjects: 24,
-        soloProjects: 8,
-        teamProjects: 12,
-        studentsGuided: 96,
-        avgStudentsPerMentor: "5.3",
+        id: String(Date.now()),
+        uuid: crypto.randomUUID(),
+        name: payload.name,
+        domain: payload.domain,
+        passMarks: `${payload.passMarks}/100`,
+        status: payload.status,
       };
     }
-    return request<MentorsResponse>(`/admin/mentors?page=${page}`);
+    return request<Assessment>("/admin/assessments", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getAssessment: async (id: string): Promise<AssessmentDetail> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Not available in mock mode");
+    }
+    return request<AssessmentDetail>(`/admin/assessments/${id}`);
+  },
+
+  updateAssessment: async (
+    id: string,
+    payload: CreateAssessmentPayload,
+  ): Promise<Assessment> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        id,
+        uuid: crypto.randomUUID(),
+        name: payload.name,
+        domain: payload.domain,
+        passMarks: `${payload.passMarks}/100`,
+        status: payload.status,
+      };
+    }
+    return request<Assessment>(`/admin/assessments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getQuestions: async (): Promise<{ questions: AssessmentQuestionBankItem[] }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { questions: [] };
+    }
+    return request<{ questions: AssessmentQuestionBankItem[] }>(
+      "/admin/assessments/questions",
+    );
+  },
+
+  createQuestion: async (
+    payload: AssessmentQuestionInput,
+  ): Promise<AssessmentQuestionBankItem> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        id: Date.now(),
+        uuid: crypto.randomUUID(),
+        ...payload,
+        options: payload.options.map((o, i) => ({
+          id: `mock-o${i + 1}`,
+          label: o.label,
+          correctOrder: o.correctOrder,
+        })),
+      };
+    }
+    return request<AssessmentQuestionBankItem>("/admin/assessments/questions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteAssessment: async (id: string): Promise<Assessment> => {
+    if (USE_MOCK) {
+      await delay(300);
+      const found = MOCK_ASSESSMENTS.find((a) => a.id === id);
+      if (!found) throw new Error("Assessment not found");
+      return { ...found, status: "ARCHIVED" };
+    }
+    return request<Assessment>(`/admin/assessments/${id}`, { method: "DELETE" });
+  },
+
+  getResults: async (
+    page = 1,
+    result?: "PASS" | "FAIL" | "PENDING" | "ALL",
+  ): Promise<AssessmentResultsResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return { results: [], page: 1, totalPages: 1, total: 0 };
+    }
+    const params = new URLSearchParams({ page: String(page) });
+    if (result && result !== "ALL") params.set("result", result);
+    return request<AssessmentResultsResponse>(
+      `/admin/assessments/results?${params.toString()}`,
+    );
+  },
+
+  getResultDetail: async (submissionId: string): Promise<AssessmentResultDetail> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Not available in mock mode");
+    }
+    return request<AssessmentResultDetail>(
+      `/admin/assessments/results/${submissionId}`,
+    );
+  },
+
+  setPersonalScore: async (
+    submissionId: string,
+    answerId: string,
+    personalScore: number,
+  ): Promise<AssessmentResultDetail> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Not available in mock mode");
+    }
+    return request<AssessmentResultDetail>(
+      `/admin/assessments/results/${submissionId}/answers/${answerId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ personalScore }),
+      },
+    );
+  },
+
+  fullEvaluate: async (submissionId: string): Promise<AssessmentResultDetail> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Not available in mock mode");
+    }
+    return request<AssessmentResultDetail>(
+      `/admin/assessments/results/${submissionId}/full-evaluate`,
+      { method: "POST" },
+    );
+  },
+
+  deleteResult: async (submissionId: string): Promise<{ id: string; deleted: boolean }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { id: submissionId, deleted: true };
+    }
+    return request<{ id: string; deleted: boolean }>(
+      `/admin/assessments/results/${submissionId}`,
+      { method: "DELETE" },
+    );
+  },
+
+  bulkDeleteResults: async (
+    ids: string[],
+  ): Promise<{ deleted: string[]; deletedCount: number; requestedCount: number }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { deleted: ids, deletedCount: ids.length, requestedCount: ids.length };
+    }
+    return request<{ deleted: string[]; deletedCount: number; requestedCount: number }>(
+      "/admin/assessments/results/bulk-delete",
+      {
+        method: "POST",
+        body: JSON.stringify({ ids }),
+      },
+    );
+  },
+
+  downloadResultsExport: async (
+    result?: "PASS" | "FAIL" | "PENDING" | "ALL",
+  ): Promise<void> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Results export is not available in mock mode");
+    }
+
+    const token = getAdminToken();
+    const params = new URLSearchParams();
+    if (result && result !== "ALL") params.set("result", result);
+    const query = params.toString();
+    const res = await fetch(
+      `${BASE_URL}/admin/assessments/results/export${query ? `?${query}` : ""}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      },
+    );
+
+    if (res.status === 401) {
+      clearAdminToken();
+    }
+
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => null);
+      throw new Error(errorBody?.message || "Failed to download results Excel.");
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "assessment-results.xlsx";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  downloadBulkSample: async (): Promise<void> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Bulk sample download is not available in mock mode");
+    }
+
+    const token = getAdminToken();
+    const res = await fetch(`${BASE_URL}/admin/assessments/bulk/sample`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (res.status === 401) {
+      clearAdminToken();
+    }
+
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => null);
+      throw new Error(errorBody?.message || "Failed to download sample Excel.");
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "assessment-bulk-sample.xlsx";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  bulkUpload: async (
+    file: File,
+  ): Promise<{ createdCount: number; assessments: Assessment[] }> => {
+    if (USE_MOCK) {
+      await delay(500);
+      throw new Error("Bulk upload is not available in mock mode");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return request<{ createdCount: number; assessments: Assessment[] }>(
+      "/admin/assessments/bulk/upload",
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+  },
+};
+
+// ─── Project categories ───────────────────────────────────────────────────────
+
+export interface ProjectCategoryItem {
+  id: string;
+  uuid: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export const projectCategoriesApi = {
+  list: async (activeOnly = false): Promise<{ categories: ProjectCategoryItem[] }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        categories: [
+          {
+            id: "1",
+            uuid: "mock-ai",
+            name: "Artificial Intelligence",
+            slug: "artificial-intelligence",
+            isActive: true,
+          },
+          {
+            id: "2",
+            uuid: "mock-ml",
+            name: "Machine Learning",
+            slug: "machine-learning",
+            isActive: true,
+          },
+          {
+            id: "3",
+            uuid: "mock-el",
+            name: "Electronics",
+            slug: "electronics",
+            isActive: true,
+          },
+        ],
+      };
+    }
+    const query = activeOnly ? "?activeOnly=true" : "";
+    return request<{ categories: ProjectCategoryItem[] }>(
+      `/admin/projects/categories${query}`,
+    );
+  },
+
+  create: async (payload: {
+    name: string;
+    slug?: string;
+    description?: string;
+    isActive?: boolean;
+  }): Promise<ProjectCategoryItem> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        id: String(Date.now()),
+        uuid: `mock-${Date.now()}`,
+        name: payload.name,
+        slug: payload.slug || payload.name.toLowerCase().replace(/\s+/g, "-"),
+        description: payload.description || "",
+        isActive: payload.isActive !== false,
+      };
+    }
+    return request<ProjectCategoryItem>("/admin/projects/categories", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  update: async (
+    id: string,
+    payload: {
+      name: string;
+      slug?: string;
+      description?: string;
+      isActive?: boolean;
+    },
+  ): Promise<ProjectCategoryItem> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        id,
+        uuid: `mock-${id}`,
+        name: payload.name,
+        slug: payload.slug || payload.name.toLowerCase().replace(/\s+/g, "-"),
+        description: payload.description || "",
+        isActive: payload.isActive !== false,
+      };
+    }
+    return request<ProjectCategoryItem>(`/admin/projects/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  delete: async (id: string): Promise<{ id: string; deleted: boolean }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { id, deleted: true };
+    }
+    return request<{ id: string; deleted: boolean }>(
+      `/admin/projects/categories/${id}`,
+      { method: "DELETE" },
+    );
   },
 };
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
 export type ProjectStatus = "ACTIVE" | "PENDING" | "REVIEW" | "ARCHIVED";
+export type ProjectCategory = string;
 
 export interface Project {
   id: string;
+  uuid?: string;
+  slug?: string;
   name: string;
+  title?: string;
   domain: string;
-  mentorInitials: string;
-  mentorInitialsColor: string;
-  mentorName: string;
+  category?: ProjectCategory;
+  badge?: string;
+  description?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  requirements?: string[];
+  techStack?: string[];
+  estimatedTime?: string;
+  level?: string;
+  overview?: string;
+  briefRequirements?: string[];
+  deliverables?: { id?: string; label: string }[];
+  evaluationCriteria?: { label: string; percent: number }[];
+  resources?: { label: string; type: "pdf" | "zip"; href: string }[];
+  teamSize: number;
+  status: ProjectStatus;
+}
+
+export interface ProjectInput {
+  title: string;
+  slug?: string;
+  category: ProjectCategory;
+  badge?: string;
+  description: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  requirements: string[];
+  techStack: string[];
+  estimatedTime: string;
+  level: string;
+  overview: string;
+  briefRequirements: string[];
+  deliverables: { id?: string; label: string }[];
+  evaluationCriteria: { label: string; percent: number }[];
+  resources?: { label: string; type: "pdf" | "zip"; href: string }[];
   teamSize: number;
   status: ProjectStatus;
 }
@@ -384,11 +851,11 @@ export interface ProjectsResponse {
 }
 
 const MOCK_PROJECTS: Project[] = [
-  { id: "1", name: "Neural_Sync_Core",    domain: "AI_ML",        mentorInitials: "SC", mentorInitialsColor: "bg-teal-500",   mentorName: "Dr. S. Chen",  teamSize: 5,  status: "ACTIVE"   },
-  { id: "2", name: "Vortex_Ledger_v4",   domain: "BLOCKCHAIN",   mentorInitials: "MK", mentorInitialsColor: "bg-violet-500", mentorName: "M. Kowalski",  teamSize: 8,  status: "PENDING"  },
-  { id: "3", name: "Secure_Vault_Beta",  domain: "CYBER_SEC",    mentorInitials: "RE", mentorInitialsColor: "bg-blue-500",   mentorName: "R. Evans",     teamSize: 3,  status: "REVIEW"   },
-  { id: "4", name: "Data_Harvester_X",   domain: "CLOUD_COMP",   mentorInitials: "JD", mentorInitialsColor: "bg-orange-500", mentorName: "J. Doe",       teamSize: 12, status: "ACTIVE"   },
-  { id: "5", name: "Quantum_Cipher_7",   domain: "CRYPTOGRAPHY", mentorInitials: "AL", mentorInitialsColor: "bg-rose-500",   mentorName: "A. Lovelace",  teamSize: 4,  status: "ARCHIVED" },
+  { id: "1", name: "Neural_Sync_Core",    domain: "AI_ML",        teamSize: 5,  status: "ACTIVE"   },
+  { id: "2", name: "Vortex_Ledger_v4",   domain: "BLOCKCHAIN",   teamSize: 8,  status: "PENDING"  },
+  { id: "3", name: "Secure_Vault_Beta",  domain: "CYBER_SEC",    teamSize: 3,  status: "REVIEW"   },
+  { id: "4", name: "Data_Harvester_X",   domain: "CLOUD_COMP",   teamSize: 12, status: "ACTIVE"   },
+  { id: "5", name: "Quantum_Cipher_7",   domain: "CRYPTOGRAPHY", teamSize: 4,  status: "ARCHIVED" },
 ];
 
 export const projectsApi = {
@@ -403,5 +870,82 @@ export const projectsApi = {
       };
     }
     return request<ProjectsResponse>(`/admin/projects?page=${page}`);
+  },
+
+  getProject: async (id: string): Promise<Project> => {
+    if (USE_MOCK) {
+      await delay(300);
+      const found = MOCK_PROJECTS.find((p) => p.id === id);
+      if (!found) throw new Error("Project not found");
+      return found;
+    }
+    return request<Project>(`/admin/projects/${id}`);
+  },
+
+  createProject: async (payload: ProjectInput): Promise<Project> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        id: String(Date.now()),
+        name: payload.title,
+        domain: payload.category,
+        teamSize: payload.teamSize,
+        status: payload.status,
+      };
+    }
+    return request<Project>("/admin/projects", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateProject: async (id: string, payload: ProjectInput): Promise<Project> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        id,
+        name: payload.title,
+        domain: payload.category,
+        teamSize: payload.teamSize,
+        status: payload.status,
+      };
+    }
+    return request<Project>(`/admin/projects/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteProject: async (id: string): Promise<{ id: string; deleted: boolean }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { id, deleted: true };
+    }
+    return request<{ id: string; deleted: boolean }>(`/admin/projects/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  uploadFile: async (
+    file: File,
+    kind: "image" | "resource" = "image",
+  ): Promise<{ url: string; filename: string; type: string }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        url: URL.createObjectURL(file),
+        filename: file.name,
+        type: kind === "image" ? "image" : file.name.endsWith(".zip") ? "zip" : "pdf",
+      };
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{ url: string; filename: string; type: string }>(
+      `/admin/projects/uploads?kind=${kind}`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
   },
 };

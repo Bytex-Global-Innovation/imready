@@ -1,18 +1,17 @@
 'use strict';
 
 const { Sequelize } = require('sequelize');
-const config = require('@config/config');
 
 const sequelize = new Sequelize(
-  config.db.database,
-  config.db.username,
-  config.db.password,
+  String(process.env.DB_NAME || '').trim(),
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
   {
-    host: config.db.host,
-    port: config.db.port,
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 3306,
     dialect: 'mysql',
     pool: {
-      max: config.db.connectionLimit,
+      max: Number(process.env.DB_CONNECTION_LIMIT) || 10,
       min: 0,
       acquire: 30000,
       idle: 10000,

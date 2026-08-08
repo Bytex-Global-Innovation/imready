@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   ArrowRight,
   BarChart2,
@@ -15,8 +14,10 @@ import {
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PROJECTS } from "@/constants/projects";
+import { DASHBOARD_USER } from "@/constants/dashboard";
+import { PROJECTS, type ProjectItem } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
+import { projectsApi, resolveMediaUrl, type ApiProjectItem } from "@/lib/api";
 import { ApplySuccessModal } from "./apply-success-modal";
 
 function BriefPill({
@@ -53,12 +54,94 @@ function SectionCard({
   );
 }
 
+function mapApiProject(project: ApiProjectItem): ProjectItem {
+  return {
+    id: project.id,
+    category: project.category,
+    badge: project.badge,
+    title: project.title,
+    description: project.description,
+    imageSrc: resolveMediaUrl(project.imageSrc),
+    imageAlt: project.imageAlt,
+    requirements: project.requirements || [],
+    techStack: [],
+    estimatedTime: project.estimatedTime,
+    level: project.level,
+    overview: project.overview,
+    briefRequirements: project.briefRequirements,
+    deliverables: project.deliverables,
+    evaluationCriteria: project.evaluationCriteria,
+    resources: (project.resources || []).map((resource) => ({
+      ...resource,
+      href: resolveMediaUrl(resource.href) || resource.href,
+    })),
+  };
+}
+
 export function ProjectBriefView({ projectId }: { projectId: string }) {
+  const [project, setProject] = useState<ProjectItem | null>(
+    PROJECTS.find((item) => item.id === projectId) || null,
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const project = PROJECTS.find((item) => item.id === projectId);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const data = await projectsApi.getBySlug(projectId);
+        if (!cancelled) setProject(mapApiProject(data));
+      } catch {
+        if (!cancelled) {
+          const fallback = PROJECTS.find((item) => item.id === projectId) || null;
+          setProject(fallback);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  async function handleApply() {
+    if (!project) return;
+    setIsApplying(true);
+    setApplyError(null);
+    try {
+      await projectsApi.apply(project.id, {
+        studentName: DASHBOARD_USER.name,
+        studentEmail: "alex.rivers@imready.com",
+      });
+      setIsSuccessOpen(true);
+    } catch (err) {
+      setApplyError(
+        err instanceof Error ? err.message : "Failed to apply for project.",
+      );
+    } finally {
+      setIsApplying(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl py-16 text-center text-sm text-muted">
+        Loading project brief…
+      </div>
+    );
+  }
 
   if (!project) {
-    notFound();
+    return (
+      <div className="mx-auto max-w-3xl py-16 text-center text-sm text-muted">
+        Project not found.
+      </div>
+    );
   }
 
   return (
@@ -171,9 +254,13 @@ export function ProjectBriefView({ projectId }: { projectId: string }) {
         ) : null}
       </div>
 
+      {applyError && (
+        <p className="mt-4 text-center text-sm text-red-600">{applyError}</p>
+      )}
+
       <div className="mt-6 text-center">
-        <Button className="w-full" onClick={() => setIsSuccessOpen(true)}>
-          Apply and Start Project
+        <Button className="w-full" onClick={handleApply} disabled={isApplying}>
+          {isApplying ? "Applying…" : "Apply and Start Project"}
           <ArrowRight className="h-4 w-4" />
         </Button>
         <p className="mt-3 text-xs text-muted">

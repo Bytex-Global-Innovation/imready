@@ -1,4 +1,5 @@
-import { Pencil, Eye, Trash2, RotateCcw } from "@/components/icons";
+import Link from "next/link";
+import { Pencil, Eye, Trash2 } from "@/components/icons";
 import type { Assessment } from "@/lib/api";
 
 const STATUS_CONFIG = {
@@ -9,9 +10,10 @@ const STATUS_CONFIG = {
 
 interface AssessmentsTableProps {
   assessments: Assessment[];
+  onDelete?: (id: string) => void;
 }
 
-export default function AssessmentsTable({ assessments }: AssessmentsTableProps) {
+export default function AssessmentsTable({ assessments, onDelete }: AssessmentsTableProps) {
   if (assessments.length === 0) {
     return (
       <div className="admin-card p-8 text-center text-sm text-gray-400">
@@ -22,7 +24,6 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
 
   return (
     <>
-      {/* Mobile card view — below sm */}
       <div className="flex flex-col gap-3 sm:hidden">
         {assessments.map((a) => {
           const cfg = STATUS_CONFIG[a.status];
@@ -40,27 +41,29 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
               </div>
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="admin-badge bg-blue-50 text-blue-600">
-                    {a.domain}
-                  </span>
-                  <span className="text-xs font-semibold text-gray-700">{a.passMarks}</span>
-                </div>
+                <span className="text-xs font-semibold text-gray-700">{a.passMarks}</span>
 
                 <div className="flex items-center gap-3">
-                  {a.status === "ARCHIVED" ? (
-                    <button aria-label={`Restore ${a.name}`} className="admin-icon-btn">
-                      <RotateCcw className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button aria-label={`Edit ${a.name}`} className="admin-icon-btn">
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  )}
-                  <button aria-label={`View ${a.name}`} className="admin-icon-btn">
+                  <Link
+                    href={`/assessments/${a.id}/edit`}
+                    aria-label={`Edit ${a.name}`}
+                    className="admin-icon-btn"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/assessment-results"
+                    aria-label={`View ${a.name}`}
+                    className="admin-icon-btn"
+                  >
                     <Eye className="h-4 w-4" />
-                  </button>
-                  <button aria-label={`Delete ${a.name}`} className="text-gray-400 hover:text-red-500 transition-colors">
+                  </Link>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${a.name}`}
+                    className="cursor-pointer text-gray-400 transition-colors hover:text-red-500"
+                    onClick={() => onDelete?.(a.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -70,13 +73,11 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
         })}
       </div>
 
-      {/* Desktop table — sm and above */}
       <div className="hidden overflow-x-auto rounded-lg border border-gray-200 sm:block">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr className="admin-table-header">
               <th className="px-4 py-3">Assessment Name</th>
-              <th className="px-4 py-3">Domain</th>
               <th className="px-4 py-3">Pass Marks</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -91,11 +92,6 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
                     <p className="font-semibold text-[#153a75]">{a.name}</p>
                     <p className="text-[10px] text-gray-400">UUID: {a.uuid}</p>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="admin-badge bg-blue-50 text-blue-600">
-                      {a.domain}
-                    </span>
-                  </td>
                   <td className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">
                     {a.passMarks}
                   </td>
@@ -107,19 +103,26 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-3">
-                      {a.status === "ARCHIVED" ? (
-                        <button aria-label={`Restore ${a.name}`} className="admin-icon-btn">
-                          <RotateCcw className="h-4 w-4" />
-                        </button>
-                      ) : (
-                        <button aria-label={`Edit ${a.name}`} className="admin-icon-btn">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                      )}
-                      <button aria-label={`View ${a.name}`} className="admin-icon-btn">
+                      <Link
+                        href={`/assessments/${a.id}/edit`}
+                        aria-label={`Edit ${a.name}`}
+                        className="admin-icon-btn"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href="/assessment-results"
+                        aria-label={`View ${a.name}`}
+                        className="admin-icon-btn"
+                      >
                         <Eye className="h-4 w-4" />
-                      </button>
-                      <button aria-label={`Delete ${a.name}`} className="text-gray-400 hover:text-red-500 transition-colors">
+                      </Link>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${a.name}`}
+                        className="cursor-pointer text-gray-400 transition-colors hover:text-red-500"
+                        onClick={() => onDelete?.(a.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

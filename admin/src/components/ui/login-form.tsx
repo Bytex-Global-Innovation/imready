@@ -48,7 +48,7 @@ export default function LoginForm() {
           <input
             id="email"
             type="email"
-            placeholder="admin@imready.io"
+            placeholder="Enter your email"
             autoComplete="email"
             {...register("email")}
             className="admin-input-icon w-full"
