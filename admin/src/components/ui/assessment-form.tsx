@@ -40,6 +40,11 @@ function answerTypeLabel(answerType: AnswerType) {
 }
 
 function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
+  const durationSeconds =
+    draft.durationMinutes == null || Number(draft.durationMinutes) <= 0
+      ? null
+      : Math.round(Number(draft.durationMinutes) * 60);
+
   return {
     title: draft.title.trim(),
     prompt: "",
@@ -59,6 +64,7 @@ function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
     personalResponseMarks: needsPersonal(draft.answerType)
       ? draft.personalResponseMarks
       : 0,
+    durationSeconds,
   };
 }
 
@@ -86,6 +92,13 @@ function bankItemToDraft(item: AssessmentQuestionBankItem): DraftQuestion {
     category: item.category ?? "OBSERVATION",
     jumbledOptionsMarks: item.jumbledOptionsMarks ?? undefined,
     personalResponseMarks: item.personalResponseMarks ?? undefined,
+    durationMinutes:
+      item.durationSeconds == null
+        ? null
+        : Math.max(
+            0.5,
+            Math.round((Number(item.durationSeconds) / 60) * 2) / 2,
+          ),
   };
 }
 
@@ -103,6 +116,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
   const [personalResponseMarks, setPersonalResponseMarks] = useState(40);
   const [weightingMode, setWeightingMode] = useState<WeightingMode>("EQUAL");
   const [passMarks, setPassMarks] = useState(70);
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [newQuestions, setNewQuestions] = useState<DraftQuestion[]>([]);
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(isEdit);
@@ -133,6 +147,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
         setPersonalResponseMarks(detail.personalResponseMarks ?? 40);
         setWeightingMode(detail.weightingMode ?? "EQUAL");
         setPassMarks(detail.passMarksValue ?? 70);
+        setDurationMinutes(detail.durationMinutes ?? 60);
         setNewQuestions((detail.questions || []).map(bankItemToDraft));
       } catch (err) {
         if (!cancelled) {
@@ -150,14 +165,21 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
   }, [isEdit, assessmentId]);
 
   const totalSelected = newQuestions.length;
+
+  // Keep ask-count aligned with the question pool so students see the same set as admin.
+  useEffect(() => {
+    if (totalSelected < 1) return;
+    setQuestionCount(totalSelected);
+  }, [totalSelected]);
+
   const estimatedTotal =
     weightingMode === "EQUAL"
-      ? newQuestions.slice(0, questionCount).reduce((sum, q) => {
+      ? newQuestions.reduce((sum, q) => {
           const jumbled = needsJumbled(q.answerType) ? jumbledOptionsMarks : 0;
           const personal = needsPersonal(q.answerType) ? personalResponseMarks : 0;
           return sum + jumbled + personal;
         }, 0)
-      : newQuestions.slice(0, questionCount).reduce((sum, q) => {
+      : newQuestions.reduce((sum, q) => {
           const jumbled = needsJumbled(q.answerType) ? (q.jumbledOptionsMarks ?? 0) : 0;
           const personal = needsPersonal(q.answerType) ? (q.personalResponseMarks ?? 0) : 0;
           return sum + jumbled + personal;
@@ -169,10 +191,6 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
 
     if (totalSelected < 1) {
       setError("Add at least one question.");
-      return;
-    }
-    if (questionCount > totalSelected) {
-      setError("Questions to ask cannot exceed added questions.");
       return;
     }
 
@@ -198,6 +216,24 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
       }
     }
 
+    if (durationMinutes < 1) {
+      setError("Overall assessment duration must be at least 1 minute.");
+      return;
+    }
+
+    for (const draft of uniqueDrafts) {
+      if (
+        draft.durationMinutes != null &&
+        Number(draft.durationMinutes) > 0 &&
+        Number(draft.durationMinutes) < 0.5
+      ) {
+        setError(
+          "Each question timer must be at least 0.5 minutes when set (or leave empty).",
+        );
+        return;
+      }
+    }
+
     const payload: CreateAssessmentPayload = {
       name: name.trim(),
       domain,
@@ -208,6 +244,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
       personalResponseMarks,
       weightingMode,
       passMarks,
+      durationMinutes,
       questionIds: [],
       questions: uniqueDrafts.map(toQuestionPayload),
     };
@@ -315,17 +352,40 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">
-                How many questions to ask
+                Questions students will receive
               </span>
               <input
                 type="number"
                 min={1}
                 max={Math.max(1, totalSelected || 50)}
-                className="admin-input w-full"
+                className="admin-input w-full bg-gray-50"
                 value={questionCount}
-                onChange={(e) => setQuestionCount(Number(e.target.value) || 1)}
+                readOnly
+                aria-readonly="true"
+              />
+              <span className="mt-1 block text-xs text-admin-text-muted">
+                Always matches the questions added below so the student app stays in sync.
+              </span>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Overall assessment duration (minutes)
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={480}
+                step={1}
+                className="admin-input w-full"
+                value={durationMinutes}
+                onChange={(e) =>
+                  setDurationMinutes(Math.max(1, Number(e.target.value) || 1))
+                }
                 required
               />
+              <span className="mt-1 block text-xs text-admin-text-muted">
+                When this timer ends, the assessment auto-submits for the student.
+              </span>
             </label>
           </div>
         </section>
@@ -423,7 +483,36 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                     <p className="mt-1 text-sm text-gray-600">{draft.question}</p>
                     <p className="mt-1 text-xs font-semibold tracking-wide text-primary">
                       {draft.category} · {answerTypeLabel(draft.answerType)}
+                      {draft.durationMinutes
+                        ? ` · ${draft.durationMinutes} min timer`
+                        : " · no question timer"}
                     </p>
+                    <label className="mt-2 block text-xs text-gray-600">
+                      Time to solve (minutes, optional)
+                      <input
+                        type="number"
+                        min={0.5}
+                        max={60}
+                        step={0.5}
+                        className="admin-input mt-1 w-full max-w-[12rem]"
+                        value={draft.durationMinutes ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setNewQuestions((prev) =>
+                            prev.map((q, i) =>
+                              i === index
+                                ? {
+                                    ...q,
+                                    durationMinutes:
+                                      raw === "" ? null : Number(raw),
+                                  }
+                                : q,
+                            ),
+                          );
+                        }}
+                        placeholder="No timer"
+                      />
+                    </label>
                     {weightingMode === "INDIVIDUAL" && (
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {needsJumbled(draft.answerType) && (

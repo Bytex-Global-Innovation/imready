@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminShell from "@/components/layout/admin-shell";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { isAdminAuthenticated } from "@/lib/auth";
+import { authApi } from "@/lib/api";
+import {
+  clearAdminSession,
+  setAdminSessionExpiresAt,
+} from "@/lib/auth";
 
 export default function DashboardLayout({
   children,
@@ -16,11 +20,50 @@ export default function DashboardLayout({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!isAdminAuthenticated()) {
-      router.replace("/");
-      return;
+    let cancelled = false;
+    let logoutTimer: ReturnType<typeof setTimeout> | null = null;
+
+    async function forceLogout() {
+      clearAdminSession();
+      try {
+        await authApi.logout();
+      } catch {
+        // ignore
+      }
+      if (!cancelled) router.replace("/");
     }
-    setReady(true);
+
+    async function bootstrap() {
+      try {
+        const data = await authApi.me();
+        if (cancelled) return;
+
+        setAdminSessionExpiresAt(data.expiresAt);
+        const msLeft = new Date(data.expiresAt).getTime() - Date.now();
+        if (msLeft <= 0) {
+          await forceLogout();
+          return;
+        }
+
+        logoutTimer = setTimeout(() => {
+          void forceLogout();
+        }, msLeft);
+
+        setReady(true);
+      } catch {
+        if (!cancelled) {
+          clearAdminSession();
+          router.replace("/");
+        }
+      }
+    }
+
+    bootstrap();
+
+    return () => {
+      cancelled = true;
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
   }, [router]);
 
   if (!ready) {

@@ -38,7 +38,7 @@ export function HeroSection() {
           </div>
 
           <div className="order-4 pt-1 lg:col-start-1 lg:max-w-[560px]">
-            <Button size="lg" href={ROUTES.signupStep(1)}>
+            <Button size="lg" href={ROUTES.signup}>
               Start Your Industry Journey
             </Button>
           </div>

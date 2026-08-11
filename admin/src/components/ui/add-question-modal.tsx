@@ -17,6 +17,8 @@ export type DraftQuestion = {
   category: QuestionCategory;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  /** Optional minutes for this question only. Empty = no per-question timer. */
+  durationMinutes?: number | null;
 };
 
 function emptyOptions(): DraftOption[] {
@@ -105,11 +107,25 @@ export default function AddQuestionModal({
         return;
       }
     }
+    if (
+      draft.durationMinutes != null &&
+      Number(draft.durationMinutes) > 0 &&
+      Number(draft.durationMinutes) < 0.5
+    ) {
+      setError("Question timer must be at least 0.5 minutes when set.");
+      return;
+    }
+    const durationMinutes =
+      draft.durationMinutes == null || Number(draft.durationMinutes) <= 0
+        ? null
+        : Number(draft.durationMinutes);
+
     onSave({
       ...draft,
       title: draft.title.trim(),
       prompt: "",
       question: draft.question.trim(),
+      durationMinutes,
       options: needsJumbled(draft.answerType)
         ? draft.options.map((opt, index) => ({
             label: opt.label.trim(),
@@ -195,6 +211,32 @@ export default function AddQuestionModal({
                 setDraft((prev) => ({ ...prev, question: e.target.value }))
               }
             />
+          </label>
+
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">
+              Time to solve (minutes){" "}
+              <span className="font-normal text-gray-400">(optional)</span>
+            </span>
+            <input
+              type="number"
+              min={0.5}
+              max={60}
+              step={0.5}
+              className="admin-input w-full"
+              value={draft.durationMinutes ?? ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setDraft((prev) => ({
+                  ...prev,
+                  durationMinutes: raw === "" ? null : Number(raw),
+                }));
+              }}
+              placeholder="Leave empty for no question timer"
+            />
+            <span className="mt-1 block text-xs text-gray-500">
+              If set, this question locks when the timer ends and the student moves on.
+            </span>
           </label>
 
           {showOptions && (

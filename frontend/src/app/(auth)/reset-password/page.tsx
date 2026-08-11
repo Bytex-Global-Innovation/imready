@@ -10,17 +10,17 @@ export const metadata: Metadata = {
 };
 
 interface ResetPasswordPageProps {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ token?: string }>;
 }
 
 export default async function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
-  const { email } = await searchParams;
+  const { token } = await searchParams;
 
-  if (!email?.trim()) {
+  if (!token?.trim()) {
     redirect(ROUTES.forgotPassword);
   }
 
-  return <ResetPasswordForm email={email.trim()} />;
+  return <ResetPasswordForm token={token.trim()} />;
 }

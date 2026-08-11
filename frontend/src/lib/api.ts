@@ -1,17 +1,85 @@
-const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+import { clearStudentSessionCache, setCachedStudentSession } from "@/lib/student-session";
+import { clearLegacyStudentToken } from "@/lib/auth";
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+clearLegacyStudentToken();
+
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+/** Origin for static assets like /uploads (not versioned under /api/v1). */
+const API_ORIGIN = BASE_URL.replace(/\/api\/v\d+$/i, "");
+
+export class ApiError extends Error {
+  code?: string;
+  status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function tryRefreshSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/students/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  auth = false,
+  allowRefresh = true,
+): Promise<T> {
+  const headers = new Headers(options.headers || {});
+  if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
+    headers,
+    credentials: "include",
   });
+
+  if (res.status === 401 && auth && allowRefresh) {
+    const refreshed = await tryRefreshSession();
+    if (refreshed) {
+      return request<T>(path, options, auth, false);
+    }
+    clearStudentSessionCache();
+  }
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => null);
-    throw new Error(errorBody?.message || "Something went wrong. Please try again.");
+    if (res.status === 401 && auth) {
+      clearStudentSessionCache();
+    }
+    throw new ApiError(
+      errorBody?.message || "Something went wrong. Please try again.",
+      res.status,
+      errorBody?.code,
+    );
+  }
+
+  if (res.status === 204) {
+    return undefined as T;
   }
 
   return res.json();
@@ -23,7 +91,7 @@ export function resolveMediaUrl(pathOrUrl?: string | null): string {
     return pathOrUrl;
   }
   if (pathOrUrl.startsWith("/")) {
-    return `${BASE_URL}${pathOrUrl}`;
+    return `${API_ORIGIN}${pathOrUrl}`;
   }
   return pathOrUrl;
 }
@@ -44,20 +112,24 @@ export interface AssessmentQuestion {
   tips: string[];
   category: "OBSERVATION" | "THINKING" | "BUILDING";
   answerType: AnswerType;
+  /** Optional per-question timer in seconds. null = no question lock timer. */
+  durationSeconds?: number | null;
   options: AssessmentOption[];
 }
 
 export interface ActiveAssessment {
   id: string;
+  name: string;
   questionCount: number;
   questionOrderMode: "sequential" | "random" | "jumbled";
+  /** Overall assessment time limit in minutes. */
+  durationMinutes: number;
+  /** Server clock for skew-aware timers. */
+  serverNow?: string;
   questions: AssessmentQuestion[];
 }
 
 export interface SubmitAssessmentPayload {
-  studentName: string;
-  email: string;
-  collegeName: string;
   answers: {
     questionId: number;
     optionOrder: string[];
@@ -76,6 +148,7 @@ export const assessmentApi = {
         method: "POST",
         body: JSON.stringify(payload),
       },
+      true,
     ),
 };
 
@@ -126,16 +199,14 @@ export const projectsApi = {
   getBySlug: (slug: string): Promise<ApiProjectItem> =>
     request<ApiProjectItem>(`/projects/${slug}`),
 
-  apply: (
-    slug: string,
-    payload: { studentName: string; studentEmail: string },
-  ) =>
+  apply: (slug: string) =>
     request<{ id: string; status: string; projectSlug: string }>(
       `/projects/${slug}/apply`,
       {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({}),
       },
+      true,
     ),
 };
 
@@ -153,14 +224,111 @@ export interface SignupPayload {
   agreedToTerms: boolean;
 }
 
+export interface StudentProfile {
+  id: string;
+  uuid?: string;
+  studentName: string;
+  email: string;
+  phone?: string;
+  college?: string;
+  collegeName?: string;
+  streamMajor?: string;
+  graduationYear?: string;
+  domain?: string;
+  level?: string;
+  careerDoor?: string;
+  status?: string;
+  emailVerified?: boolean;
+  projectsUnlocked?: boolean;
+}
+
+export interface AuthSession {
+  student: StudentProfile;
+  redirectTo: string;
+  projectsUnlocked?: boolean;
+}
+
 export const authApi = {
   signup: (payload: SignupPayload) =>
     request<{
-      token: string;
+      message: string;
+      email: string;
+      requiresVerification: boolean;
+      emailSent?: boolean;
+      emailPreviewUrl?: string;
+      devVerifyUrl?: string;
       redirectTo: string;
-      student: { id: string; email: string; studentName: string };
     }>("/auth/students/signup", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  login: async (payload: {
+    email: string;
+    password: string;
+    rememberMe?: boolean;
+  }): Promise<AuthSession> => {
+    const result = await request<AuthSession>("/auth/students/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
+
+  verifyEmail: async (token: string): Promise<AuthSession> => {
+    const result = await request<AuthSession>("/auth/students/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
+
+  resendVerification: (email: string) =>
+    request<{ message: string }>("/auth/students/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/students/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (payload: { token: string; password: string }) =>
+    request<{ message: string }>("/auth/students/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  me: (): Promise<{
+    student: StudentProfile;
+    projectsUnlocked: boolean;
+    redirectTo: string;
+  }> => request("/auth/students/me", {}, true),
+
+  refresh: () =>
+    request<AuthSession>("/auth/students/refresh", { method: "POST" }, false),
+
+  logout: async () => {
+    try {
+      await request<{ message: string }>(
+        "/auth/students/logout",
+        { method: "POST" },
+        false,
+        false,
+      );
+    } catch {
+      // Still clear local session if the network call fails.
+    }
+    clearStudentSessionCache();
+  },
 };

@@ -1,4 +1,10 @@
-import { clearAdminToken, getAdminToken, setAdminToken } from "@/lib/auth";
+import {
+  clearAdminSession,
+  clearLegacyAdminToken,
+  setAdminSessionExpiresAt,
+} from "@/lib/auth";
+
+clearLegacyAdminToken();
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
 /** Use mock data when explicitly enabled or when no API URL is configured (local dev). */
@@ -6,16 +12,18 @@ const USE_MOCK =
   process.env.NEXT_PUBLIC_USE_MOCK === "true" ||
   (process.env.NEXT_PUBLIC_USE_MOCK !== "false" && BASE_URL === "");
 
+function redirectToLogin() {
+  clearAdminSession();
+  if (typeof window !== "undefined" && window.location.pathname !== "/") {
+    window.location.replace("/");
+  }
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAdminToken();
   const headers = new Headers(options.headers || {});
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   const isFormData =
     typeof FormData !== "undefined" && options.body instanceof FormData;
@@ -27,10 +35,11 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (res.status === 401) {
-    clearAdminToken();
+    redirectToLogin();
   }
 
   if (!res.ok) {
@@ -55,22 +64,39 @@ export const authApi = {
     if (USE_MOCK) {
       await delay(600);
       if (email === "admin@imready.io" && password === "password123") {
-        const mock = { token: "mock-token-123" };
-        setAdminToken(mock.token);
-        return mock;
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        setAdminSessionExpiresAt(expiresAt);
+        return { expiresAt, expiresIn: 900, admin: { id: "1", email } };
       }
       throw new Error("Invalid email or password");
     }
 
-    const result = await request<{ token: string }>("/auth/admin/login", {
+    const result = await request<{
+      expiresAt: string;
+      expiresIn: number;
+      admin: { id: string; email: string };
+    }>("/auth/admin/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setAdminToken(result.token);
+    setAdminSessionExpiresAt(result.expiresAt);
     return result;
   },
-  logout: () => {
-    clearAdminToken();
+
+  me: () =>
+    request<{ admin: { id: string; email: string }; expiresAt: string }>(
+      "/auth/admin/me",
+    ),
+
+  logout: async () => {
+    try {
+      await request<{ message: string }>("/auth/admin/logout", {
+        method: "POST",
+      });
+    } catch {
+      // ignore network errors on logout
+    }
+    clearAdminSession();
   },
 };
 
@@ -279,7 +305,9 @@ export interface Assessment {
   questionOrderMode?: QuestionOrderMode;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  weightingMode?: WeightingMode;
   passMarksValue?: number;
+  durationMinutes?: number;
 }
 
 const MOCK_ASSESSMENTS: Assessment[] = [
@@ -306,6 +334,8 @@ export interface AssessmentQuestionInput {
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
   weightingMode?: WeightingMode;
+  /** Optional per-question timer in seconds. null/omit = no question timer. */
+  durationSeconds?: number | null;
 }
 
 export interface AssessmentDetail extends Assessment {
@@ -323,6 +353,7 @@ export interface AssessmentQuestionBankItem {
   category?: QuestionCategory;
   jumbledOptionsMarks?: number | null;
   personalResponseMarks?: number | null;
+  durationSeconds?: number | null;
   options: { id: string; label: string; correctOrder: number }[];
 }
 
@@ -336,6 +367,7 @@ export interface CreateAssessmentPayload {
   personalResponseMarks: number;
   weightingMode: WeightingMode;
   passMarks: number;
+  durationMinutes: number;
   questionIds: number[];
   questions: AssessmentQuestionInput[];
 }
@@ -601,19 +633,18 @@ export const assessmentsApi = {
       throw new Error("Results export is not available in mock mode");
     }
 
-    const token = getAdminToken();
     const params = new URLSearchParams();
     if (result && result !== "ALL") params.set("result", result);
     const query = params.toString();
     const res = await fetch(
       `${BASE_URL}/admin/assessments/results/export${query ? `?${query}` : ""}`,
       {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: "include",
       },
     );
 
     if (res.status === 401) {
-      clearAdminToken();
+      redirectToLogin();
     }
 
     if (!res.ok) {
@@ -638,13 +669,12 @@ export const assessmentsApi = {
       throw new Error("Bulk sample download is not available in mock mode");
     }
 
-    const token = getAdminToken();
     const res = await fetch(`${BASE_URL}/admin/assessments/bulk/sample`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include",
     });
 
     if (res.status === 401) {
-      clearAdminToken();
+      redirectToLogin();
     }
 
     if (!res.ok) {

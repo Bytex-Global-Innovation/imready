@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants/routes";
+import { authApi } from "@/lib/api";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -23,8 +23,9 @@ const defaultValues: ForgotPasswordFormValues = {
 };
 
 export function ForgotPasswordForm() {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const {
     register,
@@ -38,13 +39,14 @@ export function ForgotPasswordForm() {
 
   async function onSubmit(data: ForgotPasswordFormValues) {
     setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      console.log("Forgot password:", data);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const params = new URLSearchParams({ email: data.email });
-      router.push(`${ROUTES.resetPassword}?${params.toString()}`);
+      const result = await authApi.forgotPassword(data.email);
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send reset email.");
     } finally {
       setIsSubmitting(false);
     }
@@ -64,6 +66,17 @@ export function ForgotPasswordForm() {
 
       <Card className="border-border/80 p-5 shadow-md sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p className="text-sm text-emerald-700" role="status">
+              {success}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="email" required>
               Registered Email Address

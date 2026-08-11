@@ -40,10 +40,10 @@ export default function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
     };
   }, [profileOpen]);
 
-  function handleLogout() {
+  async function handleLogout() {
     setProfileOpen(false);
-    authApi.logout();
-    router.push("/");
+    await authApi.logout();
+    router.replace("/");
   }
 
   return (
