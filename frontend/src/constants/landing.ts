@@ -63,12 +63,6 @@ export const PROJECT_SHOWCASE_ITEMS = [
     domainTone: "emerald",
   },
   {
-    domain: "Finance",
-    title: "Equity Research — EV Sector",
-    subtitle: "9 wks · Finance track",
-    domainTone: "violet",
-  },
-  {
     domain: "Cybersecurity",
     title: "Web App Vulnerability Scan",
     subtitle: "9 wks · CS track",
@@ -79,12 +73,6 @@ export const PROJECT_SHOWCASE_ITEMS = [
     title: "Feature Roadmap · EdTech",
     subtitle: "9 wks · MBA/CS",
     domainTone: "amber",
-  },
-  {
-    domain: "Operations",
-    title: "Hostel Check-in Redesign",
-    subtitle: "9 wks · Mgmt · SOP",
-    domainTone: "emerald",
   },
 ] as const;
 

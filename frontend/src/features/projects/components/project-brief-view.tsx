@@ -14,7 +14,6 @@ import {
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { DASHBOARD_USER } from "@/constants/dashboard";
 import { PROJECTS, type ProjectItem } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
 import { projectsApi, resolveMediaUrl, type ApiProjectItem } from "@/lib/api";
@@ -114,10 +113,7 @@ export function ProjectBriefView({ projectId }: { projectId: string }) {
     setIsApplying(true);
     setApplyError(null);
     try {
-      await projectsApi.apply(project.id, {
-        studentName: DASHBOARD_USER.name,
-        studentEmail: "alex.rivers@imready.com",
-      });
+      await projectsApi.apply(project.id);
       setIsSuccessOpen(true);
     } catch (err) {
       setApplyError(

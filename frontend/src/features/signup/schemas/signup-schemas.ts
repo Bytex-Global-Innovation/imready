@@ -46,9 +46,7 @@ export const GRADUATION_YEARS = [
 export const TARGET_DOMAINS = [
   { id: "ai", label: "Artificial Intelligence" },
   { id: "iot", label: "IoT" },
-  { id: "operations", label: "Operations" },
   { id: "web-dev", label: "Web Dev" },
-  { id: "finance", label: "Finance" },
   { id: "product", label: "Product" },
 ] as const;
 

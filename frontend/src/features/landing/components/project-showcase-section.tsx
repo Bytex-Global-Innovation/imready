@@ -73,7 +73,7 @@ export function ProjectShowcaseSection() {
             Real projects. Real companies. Every domain.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">
-            AI, data, engineering, finance, operations, product — ImReady projects span
+            AI, data, engineering, product — ImReady projects span
             every stream and every year of college.
           </p>
         </div>
@@ -106,7 +106,7 @@ export function ProjectShowcaseSection() {
       </div>
 
       <div className="mt-9 text-center sm:mt-10">
-        <Button href={ROUTES.signupStep(1)} size="lg">
+        <Button href={ROUTES.signup} size="lg">
           Find your project brief
         </Button>
       </div>

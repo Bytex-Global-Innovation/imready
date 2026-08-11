@@ -159,17 +159,15 @@ export default function AssessmentResultsPage() {
             <Download className="h-4 w-4" />
             {isDownloading ? "Downloading…" : "Bulk Download"}
           </button>
-          {selectedIds.size > 0 && (
-            <button
-              type="button"
-              className="admin-btn-outline gap-2 border-red-200 text-red-600 hover:bg-red-50"
-              disabled={isDeleting}
-              onClick={() => setDeleteTarget({ type: "bulk", ids: [...selectedIds] })}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete selected ({selectedIds.size})
-            </button>
-          )}
+          <button
+            type="button"
+            className="admin-btn-outline gap-2 border-red-200 text-red-600 hover:bg-red-50 disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
+            disabled={isDeleting || selectedIds.size === 0}
+            onClick={() => setDeleteTarget({ type: "bulk", ids: [...selectedIds] })}
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete selected ({selectedIds.size})
+          </button>
         </div>
       </div>
 
