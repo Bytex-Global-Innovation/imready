@@ -6,8 +6,8 @@ export const ROUTES = {
   login: "/login",
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
+  verifyEmail: "/verify-email",
   signup: "/signup",
-  signupStep: (step: SignupStep) => `/signup/step/${step}`,
   forColleges: "/for-colleges",
   domainExplorer: "/domain-explorer",
   bytex: "/bytex",
@@ -43,10 +43,20 @@ export const AUTH_ROUTE_PREFIXES = [
   ROUTES.signup,
   ROUTES.forgotPassword,
   ROUTES.resetPassword,
+  ROUTES.verifyEmail,
 ] as const;
 
 export function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+/** Login/signup only — logged-in users should be redirected away. */
+export const GUEST_ONLY_AUTH_PREFIXES = [ROUTES.login, ROUTES.signup] as const;
+
+export function isGuestOnlyAuthRoute(pathname: string): boolean {
+  return GUEST_ONLY_AUTH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

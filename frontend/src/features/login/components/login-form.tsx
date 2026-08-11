@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants/routes";
+import { ApiError, authApi } from "@/lib/api";
 import { loginSchema, type LoginFormValues } from "../schemas/login-schema";
 
 const defaultValues: LoginFormValues = {
@@ -20,11 +21,16 @@ const defaultValues: LoginFormValues = {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [info, setInfo] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
@@ -34,13 +40,41 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
+    setError(null);
+    setInfo(null);
 
     try {
-      console.log("Login data:", data);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      router.push(ROUTES.dashboard);
+      const result = await authApi.login({
+        email: data.email,
+        password: data.password,
+        rememberMe: data.rememberMe,
+      });
+      const next = searchParams.get("next");
+      router.replace(next || result.redirectTo || ROUTES.dashboard);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "EMAIL_NOT_VERIFIED") {
+        setError(err.message);
+        setInfo("You can resend the verification email below.");
+      } else {
+        setError(err instanceof Error ? err.message : "Login failed.");
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    const email = getValues("email");
+    if (!email) {
+      setError("Enter your email address first.");
+      return;
+    }
+    try {
+      const result = await authApi.resendVerification(email);
+      setInfo(result.message);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend email.");
     }
   }
 
@@ -57,6 +91,17 @@ export function LoginForm() {
 
       <Card className="border-border/80 p-5 shadow-md sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+          {info && (
+            <p className="text-sm text-emerald-700" role="status">
+              {info}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="email" required>
               Email Address
@@ -110,13 +155,23 @@ export function LoginForm() {
           >
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
+
+          {error?.toLowerCase().includes("verify") ? (
+            <button
+              type="button"
+              className="w-full cursor-pointer text-sm font-medium text-[#153a75] hover:underline"
+              onClick={handleResend}
+            >
+              Resend verification email
+            </button>
+          ) : null}
         </form>
       </Card>
 
       <p className="mt-6 text-center text-sm text-muted">
         Don&apos;t have an account?{" "}
         <Link
-          href={ROUTES.signupStep(1)}
+          href={ROUTES.signup}
           className="cursor-pointer font-medium text-[#153a75] transition-colors hover:text-primary-hover"
         >
           Apply Now

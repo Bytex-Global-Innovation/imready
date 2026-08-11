@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { LoginForm } from "@/features/login/components/login-form";
 import { SITE_CONFIG } from "@/constants/site";
 
@@ -8,5 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <Suspense
+      fallback={
+        <div className="py-16 text-center text-sm text-muted">Loading…</div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
 }

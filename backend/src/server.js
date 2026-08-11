@@ -4,23 +4,33 @@ require('module-alias/register');
 require('dotenv').config();
 
 const app = require('@src/app');
+const config = require('@config');
 const sequelize = require('@connections/sequelize');
-const { ensureAdminFromEnv } = require('@container/admin/adminBootstrap');
-
-const port = Number(process.env.PORT) || 4000;
-const nodeEnv = process.env.NODE_ENV || 'development';
+const { ensureAdminFromEnv } = require('@modules/admin/admin.bootstrap');
+const { verifyMailConfig } = require('@modules/shared/mail.service');
+const {
+  purgeExpiredUnverifiedStudents,
+} = require('@modules/student/student.service');
 
 async function start() {
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret || jwtSecret.trim().length < 32) {
-    throw new Error('JWT_SECRET must be set and at least 32 characters');
-  }
+  // Validate required secrets early
+  void config.jwtSecret;
 
   await sequelize.authenticate();
   await ensureAdminFromEnv();
+  await verifyMailConfig();
+  await purgeExpiredUnverifiedStudents();
 
-  const server = app.listen(port, () => {
-    console.log(`IMReady API on :${port} (${nodeEnv})`);
+  // Periodically remove unverified first-time signups after the 1-hour window.
+  const purgeTimer = setInterval(() => {
+    purgeExpiredUnverifiedStudents().catch((err) => {
+      console.error('[students] Failed to purge expired signups:', err.message);
+    });
+  }, 5 * 60 * 1000);
+  if (typeof purgeTimer.unref === 'function') purgeTimer.unref();
+
+  const server = app.listen(config.port, () => {
+    console.log(`IMReady API on :${config.port}/api/v1 (${config.nodeEnv})`);
   });
 
   const shutdown = (signal) => {
@@ -39,4 +49,3 @@ start().catch((err) => {
   console.error('Failed to start:', err.message);
   process.exit(1);
 });
-

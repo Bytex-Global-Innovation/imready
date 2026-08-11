@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants/routes";
+import { authApi } from "@/lib/api";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
@@ -24,12 +25,13 @@ const defaultValues: ResetPasswordFormValues = {
 };
 
 interface ResetPasswordFormProps {
-  email: string;
+  token: string;
 }
 
-export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -43,11 +45,13 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
 
   async function onSubmit(data: ResetPasswordFormValues) {
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      console.log("Reset password:", { email, ...data });
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await authApi.resetPassword({ token, password: data.password });
       router.push(ROUTES.login);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset password.");
     } finally {
       setIsSubmitting(false);
     }
@@ -60,19 +64,18 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
           Reset Password
         </h1>
         <p className="mt-2 text-sm text-muted sm:text-base">
-          {email ? (
-            <>
-              Create a new password for{" "}
-              <span className="font-medium text-[#153a75]">{email}</span>.
-            </>
-          ) : (
-            "Create a new password for your account."
-          )}
+          Create a new password for your account.
         </p>
       </header>
 
       <Card className="border-border/80 p-5 shadow-md sm:p-8">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="password" required>
               New Password
