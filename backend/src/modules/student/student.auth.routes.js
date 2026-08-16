@@ -48,5 +48,10 @@ router.post(
   studentController.resetPassword,
 );
 router.get('/me', requireVerifiedStudent, studentController.me);
+router.post(
+  '/request-premium',
+  requireVerifiedStudent,
+  studentController.requestPremium,
+);
 
 module.exports = router;

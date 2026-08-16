@@ -265,10 +265,10 @@ async function applyToProject(slugOrId, payload) {
 
   const email = String(payload.studentEmail).trim().toLowerCase();
   const studentService = require('@modules/student/student.service');
-  const unlocked = await studentService.hasPassedAssessment(email);
+  const unlocked = await studentService.hasProjectsUnlocked(email);
   if (!unlocked) {
     const err = new Error(
-      'Projects unlock after you pass the assessment. Clear the test to apply.',
+      'Projects unlock after you pass the assessment, or after an admin approves premium access.',
     );
     err.statusCode = 403;
     err.code = 'PROJECTS_LOCKED';

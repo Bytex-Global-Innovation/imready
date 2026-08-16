@@ -239,6 +239,8 @@ export interface StudentProfile {
   careerDoor?: string;
   status?: string;
   emailVerified?: boolean;
+  subscriptionStatus?: "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+  premiumApprovedAt?: string | null;
   projectsUnlocked?: boolean;
 }
 
@@ -314,6 +316,23 @@ export const authApi = {
     projectsUnlocked: boolean;
     redirectTo: string;
   }> => request("/auth/students/me", {}, true),
+
+  requestPremium: async (): Promise<{
+    message: string;
+    student: StudentProfile;
+    projectsUnlocked: boolean;
+  }> => {
+    const result = await request<{
+      message: string;
+      student: StudentProfile;
+      projectsUnlocked: boolean;
+    }>("/auth/students/request-premium", { method: "POST" }, true);
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
 
   refresh: () =>
     request<AuthSession>("/auth/students/refresh", { method: "POST" }, false),

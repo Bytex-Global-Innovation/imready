@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
+import { authApi } from "@/lib/api";
 
 const PREMIUM_BENEFITS = [
   "Unlock Stage 01 premium curriculum",
@@ -13,19 +15,51 @@ const PREMIUM_BENEFITS = [
   "Verified portfolio boost for placements",
 ] as const;
 
+type SubscriptionStatus = "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+
 interface UpgradePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
+  subscriptionStatus?: SubscriptionStatus;
+  onRequested?: () => Promise<void> | void;
 }
 
-export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
+export function UpgradePlanModal({
+  isOpen,
+  onClose,
+  subscriptionStatus = "FREE",
+  onRequested,
+}: UpgradePlanModalProps) {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  function handleSelectPlan() {
+  const isPremium = subscriptionStatus === "PREMIUM";
+
+  async function handleSelectPlan() {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await authApi.requestPremium();
+      await onRequested?.();
+      onClose();
+      router.push(ROUTES.bytex);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not submit your premium request.",
+      );
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleClose() {
+    if (isSubmitting) return;
+    setError(null);
     onClose();
-    router.push(ROUTES.bytex);
   }
 
   return (
@@ -38,7 +72,7 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close"
           className="absolute top-4 right-4 cursor-pointer rounded-md p-1.5 text-muted hover:bg-surface hover:text-foreground"
         >
@@ -55,8 +89,11 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
           Bytex Unlock
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Upgrade to the premium path and unlock specialized hardware learning,
-          advanced stages, and exclusive industry projects.
+          {isPremium
+            ? "Premium is active on your account. Hardware paths, advanced stages, and exclusive industry projects are unlocked."
+            : subscriptionStatus === "PREMIUM_PENDING"
+              ? "Your premium request is waiting for admin approval. You can still visit Bytex while you wait."
+              : "Upgrade to the premium path and unlock specialized hardware learning, advanced stages, and exclusive industry projects. Access is granted after an admin approves your request."}
         </p>
 
         <ul className="mt-5 space-y-2.5">
@@ -68,21 +105,34 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
           ))}
         </ul>
 
+        {error ? (
+          <p className="mt-4 text-sm text-red-600">{error}</p>
+        ) : null}
+
         <div className="mt-7 flex flex-col gap-3">
-          <Button
-            type="button"
-            onClick={handleSelectPlan}
-            className="w-full bg-[#153a75] hover:bg-[#102b55]"
-          >
-            Select Plan
-          </Button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="cursor-pointer text-sm font-medium text-muted hover:text-foreground"
-          >
-            Maybe later
-          </button>
+          {isPremium ? (
+            <Button type="button" onClick={handleClose} className="w-full">
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                onClick={handleSelectPlan}
+                disabled={isSubmitting}
+                className="w-full bg-[#153a75] hover:bg-[#102b55]"
+              >
+                {isSubmitting ? "Opening Bytex…" : "Select Plan"}
+              </Button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="cursor-pointer text-sm font-medium text-muted hover:text-foreground"
+              >
+                Maybe later
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -76,6 +76,24 @@ const StudentAccount = sequelize.define(
       defaultValue: '',
       field: 'career_door',
     },
+    subscriptionStatus: {
+      type: DataTypes.ENUM('FREE', 'PREMIUM_PENDING', 'PREMIUM'),
+      allowNull: false,
+      defaultValue: 'FREE',
+      field: 'subscription_status',
+    },
+    premiumApprovedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_approved_at',
+    },
+    premiumApprovedBy: {
+      type: DataTypes.STRING(36),
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_approved_by',
+    },
     status: {
       type: DataTypes.ENUM('VERIFIED', 'PENDING', 'FLAGGED'),
       allowNull: false,

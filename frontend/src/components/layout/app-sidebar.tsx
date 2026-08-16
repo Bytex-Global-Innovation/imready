@@ -28,7 +28,7 @@ import {
 } from "@/features/dashboard/components/upgrade-plan-modal";
 
 const PROJECTS_LOCKED_MESSAGE =
-  "To unlock Projects, pass the assessment first.";
+  "To unlock Projects, pass the assessment or wait for an admin to approve premium access.";
 
 const HELP_CENTER_EMAIL = "support@imready.io";
 
@@ -125,10 +125,11 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
   const router = useRouter();
   const projectsTooltip = useAutoDismissTooltip();
   const helpTooltip = useAutoDismissTooltip();
-  const { student, projectsUnlocked } = useStudentProfile();
+  const { student, projectsUnlocked, refresh } = useStudentProfile();
   const navItems = getNavItems(projectsUnlocked);
   const displayName = student?.studentName || DASHBOARD_USER.name;
   const displayRole = student?.level || DASHBOARD_USER.role;
+  const subscriptionStatus = student?.subscriptionStatus || "FREE";
   const [upgradeTooltipOpen, setUpgradeTooltipOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
@@ -270,7 +271,11 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                 setUpgradeModalOpen(true);
               }}
             >
-              Upgrade Plan
+              {subscriptionStatus === "PREMIUM"
+                ? "Premium Active"
+                : subscriptionStatus === "PREMIUM_PENDING"
+                  ? "Premium Pending"
+                  : "Upgrade Plan"}
             </Button>
 
             {upgradeTooltipOpen ? (
@@ -346,7 +351,9 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
 
       <UpgradePlanModal
         isOpen={upgradeModalOpen}
+        subscriptionStatus={subscriptionStatus}
         onClose={() => setUpgradeModalOpen(false)}
+        onRequested={refresh}
       />
     </>
   );

@@ -100,6 +100,9 @@ export const authApi = {
   },
 };
 
+export type StudentStatus = "VERIFIED" | "PENDING" | "FLAGGED";
+export type SubscriptionStatus = "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+
 export interface Student {
   id: string;
   uuid?: string;
@@ -113,47 +116,158 @@ export interface Student {
   domain: string;
   level: string;
   careerDoor?: string;
-  status: "VERIFIED" | "PENDING" | "FLAGGED";
+  status: StudentStatus;
+  emailVerified?: boolean;
+  subscriptionStatus?: SubscriptionStatus;
+  premiumApprovedAt?: string | null;
   createdAt?: string;
 }
 
 export interface StudentsResponse {
   students: Student[];
   page: number;
+  pageSize?: number;
   totalPages: number;
   total: number;
 }
 
 const mockStudents: Student[] = [
-  { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED" },
-  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING" },
-  { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED" },
-  { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED" },
-  { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING" },
-  { id: "STU-1006", studentName: "Ethan Cole", email: "ethan@example.com", college: "Global Arts Acad.", domain: "Data Science", level: "Beginner", status: "VERIFIED" },
+  { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED", subscriptionStatus: "FREE" },
+  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING", subscriptionStatus: "PREMIUM_PENDING" },
+  { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED", subscriptionStatus: "FREE" },
+  { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED", subscriptionStatus: "PREMIUM" },
+  { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING", subscriptionStatus: "FREE" },
+  { id: "STU-1006", studentName: "Ethan Cole", email: "ethan@example.com", college: "Global Arts Acad.", domain: "Data Science", level: "Beginner", status: "VERIFIED", subscriptionStatus: "PREMIUM_PENDING" },
 ];
+
+function filterMockStudents(
+  opts?: { search?: string; status?: string; subscriptionStatus?: string },
+) {
+  const search = opts?.search?.trim().toLowerCase() ?? "";
+  return mockStudents.filter((student) => {
+    const matchesSearch =
+      !search ||
+      student.studentName.toLowerCase().includes(search) ||
+      student.email.toLowerCase().includes(search) ||
+      student.college.toLowerCase().includes(search) ||
+      student.domain.toLowerCase().includes(search);
+    const matchesStatus =
+      !opts?.status || opts.status === "ALL" || student.status === opts.status;
+    const matchesSubscription =
+      !opts?.subscriptionStatus ||
+      opts.subscriptionStatus === "ALL" ||
+      student.subscriptionStatus === opts.subscriptionStatus;
+    return matchesSearch && matchesStatus && matchesSubscription;
+  });
+}
 
 export const studentsApi = {
   getStudents: async (
     page = 1,
-    opts?: { search?: string; status?: string },
+    opts?: { search?: string; status?: string; subscriptionStatus?: string },
   ): Promise<StudentsResponse> => {
     if (USE_MOCK) {
       await delay(600);
-      const pageSize = 4;
+      const pageSize = 10;
+      const filtered = filterMockStudents(opts);
       const start = (page - 1) * pageSize;
-      const pagedStudents = mockStudents.slice(start, start + pageSize);
+      const pagedStudents = filtered.slice(start, start + pageSize);
       return {
         students: pagedStudents,
         page,
-        totalPages: Math.max(1, Math.ceil(mockStudents.length / pageSize)),
-        total: mockStudents.length,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+        total: filtered.length,
       };
     }
     const params = new URLSearchParams({ page: String(page) });
     if (opts?.search) params.set("search", opts.search);
     if (opts?.status && opts.status !== "ALL") params.set("status", opts.status);
+    if (opts?.subscriptionStatus && opts.subscriptionStatus !== "ALL") {
+      params.set("subscriptionStatus", opts.subscriptionStatus);
+    }
     return request<StudentsResponse>(`/admin/students?${params.toString()}`);
+  },
+
+  approvePremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "PREMIUM";
+      return {
+        message: "Premium access approved. Premium features are now unlocked.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/approve-premium`,
+      { method: "POST" },
+    );
+  },
+
+  undoPremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "PREMIUM_PENDING";
+      return {
+        message:
+          "Premium approval undone. Status is Premium Pending again and premium features are locked.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/undo-premium`,
+      { method: "POST" },
+    );
+  },
+
+  rejectPremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "FREE";
+      return {
+        message: "Premium subscription rejected. The student is back on the Free plan.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/reject-premium`,
+      { method: "POST" },
+    );
+  },
+
+  updateStudent: async (
+    id: string,
+    payload: {
+      studentName: string;
+      email: string;
+      college: string;
+      domain: string;
+      level: string;
+      phone?: string;
+    },
+  ): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.studentName = payload.studentName;
+      student.email = payload.email;
+      student.college = payload.college;
+      student.domain = payload.domain;
+      student.level = payload.level;
+      if (payload.phone !== undefined) student.phone = payload.phone;
+      return { message: "Student details updated.", student };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+    );
   },
 };
 

@@ -107,12 +107,72 @@ async function me(req, res, next) {
   }
 }
 
+async function requestPremium(req, res, next) {
+  try {
+    const result = await studentService.requestPremium(req.student.id);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function listStudents(req, res, next) {
   try {
     const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.pageSize) || 10;
     const search = req.query.search ? String(req.query.search) : undefined;
     const status = req.query.status ? String(req.query.status) : undefined;
-    const result = await studentService.listStudents({ page, search, status });
+    const subscriptionStatus = req.query.subscriptionStatus
+      ? String(req.query.subscriptionStatus)
+      : undefined;
+    const college = req.query.college ? String(req.query.college) : undefined;
+    const result = await studentService.listStudents({
+      page,
+      pageSize,
+      search,
+      status,
+      subscriptionStatus,
+      college,
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function updateStudent(req, res, next) {
+  try {
+    const result = await studentService.updateStudent(req.params.id, req.body);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function approvePremium(req, res, next) {
+  try {
+    const result = await studentService.approvePremium(
+      req.params.id,
+      req.admin?.id,
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function undoPremium(req, res, next) {
+  try {
+    const result = await studentService.undoPremium(req.params.id);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function rejectPremium(req, res, next) {
+  try {
+    const result = await studentService.rejectPremium(req.params.id);
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -129,5 +189,10 @@ module.exports = {
   forgotPassword,
   resetPassword,
   me,
+  requestPremium,
   listStudents,
+  updateStudent,
+  approvePremium,
+  undoPremium,
+  rejectPremium,
 };
