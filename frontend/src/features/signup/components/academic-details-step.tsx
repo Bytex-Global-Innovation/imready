@@ -2,6 +2,7 @@
 
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   COLLEGE_OPTIONS,
@@ -17,30 +18,6 @@ interface AcademicDetailsStepProps {
   errors: FieldErrors<SignupFormValues>;
   selectedDomain?: string;
 }
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      className="h-4 w-4 text-muted"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 9l-7 7-7-7"
-      />
-    </svg>
-  );
-}
-
-const fieldBaseClass =
-  "h-11 w-full min-w-0 cursor-pointer rounded-[var(--radius-button)] border bg-white px-3.5 text-sm text-foreground transition-colors placeholder:text-muted/70 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20";
-
-const fieldErrorClass = "border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/20";
 
 export function AcademicDetailsStep({
   register,
@@ -63,37 +40,20 @@ export function AcademicDetailsStep({
           <Label htmlFor="college" required>
             College / Institution
           </Label>
-          <div className="relative">
-            <select
-              id="college"
-              defaultValue=""
-              className={cn(
-                fieldBaseClass,
-                "appearance-none truncate pr-10",
-                errors.college ? fieldErrorClass : "border-border",
-              )}
-              aria-invalid={errors.college ? true : undefined}
-              aria-describedby={errors.college ? "college-error" : undefined}
-              {...register("college")}
-            >
-              <option value="" disabled>
-                Select your college
+          <Select
+            id="college"
+            error={errors.college?.message}
+            {...register("college")}
+          >
+            <option value="" disabled>
+              Select your college
+            </option>
+            {COLLEGE_OPTIONS.map((college) => (
+              <option key={college} value={college}>
+                {college}
               </option>
-              {COLLEGE_OPTIONS.map((college) => (
-                <option key={college} value={college}>
-                  {college}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-              <ChevronDownIcon />
-            </span>
-          </div>
-          {errors.college?.message && (
-            <p id="college-error" className="text-xs text-red-600" role="alert">
-              {errors.college.message}
-            </p>
-          )}
+            ))}
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -101,82 +61,40 @@ export function AcademicDetailsStep({
             <Label htmlFor="streamMajor" required>
               Stream / Major
             </Label>
-            <div className="relative min-w-0">
-              <select
-                id="streamMajor"
-                defaultValue=""
-                className={cn(
-                  fieldBaseClass,
-                  "appearance-none truncate pr-10",
-                  errors.streamMajor ? fieldErrorClass : "border-border",
-                )}
-                aria-invalid={errors.streamMajor ? true : undefined}
-                aria-describedby={
-                  errors.streamMajor ? "streamMajor-error" : undefined
-                }
-                {...register("streamMajor")}
-              >
-                <option value="" disabled>
-                  Select Stream
+            <Select
+              id="streamMajor"
+              error={errors.streamMajor?.message}
+              {...register("streamMajor")}
+            >
+              <option value="" disabled>
+                Select Stream
+              </option>
+              {STREAM_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
-                {STREAM_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                <ChevronDownIcon />
-              </span>
-            </div>
-            {errors.streamMajor?.message && (
-              <p id="streamMajor-error" className="text-xs text-red-600" role="alert">
-                {errors.streamMajor.message}
-              </p>
-            )}
+              ))}
+            </Select>
           </div>
 
           <div className="min-w-0 space-y-1.5">
             <Label htmlFor="graduationYear" required>
               Year of Graduation
             </Label>
-            <div className="relative min-w-0">
-              <select
-                id="graduationYear"
-                defaultValue=""
-                className={cn(
-                  fieldBaseClass,
-                  "appearance-none pr-10",
-                  errors.graduationYear ? fieldErrorClass : "border-border",
-                )}
-                aria-invalid={errors.graduationYear ? true : undefined}
-                aria-describedby={
-                  errors.graduationYear ? "graduationYear-error" : undefined
-                }
-                {...register("graduationYear")}
-              >
-                <option value="" disabled>
-                  Select Year
+            <Select
+              id="graduationYear"
+              error={errors.graduationYear?.message}
+              {...register("graduationYear")}
+            >
+              <option value="" disabled>
+                Select Year
+              </option>
+              {GRADUATION_YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}
                 </option>
-                {GRADUATION_YEARS.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                <ChevronDownIcon />
-              </span>
-            </div>
-            {errors.graduationYear?.message && (
-              <p
-                id="graduationYear-error"
-                className="text-xs text-red-600"
-                role="alert"
-              >
-                {errors.graduationYear.message}
-              </p>
-            )}
+              ))}
+            </Select>
           </div>
         </div>
       </div>

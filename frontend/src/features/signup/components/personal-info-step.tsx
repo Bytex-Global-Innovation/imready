@@ -3,6 +3,7 @@
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { COUNTRY_CODES, type SignupFormValues } from "../schemas/signup-schemas";
 
 interface PersonalInfoStepProps {
@@ -51,10 +52,9 @@ export function PersonalInfoStep({ register, errors }: PersonalInfoStepProps) {
             Phone Number
           </Label>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative w-full shrink-0 sm:w-28">
-              <select
+            <div className="w-full min-w-0 shrink-0 sm:w-28">
+              <Select
                 id="countryCode"
-                className="h-11 w-full min-w-0 cursor-pointer appearance-none rounded-[var(--radius-button)] border border-border bg-white px-2.5 pr-7 text-sm text-foreground focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
                 aria-label="Country code"
                 {...register("countryCode")}
               >
@@ -63,25 +63,7 @@ export function PersonalInfoStep({ register, errors }: PersonalInfoStepProps) {
                     {item.label}
                   </option>
                 ))}
-              </select>
-              <span
-                className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted"
-                aria-hidden="true"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </span>
+              </Select>
             </div>
             <Input
               id="phone"
