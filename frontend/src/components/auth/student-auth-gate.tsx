@@ -185,6 +185,7 @@ export function useStudentProfile() {
       student: null as StudentProfile | null,
       projectsUnlocked: false,
       loading: true,
+      refresh: async () => {},
     };
   }
 
@@ -192,6 +193,7 @@ export function useStudentProfile() {
     student: session.student,
     projectsUnlocked: session.projectsUnlocked,
     loading: !session.ready,
+    refresh: session.refresh,
   };
 }
 
