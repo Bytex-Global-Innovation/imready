@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { X } from "@/components/icons";
+import Select from "@/components/ui/select";
 import type { AnswerType, QuestionCategory } from "@/lib/api";
 
 export type DraftOption = { label: string; correctOrder: number };
@@ -183,23 +184,27 @@ export default function AddQuestionModal({
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Answer format</span>
-            <select
-              className="admin-input w-full"
+            <Select
               value={draft.answerType}
               onChange={(e) => setAnswerType(e.target.value as AnswerType)}
             >
               <option value="JUMBLED">Jumbled order only</option>
               <option value="PERSONAL">Personal response only</option>
               <option value="BOTH">Jumbled order + personal response</option>
-            </select>
+            </Select>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Evaluation category</span>
-            <select className="admin-input w-full" value={draft.category} onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value as QuestionCategory }))}>
+            <Select
+              value={draft.category}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, category: e.target.value as QuestionCategory }))
+              }
+            >
               <option value="OBSERVATION">Observation</option>
               <option value="THINKING">Thinking</option>
               <option value="BUILDING">Building</option>
-            </select>
+            </Select>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Question</span>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import Select from "@/components/ui/select";
 import {
   projectCategoriesApi,
   projectsApi,
@@ -291,8 +292,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Category</span>
-              <select
-                className="admin-input w-full"
+              <Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
@@ -306,7 +306,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                     </option>
                   ))
                 )}
-              </select>
+              </Select>
               {categories.length === 0 && (
                 <span className="mt-1 block text-xs text-amber-600">
                   Create a category under Project Categories first.
@@ -326,8 +326,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Status</span>
-              <select
-                className="admin-input w-full"
+              <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ProjectStatus)}
               >
@@ -335,7 +334,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 <option value="PENDING">PENDING</option>
                 <option value="REVIEW">REVIEW</option>
                 <option value="ARCHIVED">ARCHIVED</option>
-              </select>
+              </Select>
             </label>
 
             <label className="block text-sm">

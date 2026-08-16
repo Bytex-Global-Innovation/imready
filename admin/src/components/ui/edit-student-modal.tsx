@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { X } from "@/components/icons";
 import type { Student } from "@/lib/api";
+import Select from "@/components/ui/select";
 
 const DOMAIN_OPTIONS = [
   "Artificial Intelligence",
@@ -164,8 +165,7 @@ export default function EditStudentModal({
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Domain</span>
-            <select
-              className="admin-input w-full"
+            <Select
               value={form.domain}
               onChange={(e) => setForm((prev) => ({ ...prev, domain: e.target.value }))}
               required
@@ -175,12 +175,11 @@ export default function EditStudentModal({
                   {option}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Level</span>
-            <select
-              className="admin-input w-full"
+            <Select
               value={form.level}
               onChange={(e) => setForm((prev) => ({ ...prev, level: e.target.value }))}
               required
@@ -190,7 +189,7 @@ export default function EditStudentModal({
                   {option}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import Select from "@/components/ui/select";
 import AddQuestionModal, {
   type DraftQuestion,
 } from "@/components/ui/add-question-modal";
@@ -324,22 +325,20 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Status</span>
-              <select
-                className="admin-input w-full cursor-pointer"
+              <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as AssessmentStatus)}
               >
                 <option value="DRAFT">DRAFT</option>
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="ARCHIVED">ARCHIVED</option>
-              </select>
+              </Select>
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">
                 Question order for students
               </span>
-              <select
-                className="admin-input w-full cursor-pointer"
+              <Select
                 value={questionOrderMode}
                 onChange={(e) =>
                   setQuestionOrderMode(e.target.value as QuestionOrderMode)
@@ -348,7 +347,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                 <option value="sequential">Sequential</option>
                 <option value="random">Random</option>
                 <option value="jumbled">Jumbled</option>
-              </select>
+              </Select>
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">
@@ -394,10 +393,13 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
           <p className="admin-section-label">Evaluation criteria</p>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Weighting method</span>
-            <select className="admin-input w-full" value={weightingMode} onChange={(e) => setWeightingMode(e.target.value as WeightingMode)}>
+            <Select
+              value={weightingMode}
+              onChange={(e) => setWeightingMode(e.target.value as WeightingMode)}
+            >
               <option value="EQUAL">Same weight for every question</option>
               <option value="INDIVIDUAL">Individual weight per question</option>
-            </select>
+            </Select>
           </label>
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="block text-sm">

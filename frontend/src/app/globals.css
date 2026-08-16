@@ -113,7 +113,7 @@ html {
     @apply mb-1.5 block text-sm font-medium text-foreground;
   }
   .form-input {
-    @apply w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:bg-gray-50;
+    @apply w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus:border-border focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:bg-gray-50;
   }
   .form-error {
     @apply mt-1 text-xs text-red-500;

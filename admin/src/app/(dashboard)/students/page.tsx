@@ -6,6 +6,7 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import ConfirmModal from "@/components/ui/confirm-modal";
 import EditStudentModal, { type StudentEditPayload } from "@/components/ui/edit-student-modal";
 import Pagination from "@/components/ui/pagination";
+import Select from "@/components/ui/select";
 import StudentsTable from "@/components/tables/students-table";
 import { studentsApi, type Student } from "@/lib/api";
 
@@ -192,7 +193,7 @@ export default function StudentsPage() {
 
       <div className="admin-card">
         <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
+          <div className="relative w-full min-w-0 max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -202,11 +203,10 @@ export default function StudentsPage() {
               onChange={(event) => setSearchInput(event.target.value)}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-500">
-              Status
-              <select
-                className="admin-input"
+          <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:w-auto sm:min-w-[22rem] sm:grid-cols-2">
+            <label className="block min-w-0 text-sm text-gray-500">
+              <span className="mb-1 block">Status</span>
+              <Select
                 value={status}
                 onChange={(event) => {
                   setStatus(event.target.value);
@@ -217,12 +217,11 @@ export default function StudentsPage() {
                 <option value="PENDING">Pending</option>
                 <option value="VERIFIED">Verified</option>
                 <option value="FLAGGED">Flagged</option>
-              </select>
+              </Select>
             </label>
-            <label className="flex items-center gap-2 text-sm text-gray-500">
-              Subscription
-              <select
-                className="admin-input"
+            <label className="block min-w-0 text-sm text-gray-500">
+              <span className="mb-1 block">Subscription</span>
+              <Select
                 value={subscriptionStatus}
                 onChange={(event) => {
                   setSubscriptionStatus(event.target.value);
@@ -233,7 +232,7 @@ export default function StudentsPage() {
                 <option value="FREE">Free</option>
                 <option value="PREMIUM_PENDING">Premium Pending</option>
                 <option value="PREMIUM">Premium</option>
-              </select>
+              </Select>
             </label>
           </div>
         </div>

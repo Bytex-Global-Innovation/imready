@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Search,
-  ChevronDown,
   Plus,
   ClipboardList,
   ShieldCheck,
@@ -12,6 +11,7 @@ import {
 } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import Pagination from "@/components/ui/pagination";
+import Select from "@/components/ui/select";
 import StatCard from "@/components/ui/stat-card";
 import AssessmentsTable from "@/components/tables/assessments-table";
 import BulkUploadAssessmentModal from "@/components/ui/bulk-upload-assessment-modal";
@@ -27,6 +27,7 @@ export default function AssessmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const loadData = useCallback(async (page: number) => {
     setIsLoading(true);
@@ -114,7 +115,7 @@ export default function AssessmentsPage() {
 
       <div className="admin-card">
         <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
+          <div className="relative w-full min-w-0 max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -122,11 +123,17 @@ export default function AssessmentsPage() {
               className="admin-input-icon w-full"
             />
           </div>
-          <div className="flex items-center gap-3">
-            <button type="button" className="admin-btn-outline gap-2 bg-gray-50/50">
-              <span className="text-gray-500">Status:</span> All
-              <ChevronDown className="h-4 w-4 text-gray-400" />
-            </button>
+          <div className="w-full min-w-0 sm:w-48">
+            <Select
+              aria-label="Filter by status"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="ALL">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="DRAFT">Draft</option>
+              <option value="ARCHIVED">Archived</option>
+            </Select>
           </div>
         </div>
 
@@ -139,7 +146,9 @@ export default function AssessmentsPage() {
             <div className="p-10 text-center text-sm text-gray-400 animate-pulse">Loading assessments...</div>
           ) : (
             <AssessmentsTable
-              assessments={data?.assessments ?? []}
+              assessments={(data?.assessments ?? []).filter(
+                (item) => statusFilter === "ALL" || item.status === statusFilter,
+              )}
               onDelete={handleDelete}
             />
           )}
