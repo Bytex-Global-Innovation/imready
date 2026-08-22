@@ -8,20 +8,27 @@ import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { ApiError, authApi } from "@/lib/api";
 
-function resolvePostVerifyPath(redirectTo?: string) {
-  if (redirectTo === "/bytex" || redirectTo === ROUTES.bytex) {
-    return ROUTES.bytex;
+/** Only allow student-app destinations after verify (never admin). */
+function resolvePostVerifyPath(
+  ...candidates: Array<string | null | undefined>
+) {
+  for (const value of candidates) {
+    if (!value) continue;
+    if (value === "/bytex" || value === ROUTES.bytex) {
+      return ROUTES.bytex;
+    }
+    if (value === "/dashboard" || value === ROUTES.dashboard) {
+      return ROUTES.dashboard;
+    }
   }
-  if (redirectTo === "/dashboard" || redirectTo === ROUTES.dashboard) {
-    return ROUTES.dashboard;
-  }
-  return redirectTo || ROUTES.dashboard;
+  return ROUTES.dashboard;
 }
 
 export function VerifyEmailView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
+  const nextHint = searchParams.get("next");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     token ? "loading" : "error",
@@ -39,7 +46,12 @@ export function VerifyEmailView() {
         const result = await authApi.verifyEmail(token);
         if (cancelled) return;
 
-        const destination = resolvePostVerifyPath(result.redirectTo);
+        // Prefer API redirect (from careerDoor); fall back to email `next` hint.
+        // bytex-unlock → /bytex ; written-challenge (free) → /dashboard
+        const destination = resolvePostVerifyPath(
+          result.redirectTo,
+          nextHint,
+        );
         const isPremium = destination === ROUTES.bytex;
 
         setStatus("success");
@@ -64,7 +76,7 @@ export function VerifyEmailView() {
     return () => {
       cancelled = true;
     };
-  }, [router, token]);
+  }, [router, token, nextHint]);
 
   return (
     <div className="mx-auto w-full max-w-md">

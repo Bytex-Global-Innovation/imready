@@ -272,8 +272,9 @@ async function signup(payload) {
   }
 
   if (!emailSent && process.env.NODE_ENV !== 'production') {
+    const next = redirectForDoor(student.careerDoor);
     response.devVerifyUrl = frontendUrl(
-      `/verify-email?token=${encodeURIComponent(rawToken)}`,
+      `/verify-email?token=${encodeURIComponent(rawToken)}&next=${encodeURIComponent(next)}`,
     );
   }
 
