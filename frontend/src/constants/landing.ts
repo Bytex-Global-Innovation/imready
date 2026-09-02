@@ -235,48 +235,45 @@ export interface MentorshipPerson {
 
 export const ACADEMIC_MENTORS: MentorshipPerson[] = [
   {
-    name: "Dr. Arjan Singh",
-    role: "IIT Delhi Alumnus • Physics Lead",
-    imageSrc:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Dr. Arjan Singh",
+    name: "Dilpreet Singh",
+    role: "Software Engineer • Wolters Kluwer",
+    imageSrc: "/mentor-dilpreet.jpeg",
+    imageAlt: "Portrait of Dilpreet Singh",
   },
   {
-    name: "Meera Krishnan",
-    role: "Stanford Scholar • Career Strategist",
-    imageSrc:
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Meera Krishnan",
+    name: "Hemant Nagalkar",
+    role: "Founder & CEO • IIM Raipur • Ex-Lenovo, Infosys Consulting, UpGrad, Wipro, Capgemini • 2x Founder",
+    imageSrc: "/mentor-hemant.png",
+    imageAlt: "Portrait of Hemant Nagalkar",
   },
   {
-    name: "Rahul Varma",
-    role: "Ex-Amazon • Senior Systems Guide",
-    imageSrc:
-      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Rahul Varma",
+    name: "Yogesh Murumkar",
+    role: "Corporate Trainer & CEO • Bharat Software Solutions",
+    imageSrc: "/mentor-yogesh.png",
+    imageAlt: "Portrait of Yogesh Murumkar",
   },
 ];
 
 export const SUCCESSFUL_EXPLORERS: MentorshipPerson[] = [
   {
-    name: "Sriram Teja",
-    role: "Senior Developer at Google",
+    name: "Urja Wagh",
+    role: "Marketing head at Softbyte Pvt.Ltd.",
     imageSrc:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Sriram Teja",
+      "/achievement-2.jpeg",
+    imageAlt: "Portrait of Urja Wagh",
   },
   {
-    name: "Pranavi R.",
-    role: "Machine Learning Scientist • Apple",
+    name: "Krishna Marathe, Samarth, Rutuja, Kartik, Indranil",
+    role: "Patent Published",
     imageSrc:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Pranavi R.",
+      "/achievement-1.jpeg",
+    imageAlt: "Portrait of Patent",
   },
   {
-    name: "Rakesh Misra",
-    role: "Founder, Uhana • Stanford Alumnus",
+    name: "Teesha Madan",
+    role: "Research paper published at IEEE conference",
     imageSrc:
-      "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?auto=format&fit=crop&w=400&q=80",
-    imageAlt: "Portrait of Rakesh Misra",
+      "/achievement-3.jpeg",
+    imageAlt: "Portrait of Teesha",
   },
 ];

@@ -128,7 +128,7 @@ export function SignupForm() {
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema) as Resolver<SignupFormValues>,
-    defaultValues: { ...defaultValues, ...loadDraft() },
+    defaultValues: { ...defaultValues, ...readDraft() },
     mode: "onTouched",
   });
 
@@ -153,7 +153,7 @@ export function SignupForm() {
 
   // Keep the draft in sync as the person types/selects, on every step.
   useEffect(() => {
-    saveDraft(watchedValues);
+    writeDraft(watchedValues);
   }, [watchedValues]);
 
   function goToStep(step: SignupStep) {

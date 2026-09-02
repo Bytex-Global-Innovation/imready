@@ -19,10 +19,10 @@ function PersonCard({ person }: { person: MentorshipPerson }) {
         />
       </div>
       <div className="p-4 text-center">
-        <p className="font-display text-base font-bold text-hero-heading">
-          {person.name}
-        </p>
-        <p className="mt-1 text-sm text-hero-body">{person.role}</p>
+        <p className="font-display text-base font-normal text-hero-heading">
+  {person.name}
+</p>
+<p className="mt-1 text-sm font-semibold text-hero-body">{person.role}</p>
       </div>
     </article>
   );
