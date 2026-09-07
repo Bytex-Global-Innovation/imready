@@ -277,3 +277,12 @@ export const SUCCESSFUL_EXPLORERS: MentorshipPerson[] = [
     imageAlt: "Portrait of Teesha",
   },
 ];
+export const INDUSTRY_LOGOS = [
+  { name: "BNY",         src: "/bny.png"         },
+  { name: "PhonePe",     src: "/phonepe.png"     },
+  { name: "Mastercard",  src: "/mastercard.png"  },
+  { name: "TCS",         src: "/tcs.png"         },
+  { name: "Institution", src: "/institution.png" },
+] as const;
+
+export const INDUSTRY_LOGOS_LABEL = "Learn from the Best in the Industry";
