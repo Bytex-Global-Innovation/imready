@@ -6,8 +6,8 @@ export const DASHBOARD_USER = {
 
 export const JOURNEY_PATH_STEPS = [
   {
-    id: "assessment",
-    label: "Assessment",
+    id: "foundation",
+    label: "Foundation",
     subtitle: "Foundational",
     status: "active" as const,
   },
@@ -29,14 +29,112 @@ export const JOURNEY_PATH_STEPS = [
     subtitle: "Professional",
     status: "locked" as const,
   },
+] as const;
+
+/** The 5-step "how it works" list on the Stage 0 dashboard card. */
+export type FoundationStepIcon =
+  | "calendar"
+  | "check"
+  | "document"
+  | "chart"
+  | "star";
+
+export const FOUNDATION_STEPS = [
   {
-    id: "research",
-    label: "Research",
-    subtitle: "Publishing",
-    status: "locked" as const,
+    id: "lessons",
+    step: 1,
+    label: "Explore short lessons",
+    note: "(10–15 min each)",
+    icon: "calendar" as FoundationStepIcon,
+  },
+  {
+    id: "mission",
+    step: 2,
+    label: "Do a small mission",
+    note: null,
+    icon: "check" as FoundationStepIcon,
+  },
+  {
+    id: "evidence",
+    step: 3,
+    label: "Submit your evidence",
+    note: null,
+    icon: "document" as FoundationStepIcon,
+  },
+  {
+    id: "feedback",
+    step: 4,
+    label: "Get feedback",
+    note: "(AI powered)",
+    icon: "chart" as FoundationStepIcon,
+  },
+  {
+    id: "profile",
+    step: 5,
+    label: "Complete all 5 missions and unlock your Foundation Profile",
+    note: null,
+    icon: "star" as FoundationStepIcon,
   },
 ] as const;
 
+export const FOUNDATION_CARD = {
+  title: "Your learning journey in 5 simple steps",
+  description:
+    "Complete the foundational missions to unlock Stage 01, hands-on projects, and your Foundation Profile.",
+  callout: "No exams. No marks. Just real work and real feedback.",
+  cta: "Start Foundation Stage",
+} as const;
+
+/** Instructions modal — 5 micro-missions. */
+export const FOUNDATION_PARTS = [
+  { part: "Part 1: Reality", title: "Friction Observation", duration: "15 mins" },
+  { part: "Part 2: Engage", title: "Conversations", duration: "20 mins" },
+  { part: "Part 3: Analyze", title: "The 5 Whys", duration: "20 mins" },
+  { part: "Part 4: Do", title: "Build & Test", duration: "30 mins" },
+  { part: "Part 5: Your Proof", title: "Show Your Impact", duration: "15 mins" },
+] as const;
+
+export const FOUNDATION_INSTRUCTIONS = {
+  title: "Stage 0: Foundation Stage Instructions",
+  intro:
+    "This foundational stage guides you through 5 real-world micro-missions to build and verify your problem-solving capabilities.",
+} as const;
+
+export type FoundationNoticeIcon = "clock" | "wifi" | "star";
+
+export const FOUNDATION_NOTICES = [
+  {
+    id: "duration",
+    icon: "clock" as FoundationNoticeIcon,
+    segments: [
+      {
+        text: "Total duration: ~100 minutes. You can complete each mission at your own pace.",
+        bold: false,
+      },
+    ],
+  },
+  {
+    id: "autosave",
+    icon: "wifi" as FoundationNoticeIcon,
+    segments: [
+      {
+        text: "Your work auto-saves continuously. You can pause and return anytime.",
+        bold: false,
+      },
+    ],
+  },
+  {
+    id: "proof",
+    icon: "star" as FoundationNoticeIcon,
+    segments: [
+      { text: "Complete all 5 missions to generate your verified ", bold: false },
+      { text: "Foundation Profile", bold: true },
+      { text: " and ", bold: false },
+      { text: "READY Score", bold: true },
+      { text: ".", bold: false },
+    ],
+  },
+] as const;
 
 export const ASSESSMENT_CHECKLIST = [
   {

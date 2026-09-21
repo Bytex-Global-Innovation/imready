@@ -2,22 +2,33 @@
 
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle,
   Clock,
   Info,
+  Star,
   TableProperties,
   Wifi,
   X,
   Zap,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { ASSESSMENT_NOTICES, ASSESSMENT_PARTS } from "@/constants/dashboard";
+import {
+  FOUNDATION_INSTRUCTIONS,
+  FOUNDATION_NOTICES,
+  FOUNDATION_PARTS,
+  type FoundationNoticeIcon,
+} from "@/constants/dashboard";
 import { ROUTES } from "@/constants/routes";
 
 interface AssessmentInstructionsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const NOTICE_ICONS: Record<FoundationNoticeIcon, typeof Clock> = {
+  clock: Clock,
+  wifi: Wifi,
+  star: Star,
+};
 
 export function AssessmentInstructionsModal({
   isOpen,
@@ -37,15 +48,15 @@ export function AssessmentInstructionsModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="assessment-instructions-title"
-        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-xl sm:p-7"
+        aria-labelledby="foundation-instructions-title"
+        className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-xl sm:p-7"
       >
         <div className="mb-4 flex items-start justify-between gap-4 sm:mb-5">
           <h2
-            id="assessment-instructions-title"
+            id="foundation-instructions-title"
             className="font-display text-xl font-bold text-foreground sm:text-2xl"
           >
-            Stage 0 Assessment Instructions
+            {FOUNDATION_INSTRUCTIONS.title}
           </h2>
           <button
             type="button"
@@ -60,8 +71,7 @@ export function AssessmentInstructionsModal({
         <div className="mb-4 flex gap-3 rounded-[var(--radius-card)] border border-brand-100 border-l-4 border-l-primary bg-surface px-4 py-3 sm:mb-6">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm text-foreground">
-            This assessment evaluates your creative baseline and helps us tailor
-            the upcoming Explorer modules to your strengths.
+            {FOUNDATION_INSTRUCTIONS.intro}
           </p>
         </div>
 
@@ -70,8 +80,8 @@ export function AssessmentInstructionsModal({
             <TableProperties className="h-4 w-4 text-primary" />
             Key Instructions
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
-            {ASSESSMENT_PARTS.map((part) => (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+            {FOUNDATION_PARTS.map((part) => (
               <div
                 key={part.part}
                 className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2.5 sm:block sm:px-4 sm:py-4"
@@ -97,26 +107,27 @@ export function AssessmentInstructionsModal({
         </div>
 
         <ul className="mb-5 space-y-2.5 sm:mb-7 sm:space-y-3">
-          {ASSESSMENT_NOTICES.map((notice) => {
-            const Icon =
-              notice.icon === "clock"
-                ? Clock
-                : notice.icon === "wifi"
-                  ? Wifi
-                  : AlertTriangle;
+          {FOUNDATION_NOTICES.map((notice) => {
+            const Icon = NOTICE_ICONS[notice.icon];
             return (
               <li key={notice.id} className="flex gap-3 text-sm text-foreground">
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <Icon
+                  className={
+                    notice.icon === "star"
+                      ? "mt-0.5 h-4 w-4 shrink-0 text-amber-500"
+                      : "mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  }
+                />
                 <p>
-                  {notice.text}
-                  {notice.highlight ? (
-                    <>
-                      {" "}
-                      <span className="font-medium text-red-600">
-                        {notice.highlight}
+                  {notice.segments.map((segment, index) =>
+                    segment.bold ? (
+                      <span key={index} className="font-semibold">
+                        {segment.text}
                       </span>
-                    </>
-                  ) : null}
+                    ) : (
+                      <span key={index}>{segment.text}</span>
+                    ),
+                  )}
                 </p>
               </li>
             );
