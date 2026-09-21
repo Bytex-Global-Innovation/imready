@@ -2,7 +2,7 @@ import { Lock, Rocket } from "@/components/icons";
 import { JOURNEY_PATH_STEPS } from "@/constants/dashboard";
 import { cn } from "@/lib/utils";
 
-const MOBILE_GRID_COLUMNS = 3;
+const MOBILE_GRID_COLUMNS = 2;
 
 function StepBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -29,7 +29,7 @@ export function JourneyPath() {
       </p>
 
       {/* Mobile: 3-over-2 grid, connecting lines only within the same row */}
-      <div className="grid grid-cols-3 gap-x-2 gap-y-6 sm:hidden">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:hidden">
         {JOURNEY_PATH_STEPS.map((step, index) => {
           const isActive = step.status === "active";
           const isLastInRow = (index + 1) % MOBILE_GRID_COLUMNS === 0;

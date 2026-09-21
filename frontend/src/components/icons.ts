@@ -79,6 +79,8 @@ export {
   FileText,
   Download,
   Zap,
+  BarChart3,
 } from "lucide-react";
+
 
 export type { LucideIcon } from "lucide-react";
