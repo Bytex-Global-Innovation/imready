@@ -2,16 +2,34 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, Circle, Play } from "@/components/icons";
+import {
+  ArrowRight,
+  BarChart3,
+  CalendarDays,
+  CheckCircle2,
+  FileText,
+  Play,
+  Star,
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
-  ASSESSMENT_CHECKLIST,
   DASHBOARD_USER,
+  FOUNDATION_CARD,
+  FOUNDATION_STEPS,
   INTRO_VIDEO,
+  type FoundationStepIcon,
 } from "@/constants/dashboard";
 import { ActiveProjectDashboard } from "./active-project-dashboard";
 import { AssessmentInstructionsModal } from "./assessment-instructions-modal";
 import { JourneyPath } from "./journey-path";
+
+const STEP_ICONS: Record<FoundationStepIcon, typeof CalendarDays> = {
+  calendar: CalendarDays,
+  check: CheckCircle2,
+  document: FileText,
+  chart: BarChart3,
+  star: Star,
+};
 
 export function DashboardView() {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
@@ -38,40 +56,42 @@ export function DashboardView() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <section className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-5 sm:p-7 xl:col-span-3">
           <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
-            Complete the assessment to move to the next stage.
+            {FOUNDATION_CARD.title}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            To unlock Stage 01 and gain access to premium curriculum and advanced
-            analytics, you must first complete the foundational competency
-            assessment. This helps us tailor your journey.
+            {FOUNDATION_CARD.description}
           </p>
 
-          <ul className="mt-6 space-y-3">
-            {ASSESSMENT_CHECKLIST.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 text-sm sm:text-base">
-                {item.done ? (
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-                ) : (
-                  <Circle className="h-5 w-5 shrink-0 text-brand-100" />
-                )}
-                <span
-                  className={
-                    item.done
-                      ? "font-medium text-foreground"
-                      : "text-muted"
-                  }
-                >
-                  {item.label}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <ol className="mt-6 space-y-3.5">
+            {FOUNDATION_STEPS.map((item) => {
+              const Icon = STEP_ICONS[item.icon];
+              return (
+                <li key={item.id} className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <p className="pt-1 text-sm leading-snug sm:text-base">
+                    <span className="font-semibold text-foreground">
+                      {item.step}
+                    </span>{" "}
+                    <span className="font-medium text-foreground">
+                      {item.label}
+                    </span>
+                    {item.note ? (
+                      <span className="text-muted"> {item.note}</span>
+                    ) : null}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
 
-          <Button
-            className="mt-7"
-            onClick={() => setInstructionsOpen(true)}
-          >
-            Start Assessment
+          <p className="mt-6 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">
+            {FOUNDATION_CARD.callout}
+          </p>
+
+          <Button className="mt-6" onClick={() => setInstructionsOpen(true)}>
+            {FOUNDATION_CARD.cta}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </section>
