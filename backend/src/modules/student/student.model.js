@@ -94,6 +94,18 @@ const StudentAccount = sequelize.define(
       defaultValue: null,
       field: 'premium_approved_by',
     },
+    premiumPaymentScreenshot: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_payment_screenshot',
+    },
+    premiumPaymentSubmittedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_payment_submitted_at',
+    },
     status: {
       type: DataTypes.ENUM('VERIFIED', 'PENDING', 'FLAGGED'),
       allowNull: false,

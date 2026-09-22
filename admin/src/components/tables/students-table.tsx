@@ -1,4 +1,4 @@
-import { CheckCircle2, Pencil, RotateCcw, X } from "@/components/icons";
+import { CheckCircle2, Eye, Pencil, X } from "@/components/icons";
 import type { Student, SubscriptionStatus } from "@/lib/api";
 
 const STATUS_CONFIG = {
@@ -31,8 +31,8 @@ function subscriptionOf(student: Student): SubscriptionStatus {
 
 interface StudentsTableProps {
   students: Student[];
+  onViewPremiumRequest?: (student: Student) => void;
   onApprovePremium?: (student: Student) => void;
-  onUndoPremium?: (student: Student) => void;
   onRejectPremium?: (student: Student) => void;
   onEditStudent?: (student: Student) => void;
   actingId?: string | null;
@@ -40,8 +40,8 @@ interface StudentsTableProps {
 
 export default function StudentsTable({
   students,
+  onViewPremiumRequest,
   onApprovePremium,
-  onUndoPremium,
   onRejectPremium,
   onEditStudent,
   actingId,
@@ -72,8 +72,8 @@ export default function StudentsTable({
                 </div>
                 <RowActions
                   student={student}
+                  onViewPremiumRequest={onViewPremiumRequest}
                   onApprovePremium={onApprovePremium}
-                  onUndoPremium={onUndoPremium}
                   onRejectPremium={onRejectPremium}
                   onEditStudent={onEditStudent}
                   actingId={actingId}
@@ -136,8 +136,8 @@ export default function StudentsTable({
                     <div className="flex items-center justify-end">
                       <RowActions
                         student={student}
+                        onViewPremiumRequest={onViewPremiumRequest}
                         onApprovePremium={onApprovePremium}
-                        onUndoPremium={onUndoPremium}
                         onRejectPremium={onRejectPremium}
                         onEditStudent={onEditStudent}
                         actingId={actingId}
@@ -156,25 +156,41 @@ export default function StudentsTable({
 
 function RowActions({
   student,
+  onViewPremiumRequest,
   onApprovePremium,
-  onUndoPremium,
   onRejectPremium,
   onEditStudent,
   actingId,
 }: {
   student: Student;
+  onViewPremiumRequest?: (student: Student) => void;
   onApprovePremium?: (student: Student) => void;
-  onUndoPremium?: (student: Student) => void;
   onRejectPremium?: (student: Student) => void;
   onEditStudent?: (student: Student) => void;
   actingId?: string | null;
 }) {
   const subscription = subscriptionOf(student);
   const isActing = actingId === student.id;
+  const isEmailVerified = student.status === "VERIFIED";
+  const canManagePremium = isEmailVerified;
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      {subscription === "PREMIUM_PENDING" ? (
+      {canManagePremium && subscription === "PREMIUM_PENDING" ? (
+        <button
+          type="button"
+          aria-label={`View premium request for ${student.studentName}`}
+          title="View premium plan request"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-800 shadow-sm transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isActing}
+          onClick={() => onViewPremiumRequest?.(student)}
+        >
+          <Eye className="h-3.5 w-3.5" />
+          View Request
+        </button>
+      ) : null}
+
+      {canManagePremium && subscription === "PREMIUM_PENDING" ? (
         <button
           type="button"
           aria-label={`Approve premium for ${student.studentName}`}
@@ -188,21 +204,7 @@ function RowActions({
         </button>
       ) : null}
 
-      {subscription === "PREMIUM" ? (
-        <button
-          type="button"
-          aria-label={`Undo premium approval for ${student.studentName}`}
-          title="Undo premium approval"
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 shadow-sm transition-colors hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isActing}
-          onClick={() => onUndoPremium?.(student)}
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Undo
-        </button>
-      ) : null}
-
-      {subscription === "PREMIUM_PENDING" || subscription === "PREMIUM" ? (
+      {canManagePremium && subscription === "PREMIUM_PENDING" ? (
         <button
           type="button"
           aria-label={`Reject premium for ${student.studentName}`}

@@ -1,12 +1,22 @@
 'use strict';
 
 const Joi = require('joi');
-
-const ANSWER_TYPES = ['JUMBLED', 'PERSONAL', 'BOTH'];
+const {
+  ANSWER_TYPES,
+  normalizeAnswerType,
+  needsJumbled,
+  needsPersonal,
+  needsMcq,
+} = require('@modules/assessment/answer-type.helpers');
 
 const optionSchema = Joi.object({
   label: Joi.string().trim().min(1).max(1000).required(),
   correctOrder: Joi.number().integer().min(1).max(4).required(),
+}).unknown(false);
+
+const mcqOptionSchema = Joi.object({
+  label: Joi.string().trim().min(1).max(1000).required(),
+  isCorrect: Joi.boolean().required(),
 }).unknown(false);
 
 const questionInputSchema = Joi.object({
@@ -18,9 +28,11 @@ const questionInputSchema = Joi.object({
     .valid(...ANSWER_TYPES)
     .default('BOTH'),
   options: Joi.array().items(optionSchema).max(4).default([]),
+  mcqOptions: Joi.array().items(mcqOptionSchema).max(6).default([]),
   category: Joi.string().valid('OBSERVATION', 'THINKING', 'BUILDING').required(),
   jumbledOptionsMarks: Joi.number().min(0).max(100000).optional(),
   personalResponseMarks: Joi.number().min(0).max(100000).optional(),
+  mcqOptionsMarks: Joi.number().min(0).max(100000).optional(),
   /** Optional question timer in seconds. Omit/null = no per-question lock. */
   durationSeconds: Joi.number().integer().min(30).max(3600).allow(null).optional(),
 }).unknown(false);
@@ -28,14 +40,12 @@ const questionInputSchema = Joi.object({
 const createQuestionSchema = questionInputSchema;
 
 function validateQuestionOptions(question, helpers) {
-  const answerType = question.answerType || 'BOTH';
-  const needsJumbled = answerType === 'JUMBLED' || answerType === 'BOTH';
-  const needsPersonal = answerType === 'PERSONAL' || answerType === 'BOTH';
+  const answerType = normalizeAnswerType(question.answerType);
 
-  if (needsJumbled) {
+  if (needsJumbled(answerType)) {
     if (!question.options || question.options.length !== 4) {
       return helpers.error('any.custom', {
-        message: 'Jumbled and combined questions must have exactly 4 options',
+        message: 'Jumbled and combined questions must have exactly 4 jumbled options',
       });
     }
     const orders = question.options.map((o) => o.correctOrder).sort((a, b) => a - b);
@@ -48,11 +58,30 @@ function validateQuestionOptions(question, helpers) {
     }
   } else if (question.options && question.options.length > 0) {
     return helpers.error('any.custom', {
-      message: 'Personal-response-only questions must not include options',
+      message: 'Non-jumbled questions must not include jumbled options',
     });
   }
 
-  if (needsPersonal && question.personalResponseMarks != null && question.personalResponseMarks < 0) {
+  if (needsMcq(answerType)) {
+    const mcqOptions = question.mcqOptions || [];
+    if (mcqOptions.length < 2 || mcqOptions.length > 6) {
+      return helpers.error('any.custom', {
+        message: 'MCQ questions must have between 2 and 6 choices',
+      });
+    }
+    const correctCount = mcqOptions.filter((o) => o.isCorrect).length;
+    if (correctCount !== 1) {
+      return helpers.error('any.custom', {
+        message: 'MCQ questions must mark exactly one correct choice',
+      });
+    }
+  } else if (question.mcqOptions && question.mcqOptions.length > 0) {
+    return helpers.error('any.custom', {
+      message: 'Non-MCQ questions must not include MCQ options',
+    });
+  }
+
+  if (needsPersonal(answerType) && question.personalResponseMarks != null && question.personalResponseMarks < 0) {
     return helpers.error('any.custom', {
       message: 'Personal response marks must be >= 0',
     });
@@ -71,6 +100,7 @@ const createAssessmentSchema = Joi.object({
     .default('sequential'),
   jumbledOptionsMarks: Joi.number().min(0).max(1000).required(),
   personalResponseMarks: Joi.number().min(0).max(1000).required(),
+  mcqOptionsMarks: Joi.number().min(0).max(1000).default(20),
   weightingMode: Joi.string().valid('EQUAL', 'INDIVIDUAL').default('EQUAL'),
   passMarks: Joi.number().min(0).max(100000).required(),
   /** Overall assessment time limit in minutes (auto-submit when reached). */
@@ -90,19 +120,22 @@ const createAssessmentSchema = Joi.object({
       });
     }
     for (const q of value.questions || []) {
-      const answerType = q.answerType || 'BOTH';
-      const needsJumbled = answerType === 'JUMBLED' || answerType === 'BOTH';
-      const needsPersonal = answerType === 'PERSONAL' || answerType === 'BOTH';
+      const answerType = normalizeAnswerType(q.answerType);
 
       if (value.weightingMode === 'INDIVIDUAL') {
-        if (needsJumbled && !Number.isFinite(q.jumbledOptionsMarks)) {
+        if (needsJumbled(answerType) && !Number.isFinite(q.jumbledOptionsMarks)) {
           return helpers.error('any.custom', {
             message: 'Each jumbled/combined question needs jumbled score caps when individual weighting is selected',
           });
         }
-        if (needsPersonal && !Number.isFinite(q.personalResponseMarks)) {
+        if (needsPersonal(answerType) && !Number.isFinite(q.personalResponseMarks)) {
           return helpers.error('any.custom', {
             message: 'Each personal/combined question needs personal score caps when individual weighting is selected',
+          });
+        }
+        if (needsMcq(answerType) && !Number.isFinite(q.mcqOptionsMarks)) {
+          return helpers.error('any.custom', {
+            message: 'Each MCQ/combined question needs MCQ score caps when individual weighting is selected',
           });
         }
       }
@@ -130,6 +163,7 @@ const submitAssessmentSchema = Joi.object({
           .max(4)
           .default([]),
         personalResponse: Joi.string().trim().allow('').max(10000).default(''),
+        mcqSelection: Joi.string().trim().min(1).max(64).allow(null, '').default(null),
       }).unknown(false),
     )
     .min(1)

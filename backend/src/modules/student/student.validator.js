@@ -47,6 +47,7 @@ const resetPasswordSchema = Joi.object({
 }).unknown(false);
 
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+const SUBSCRIPTION_STATUSES = ['FREE', 'PREMIUM_PENDING', 'PREMIUM'];
 
 const updateStudentSchema = Joi.object({
   studentName: Joi.string().trim().min(2).max(255).required(),
@@ -55,6 +56,9 @@ const updateStudentSchema = Joi.object({
   domain: Joi.string().trim().min(1).max(120).required(),
   level: Joi.string().trim().min(1).max(64).required(),
   phone: Joi.string().trim().max(40).allow('').optional(),
+  subscriptionStatus: Joi.string()
+    .valid(...SUBSCRIPTION_STATUSES)
+    .optional(),
 }).unknown(false);
 
 function validateBody(schema) {

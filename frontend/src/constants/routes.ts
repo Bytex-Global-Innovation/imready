@@ -10,9 +10,7 @@ export const ROUTES = {
   signup: "/signup",
   forColleges: "/for-colleges",
   domainExplorer: "/domain-explorer",
-  bytex: "/bytex",
-  productComparison: "/product-comparison",
-  product: (id: string) => `/product/${id}`,
+  details: "/details",
   privacy: "/privacy",
   terms: "/terms",
   cookies: "/cookies",
@@ -29,6 +27,7 @@ export const APP_ROUTE_PREFIXES = [
   ROUTES.dashboard,
   ROUTES.assessment,
   ROUTES.projects,
+  ROUTES.details,
 ] as const;
 
 export function isAppRoute(pathname: string): boolean {

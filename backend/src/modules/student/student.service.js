@@ -63,8 +63,18 @@ function forbidden(message, code) {
   return err;
 }
 
-function redirectForDoor(careerDoor) {
-  return careerDoor === 'bytex-unlock' ? '/bytex' : '/dashboard';
+function redirectForDoor(careerDoor, subscriptionStatus) {
+  if (
+    careerDoor === 'bytex-unlock' &&
+    subscriptionStatus === SUBSCRIPTION.PREMIUM_PENDING
+  ) {
+    return '/details';
+  }
+  return '/dashboard';
+}
+
+function redirectForStudent(student) {
+  return redirectForDoor(student.careerDoor, student.subscriptionStatus);
 }
 
 function hashToken(token) {
@@ -120,7 +130,7 @@ async function issueAuthSession(student, { rememberMe = false } = {}) {
     refreshExpiresAt: student.refreshTokenExpiresAt,
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
@@ -207,6 +217,8 @@ function serializeStudent(student, extras = {}) {
     emailVerified: Boolean(student.emailVerifiedAt),
     subscriptionStatus: student.subscriptionStatus || SUBSCRIPTION.FREE,
     premiumApprovedAt: student.premiumApprovedAt,
+    premiumPaymentScreenshot: student.premiumPaymentScreenshot || null,
+    premiumPaymentSubmittedAt: student.premiumPaymentSubmittedAt || null,
     createdAt: student.createdAt,
     ...extras,
   };
@@ -264,7 +276,7 @@ async function signup(payload) {
     email: student.email,
     requiresVerification: true,
     emailSent,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 
   if (!emailSent) {
@@ -272,7 +284,7 @@ async function signup(payload) {
   }
 
   if (!emailSent && process.env.NODE_ENV !== 'production') {
-    const next = redirectForDoor(student.careerDoor);
+    const next = redirectForStudent(student);
     response.devVerifyUrl = frontendUrl(
       `/verify-email?token=${encodeURIComponent(rawToken)}&next=${encodeURIComponent(next)}`,
     );
@@ -427,7 +439,7 @@ async function refreshSession(rawRefreshToken) {
     refreshExpiresAt: absoluteExpiry,
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
@@ -502,7 +514,7 @@ async function getMe(studentId) {
   return {
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
@@ -526,19 +538,52 @@ async function requestPremium(studentId) {
     student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
     student.premiumApprovedAt = null;
     student.premiumApprovedBy = null;
+    student.premiumPaymentScreenshot = null;
+    student.premiumPaymentSubmittedAt = null;
     await student.save();
   }
 
   const projectsUnlocked = await resolveProjectsUnlocked(student);
   return {
     message:
-      'Premium request submitted. An admin must approve it before premium features unlock.',
+      'Premium request started. Complete payment on the details page and upload your screenshot for admin review.',
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
   };
 }
 
-async function updateStudent(studentId, payload) {
+async function submitPremiumPayment(studentId, screenshotPath) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student || !student.isActive) {
+    throw unauthorized('Unauthorized');
+  }
+
+  if (student.subscriptionStatus === SUBSCRIPTION.PREMIUM) {
+    throw badRequest('Premium is already active on this account.');
+  }
+
+  if (!screenshotPath) {
+    throw badRequest('Please upload a payment screenshot.');
+  }
+
+  student.careerDoor = 'bytex-unlock';
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+  student.premiumApprovedAt = null;
+  student.premiumApprovedBy = null;
+  student.premiumPaymentScreenshot = screenshotPath;
+  student.premiumPaymentSubmittedAt = new Date();
+  await student.save();
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message:
+      'Payment screenshot submitted. An admin will review and approve your premium access.',
+    student: serializeStudent(student, { projectsUnlocked }),
+    projectsUnlocked,
+  };
+}
+
+async function updateStudent(studentId, payload, adminId) {
   const student = await StudentAccount.findByPk(studentId);
   if (!student) {
     const err = new Error('Student not found');
@@ -574,11 +619,44 @@ async function updateStudent(studentId, payload) {
     }
   }
 
+  if (
+    payload.subscriptionStatus === SUBSCRIPTION.FREE ||
+    payload.subscriptionStatus === SUBSCRIPTION.PREMIUM_PENDING ||
+    payload.subscriptionStatus === SUBSCRIPTION.PREMIUM
+  ) {
+    applySubscriptionStatus(student, payload.subscriptionStatus, adminId);
+  }
+
   await student.save();
   return {
     message: 'Student details updated.',
     student: serializeStudent(student),
   };
+}
+
+function applySubscriptionStatus(student, nextStatus, adminId) {
+  const previous = student.subscriptionStatus || SUBSCRIPTION.FREE;
+  if (previous === nextStatus) return;
+
+  if (nextStatus === SUBSCRIPTION.FREE) {
+    student.subscriptionStatus = SUBSCRIPTION.FREE;
+    student.careerDoor = 'written-challenge';
+    clearPremiumGrant(student);
+    clearPremiumPayment(student);
+    return;
+  }
+
+  if (nextStatus === SUBSCRIPTION.PREMIUM_PENDING) {
+    student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+    student.careerDoor = 'bytex-unlock';
+    clearPremiumGrant(student);
+    return;
+  }
+
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM;
+  student.careerDoor = 'bytex-unlock';
+  student.premiumApprovedAt = new Date();
+  student.premiumApprovedBy = adminId ? String(adminId) : null;
 }
 
 async function approvePremium(studentId, adminId) {
@@ -587,6 +665,12 @@ async function approvePremium(studentId, adminId) {
     const err = new Error('Student not found');
     err.statusCode = 404;
     throw err;
+  }
+
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
   }
 
   if (student.subscriptionStatus === SUBSCRIPTION.PREMIUM) {
@@ -627,9 +711,20 @@ function clearPremiumGrant(student) {
   student.premiumApprovedBy = null;
 }
 
+function clearPremiumPayment(student) {
+  student.premiumPaymentScreenshot = null;
+  student.premiumPaymentSubmittedAt = null;
+}
+
 async function undoPremium(studentId) {
   const student = await StudentAccount.findByPk(studentId);
   if (!student) throw studentNotFound();
+
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
+  }
 
   if (student.subscriptionStatus !== SUBSCRIPTION.PREMIUM) {
     throw badRequest(
@@ -654,6 +749,12 @@ async function rejectPremium(studentId) {
   const student = await StudentAccount.findByPk(studentId);
   if (!student) throw studentNotFound();
 
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
+  }
+
   if (
     student.subscriptionStatus !== SUBSCRIPTION.PREMIUM &&
     student.subscriptionStatus !== SUBSCRIPTION.PREMIUM_PENDING
@@ -666,6 +767,7 @@ async function rejectPremium(studentId) {
   student.subscriptionStatus = SUBSCRIPTION.FREE;
   student.careerDoor = 'written-challenge';
   clearPremiumGrant(student);
+  clearPremiumPayment(student);
   await student.save();
 
   const projectsUnlocked = await resolveProjectsUnlocked(student);
@@ -747,6 +849,7 @@ module.exports = {
   resetPassword,
   getMe,
   requestPremium,
+  submitPremiumPayment,
   updateStudent,
   approvePremium,
   undoPremium,
@@ -757,6 +860,7 @@ module.exports = {
   hasProjectsUnlocked,
   resolveProjectsUnlocked,
   redirectForDoor,
+  redirectForStudent,
   purgeExpiredUnverifiedStudents,
   EMAIL_VERIFICATION_TTL_MS,
   SUBSCRIPTION,

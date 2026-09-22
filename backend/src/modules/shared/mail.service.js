@@ -107,7 +107,7 @@ function frontendUrl(path = '/') {
 
 /** Where the student app should land after email verification. */
 function postVerifyPath(careerDoor) {
-  return careerDoor === 'bytex-unlock' ? '/bytex' : '/dashboard';
+  return careerDoor === 'bytex-unlock' ? '/details' : '/dashboard';
 }
 
 async function sendMail({ to, subject, html, text }) {
@@ -149,7 +149,7 @@ async function sendVerificationEmail({ email, fullName, token, careerDoor }) {
   );
   const isPremium = careerDoor === 'bytex-unlock';
   const nextStep = isPremium
-    ? 'After verification you will continue to the Bytex premium page.'
+    ? 'After verification you will continue to the premium payment details page.'
     : 'After verification you will continue to your dashboard.';
 
   const subject = 'Verify your ImReady account';

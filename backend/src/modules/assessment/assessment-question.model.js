@@ -34,7 +34,15 @@ const AssessmentQuestion = sequelize.define(
       defaultValue: [],
     },
     answerType: {
-      type: DataTypes.ENUM('JUMBLED', 'PERSONAL', 'BOTH'),
+      type: DataTypes.ENUM(
+        'JUMBLED',
+        'PERSONAL',
+        'BOTH',
+        'MCQ',
+        'JUMBLED_MCQ',
+        'PERSONAL_MCQ',
+        'ALL',
+      ),
       allowNull: false,
       defaultValue: 'BOTH',
       field: 'answer_type',

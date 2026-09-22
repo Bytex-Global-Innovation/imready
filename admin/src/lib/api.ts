@@ -7,10 +7,23 @@ import {
 clearLegacyAdminToken();
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+/** Origin for static assets like /uploads (not versioned under /api/v1). */
+const API_ORIGIN = BASE_URL.replace(/\/api\/v\d+$/i, "");
 /** Use mock data when explicitly enabled or when no API URL is configured (local dev). */
 const USE_MOCK =
   process.env.NEXT_PUBLIC_USE_MOCK === "true" ||
   (process.env.NEXT_PUBLIC_USE_MOCK !== "false" && BASE_URL === "");
+
+export function resolveMediaUrl(pathOrUrl?: string | null): string {
+  if (!pathOrUrl) return "";
+  if (/^https?:\/\//i.test(pathOrUrl) || pathOrUrl.startsWith("blob:")) {
+    return pathOrUrl;
+  }
+  if (pathOrUrl.startsWith("/")) {
+    return `${API_ORIGIN}${pathOrUrl}`;
+  }
+  return pathOrUrl;
+}
 
 function redirectToLogin() {
   clearAdminSession();
@@ -120,6 +133,8 @@ export interface Student {
   emailVerified?: boolean;
   subscriptionStatus?: SubscriptionStatus;
   premiumApprovedAt?: string | null;
+  premiumPaymentScreenshot?: string | null;
+  premiumPaymentSubmittedAt?: string | null;
   createdAt?: string;
 }
 
@@ -133,7 +148,7 @@ export interface StudentsResponse {
 
 const mockStudents: Student[] = [
   { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED", subscriptionStatus: "FREE" },
-  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING", subscriptionStatus: "PREMIUM_PENDING" },
+  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING", subscriptionStatus: "PREMIUM_PENDING", premiumPaymentScreenshot: "/uploads/premium-payments/demo.png", premiumPaymentSubmittedAt: "2026-09-05T10:00:00.000Z" },
   { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED", subscriptionStatus: "FREE" },
   { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED", subscriptionStatus: "PREMIUM" },
   { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING", subscriptionStatus: "FREE" },
@@ -250,6 +265,7 @@ export const studentsApi = {
       domain: string;
       level: string;
       phone?: string;
+      subscriptionStatus?: SubscriptionStatus;
     },
   ): Promise<{ message: string; student: Student }> => {
     if (USE_MOCK) {
@@ -262,6 +278,9 @@ export const studentsApi = {
       student.domain = payload.domain;
       student.level = payload.level;
       if (payload.phone !== undefined) student.phone = payload.phone;
+      if (payload.subscriptionStatus) {
+        student.subscriptionStatus = payload.subscriptionStatus;
+      }
       return { message: "Student details updated.", student };
     }
     return request<{ message: string; student: Student }>(
@@ -404,9 +423,47 @@ export type AssessmentStatus = "ACTIVE" | "DRAFT" | "ARCHIVED";
 export type QuestionOrderMode = "sequential" | "random" | "jumbled";
 export type QuestionCategory = "OBSERVATION" | "THINKING" | "BUILDING";
 export type WeightingMode = "EQUAL" | "INDIVIDUAL";
-export type AnswerType = "JUMBLED" | "PERSONAL" | "BOTH";
+export type AnswerType =
+  | "JUMBLED"
+  | "PERSONAL"
+  | "BOTH"
+  | "MCQ"
+  | "JUMBLED_MCQ"
+  | "PERSONAL_MCQ"
+  | "ALL";
 export type SubmissionResult = "PASS" | "FAIL" | null;
 export type SubmissionStatus = "SUBMITTED" | "PARTIALLY_EVALUATED" | "EVALUATED";
+
+/** Capability helpers — keep in sync with backend answer-type.helpers.js */
+export function needsJumbled(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "JUMBLED" ||
+    type === "BOTH" ||
+    type === "JUMBLED_MCQ" ||
+    type === "ALL"
+  );
+}
+
+export function needsPersonal(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "PERSONAL" ||
+    type === "BOTH" ||
+    type === "PERSONAL_MCQ" ||
+    type === "ALL"
+  );
+}
+
+export function needsMcq(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "MCQ" ||
+    type === "JUMBLED_MCQ" ||
+    type === "PERSONAL_MCQ" ||
+    type === "ALL"
+  );
+}
 
 export interface Assessment {
   id: string;
@@ -419,6 +476,7 @@ export interface Assessment {
   questionOrderMode?: QuestionOrderMode;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
   weightingMode?: WeightingMode;
   passMarksValue?: number;
   durationMinutes?: number;
@@ -437,6 +495,18 @@ export interface AssessmentOptionInput {
   correctOrder: number;
 }
 
+export interface AssessmentMcqOptionInput {
+  label: string;
+  isCorrect: boolean;
+}
+
+/** MCQ choice as returned from the API (admin detail / results). */
+export interface AssessmentQuestionMcqOption {
+  id?: string;
+  label: string;
+  isCorrect?: boolean;
+}
+
 export interface AssessmentQuestionInput {
   title: string;
   prompt: string;
@@ -444,9 +514,11 @@ export interface AssessmentQuestionInput {
   tips: string[];
   answerType: AnswerType;
   options: AssessmentOptionInput[];
+  mcqOptions?: AssessmentMcqOptionInput[];
   category: QuestionCategory;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
   weightingMode?: WeightingMode;
   /** Optional per-question timer in seconds. null/omit = no question timer. */
   durationSeconds?: number | null;
@@ -467,8 +539,10 @@ export interface AssessmentQuestionBankItem {
   category?: QuestionCategory;
   jumbledOptionsMarks?: number | null;
   personalResponseMarks?: number | null;
+  mcqOptionsMarks?: number | null;
   durationSeconds?: number | null;
   options: { id: string; label: string; correctOrder: number }[];
+  mcqOptions?: AssessmentQuestionMcqOption[];
 }
 
 export interface CreateAssessmentPayload {
@@ -479,6 +553,7 @@ export interface CreateAssessmentPayload {
   questionOrderMode: QuestionOrderMode;
   jumbledOptionsMarks: number;
   personalResponseMarks: number;
+  mcqOptionsMarks: number;
   weightingMode: WeightingMode;
   passMarks: number;
   durationMinutes: number;
@@ -508,6 +583,7 @@ export interface AssessmentResultListItem {
   result: SubmissionResult;
   jumbledScore: number;
   personalScore: number | null;
+  mcqScore?: number;
   totalScore: number | null;
   maxScore: number;
   submittedAt: string;
@@ -530,6 +606,7 @@ export interface AssessmentResultDetail {
   result: SubmissionResult;
   jumbledScore: number;
   personalScore: number | null;
+  mcqScore?: number;
   totalScore: number | null;
   maxScore: number;
   passMarksValue: number;
@@ -545,10 +622,14 @@ export interface AssessmentResultDetail {
     optionOrder: { id: string; label: string }[];
     correctOrder: { id: string; label: string; correctOrder: number }[];
     personalResponse: string;
+    mcqSelection?: { id: string; label: string } | null;
+    mcqOptions?: AssessmentQuestionMcqOption[];
     jumbledScore: number;
     personalScore: number | null;
+    mcqScore?: number;
     jumbledMax: number;
     personalMax: number;
+    mcqMax?: number;
   }[];
 }
 
@@ -639,6 +720,11 @@ export const assessmentsApi = {
           id: `mock-o${i + 1}`,
           label: o.label,
           correctOrder: o.correctOrder,
+        })),
+        mcqOptions: (payload.mcqOptions || []).map((o, i) => ({
+          id: `mock-mcq${i + 1}`,
+          label: o.label,
+          isCorrect: o.isCorrect,
         })),
       };
     }

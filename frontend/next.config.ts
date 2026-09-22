@@ -8,12 +8,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "bytex-uex-production.s3.ap-south-1.amazonaws.com",
+        hostname: "images.unsplash.com",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "api.qrserver.com",
         pathname: "/**",
       },
       {

@@ -30,6 +30,7 @@ const AssessmentQuestionLink = sequelize.define(
     category: { type: DataTypes.ENUM('OBSERVATION', 'THINKING', 'BUILDING'), allowNull: false, defaultValue: 'OBSERVATION' },
     jumbledOptionsMarks: { type: DataTypes.DECIMAL(8, 2), allowNull: true, field: 'jumbled_options_marks' },
     personalResponseMarks: { type: DataTypes.DECIMAL(8, 2), allowNull: true, field: 'personal_response_marks' },
+    mcqOptionsMarks: { type: DataTypes.DECIMAL(8, 2), allowNull: true, field: 'mcq_options_marks' },
     /** Optional per-question timer (seconds). Null = no lock/auto-advance for this question. */
     durationSeconds: {
       type: DataTypes.INTEGER.UNSIGNED,

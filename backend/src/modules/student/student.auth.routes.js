@@ -16,6 +16,9 @@ const {
   sensitiveActionLimiter,
   refreshLimiter,
 } = require('@middleware/rate-limit.middleware');
+const {
+  uploadPaymentScreenshot,
+} = require('@middleware/upload-payment-screenshot.middleware');
 
 const router = express.Router();
 
@@ -52,6 +55,12 @@ router.post(
   '/request-premium',
   requireVerifiedStudent,
   studentController.requestPremium,
+);
+router.post(
+  '/submit-premium-payment',
+  requireVerifiedStudent,
+  uploadPaymentScreenshot('screenshot'),
+  studentController.submitPremiumPayment,
 );
 
 module.exports = router;

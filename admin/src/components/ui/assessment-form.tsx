@@ -10,6 +10,9 @@ import AddQuestionModal, {
 } from "@/components/ui/add-question-modal";
 import {
   assessmentsApi,
+  needsJumbled,
+  needsMcq,
+  needsPersonal,
   type AnswerType,
   type AssessmentQuestionBankItem,
   type AssessmentQuestionInput,
@@ -26,18 +29,25 @@ interface AssessmentFormProps {
   assessmentId?: string;
 }
 
-function needsJumbled(answerType: AnswerType) {
-  return answerType === "JUMBLED" || answerType === "BOTH";
-}
-
-function needsPersonal(answerType: AnswerType) {
-  return answerType === "PERSONAL" || answerType === "BOTH";
-}
-
 function answerTypeLabel(answerType: AnswerType) {
-  if (answerType === "JUMBLED") return "Jumbled only";
-  if (answerType === "PERSONAL") return "Personal only";
-  return "Jumbled + personal";
+  switch (answerType) {
+    case "JUMBLED":
+      return "Jumbled only";
+    case "PERSONAL":
+      return "Personal only";
+    case "BOTH":
+      return "Jumbled + personal";
+    case "MCQ":
+      return "MCQ only";
+    case "JUMBLED_MCQ":
+      return "Jumbled + MCQ";
+    case "PERSONAL_MCQ":
+      return "Personal + MCQ";
+    case "ALL":
+      return "Jumbled + personal + MCQ";
+    default:
+      return answerType;
+  }
 }
 
 function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
@@ -58,6 +68,12 @@ function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
           correctOrder: index + 1,
         }))
       : [],
+    mcqOptions: needsMcq(draft.answerType)
+      ? (draft.mcqOptions || []).map((opt) => ({
+          label: opt.label.trim(),
+          isCorrect: Boolean(opt.isCorrect),
+        }))
+      : [],
     category: draft.category,
     jumbledOptionsMarks: needsJumbled(draft.answerType)
       ? draft.jumbledOptionsMarks
@@ -65,6 +81,7 @@ function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
     personalResponseMarks: needsPersonal(draft.answerType)
       ? draft.personalResponseMarks
       : 0,
+    mcqOptionsMarks: needsMcq(draft.answerType) ? draft.mcqOptionsMarks : 0,
     durationSeconds,
   };
 }
@@ -82,6 +99,19 @@ function bankItemToDraft(item: AssessmentQuestionBankItem): DraftQuestion {
         correctOrder: index + 1,
       }))
     : [];
+  const sourceMcq = item.mcqOptions || [];
+  const mcqOptions = needsMcq(answerType)
+    ? [0, 1, 2, 3].map((index) => ({
+        label: sourceMcq[index]?.label || "",
+        isCorrect: Boolean(sourceMcq[index]?.isCorrect),
+      }))
+    : [];
+  // Ensure exactly one correct when loading incomplete data
+  if (needsMcq(answerType) && mcqOptions.filter((o) => o.isCorrect).length !== 1) {
+    mcqOptions.forEach((o, i) => {
+      o.isCorrect = i === 0;
+    });
+  }
   return {
     title: item.title,
     prompt: "",
@@ -89,10 +119,12 @@ function bankItemToDraft(item: AssessmentQuestionBankItem): DraftQuestion {
     tipsText: "",
     answerType,
     options,
+    mcqOptions: needsMcq(answerType) ? mcqOptions : [],
     sourceId: item.id,
     category: item.category ?? "OBSERVATION",
     jumbledOptionsMarks: item.jumbledOptionsMarks ?? undefined,
     personalResponseMarks: item.personalResponseMarks ?? undefined,
+    mcqOptionsMarks: item.mcqOptionsMarks ?? undefined,
     durationMinutes:
       item.durationSeconds == null
         ? null
@@ -115,6 +147,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
     useState<QuestionOrderMode>("sequential");
   const [jumbledOptionsMarks, setJumbledOptionsMarks] = useState(60);
   const [personalResponseMarks, setPersonalResponseMarks] = useState(40);
+  const [mcqOptionsMarks, setMcqOptionsMarks] = useState(20);
   const [weightingMode, setWeightingMode] = useState<WeightingMode>("EQUAL");
   const [passMarks, setPassMarks] = useState(70);
   const [durationMinutes, setDurationMinutes] = useState(60);
@@ -146,6 +179,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
         setQuestionOrderMode(detail.questionOrderMode ?? "sequential");
         setJumbledOptionsMarks(detail.jumbledOptionsMarks ?? 60);
         setPersonalResponseMarks(detail.personalResponseMarks ?? 40);
+        setMcqOptionsMarks(detail.mcqOptionsMarks ?? 20);
         setWeightingMode(detail.weightingMode ?? "EQUAL");
         setPassMarks(detail.passMarksValue ?? 70);
         setDurationMinutes(detail.durationMinutes ?? 60);
@@ -178,12 +212,14 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
       ? newQuestions.reduce((sum, q) => {
           const jumbled = needsJumbled(q.answerType) ? jumbledOptionsMarks : 0;
           const personal = needsPersonal(q.answerType) ? personalResponseMarks : 0;
-          return sum + jumbled + personal;
+          const mcq = needsMcq(q.answerType) ? mcqOptionsMarks : 0;
+          return sum + jumbled + personal + mcq;
         }, 0)
       : newQuestions.reduce((sum, q) => {
           const jumbled = needsJumbled(q.answerType) ? (q.jumbledOptionsMarks ?? 0) : 0;
           const personal = needsPersonal(q.answerType) ? (q.personalResponseMarks ?? 0) : 0;
-          return sum + jumbled + personal;
+          const mcq = needsMcq(q.answerType) ? (q.mcqOptionsMarks ?? 0) : 0;
+          return sum + jumbled + personal + mcq;
         }, 0);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -215,6 +251,17 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
           return;
         }
       }
+      if (needsMcq(draft.answerType)) {
+        const mcq = draft.mcqOptions || [];
+        if (mcq.length !== 4 || mcq.some((o) => !o.label.trim())) {
+          setError("Every MCQ/combined question must have exactly 4 choices.");
+          return;
+        }
+        if (mcq.filter((o) => o.isCorrect).length !== 1) {
+          setError("Every MCQ/combined question must mark exactly one correct choice.");
+          return;
+        }
+      }
     }
 
     if (durationMinutes < 1) {
@@ -243,6 +290,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
       questionOrderMode,
       jumbledOptionsMarks,
       personalResponseMarks,
+      mcqOptionsMarks,
       weightingMode,
       passMarks,
       durationMinutes,
@@ -401,7 +449,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
               <option value="INDIVIDUAL">Individual weight per question</option>
             </Select>
           </label>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">
                 Marks for jumbled options
@@ -429,6 +477,20 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                 onChange={(e) =>
                   setPersonalResponseMarks(Number(e.target.value) || 0)
                 }
+                required
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Marks for MCQ
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="admin-input w-full"
+                value={mcqOptionsMarks}
+                onChange={(e) => setMcqOptionsMarks(Number(e.target.value) || 0)}
                 required
               />
             </label>
@@ -516,7 +578,7 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                       />
                     </label>
                     {weightingMode === "INDIVIDUAL" && (
-                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <div className="mt-3 grid gap-2 sm:grid-cols-3">
                         {needsJumbled(draft.answerType) && (
                           <label className="text-xs text-gray-600">Jumbled marks
                             <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.jumbledOptionsMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, jumbledOptionsMarks: Number(e.target.value) || 0 } : q))} />
@@ -525,6 +587,11 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                         {needsPersonal(draft.answerType) && (
                           <label className="text-xs text-gray-600">Personal-response marks
                             <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.personalResponseMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, personalResponseMarks: Number(e.target.value) || 0 } : q))} />
+                          </label>
+                        )}
+                        {needsMcq(draft.answerType) && (
+                          <label className="text-xs text-gray-600">MCQ marks
+                            <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.mcqOptionsMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, mcqOptionsMarks: Number(e.target.value) || 0 } : q))} />
                           </label>
                         )}
                       </div>
@@ -536,9 +603,31 @@ export default function AssessmentForm({ mode, assessmentId }: AssessmentFormPro
                         ))}
                       </ol>
                     )}
+                    {needsMcq(draft.answerType) && (
+                      <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                        {(draft.mcqOptions || []).map((opt, oi) => (
+                          <li key={oi}>
+                            <span className="font-semibold text-gray-400">
+                              {String.fromCharCode(65 + oi)}.
+                            </span>{" "}
+                            {opt.label}
+                            {opt.isCorrect ? (
+                              <span className="ml-1 font-semibold text-emerald-600">
+                                (correct)
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {draft.answerType === "PERSONAL" && (
                       <p className="mt-2 text-xs text-gray-500">
                         Students will only write a personal response for this question.
+                      </p>
+                    )}
+                    {draft.answerType === "MCQ" && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Students will only select one MCQ choice for this question.
                       </p>
                     )}
                   </div>

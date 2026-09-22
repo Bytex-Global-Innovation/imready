@@ -10,11 +10,11 @@ export const CAREER_DOORS = [
   },
   {
     id: "bytex-unlock",
-    title: "Bytex Unlock",
+    title: "Premium Unlock",
     badge: "PREMIUM",
     badgeVariant: "premium" as const,
     description:
-      "Unlock specialized hardware paths and premium industry projects to demonstrate practical, hands-on expertise.",
+      "Unlock specialized premium paths and industry projects to demonstrate practical, hands-on expertise.",
     icon: "monitor" as const,
   },
 ] as const;

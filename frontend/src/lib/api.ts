@@ -101,7 +101,14 @@ export interface AssessmentOption {
   label: string;
 }
 
-export type AnswerType = "JUMBLED" | "PERSONAL" | "BOTH";
+export type AnswerType =
+  | "JUMBLED"
+  | "PERSONAL"
+  | "BOTH"
+  | "MCQ"
+  | "JUMBLED_MCQ"
+  | "PERSONAL_MCQ"
+  | "ALL";
 
 export interface AssessmentQuestion {
   id: number;
@@ -115,6 +122,8 @@ export interface AssessmentQuestion {
   /** Optional per-question timer in seconds. null = no question lock timer. */
   durationSeconds?: number | null;
   options: AssessmentOption[];
+  /** MCQ choices when answerType includes MCQ. */
+  mcqOptions?: AssessmentOption[];
 }
 
 export interface ActiveAssessment {
@@ -134,6 +143,7 @@ export interface SubmitAssessmentPayload {
     questionId: number;
     optionOrder: string[];
     personalResponse: string;
+    mcqSelection?: string | null;
   }[];
 }
 
@@ -241,6 +251,8 @@ export interface StudentProfile {
   emailVerified?: boolean;
   subscriptionStatus?: "FREE" | "PREMIUM_PENDING" | "PREMIUM";
   premiumApprovedAt?: string | null;
+  premiumPaymentScreenshot?: string | null;
+  premiumPaymentSubmittedAt?: string | null;
   projectsUnlocked?: boolean;
 }
 
@@ -327,6 +339,31 @@ export const authApi = {
       student: StudentProfile;
       projectsUnlocked: boolean;
     }>("/auth/students/request-premium", { method: "POST" }, true);
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
+
+  submitPremiumPayment: async (
+    screenshot: File,
+  ): Promise<{
+    message: string;
+    student: StudentProfile;
+    projectsUnlocked: boolean;
+  }> => {
+    const formData = new FormData();
+    formData.append("screenshot", screenshot);
+    const result = await request<{
+      message: string;
+      student: StudentProfile;
+      projectsUnlocked: boolean;
+    }>(
+      "/auth/students/submit-premium-payment",
+      { method: "POST", body: formData },
+      true,
+    );
     setCachedStudentSession({
       student: result.student,
       projectsUnlocked: Boolean(result.projectsUnlocked),
