@@ -53,6 +53,12 @@ const Assessment = sequelize.define(
       defaultValue: 40,
       field: 'personal_response_marks',
     },
+    mcqOptionsMarks: {
+      type: DataTypes.DECIMAL(6, 2),
+      allowNull: false,
+      defaultValue: 20,
+      field: 'mcq_options_marks',
+    },
     weightingMode: {
       type: DataTypes.ENUM('EQUAL', 'INDIVIDUAL'),
       allowNull: false,

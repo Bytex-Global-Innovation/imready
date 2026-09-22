@@ -4,7 +4,14 @@ const ExcelJS = require('exceljs');
 const XLSX = require('xlsx');
 const assessmentService = require('@modules/assessment/assessment.service');
 const { createAssessmentSchema } = require('@modules/assessment/assessment.validator');
+const {
+  ANSWER_TYPES,
+  needsJumbled,
+  needsPersonal,
+  needsMcq,
+} = require('@modules/assessment/answer-type.helpers');
 
+/** Columns that must be present in every upload (legacy BOTH templates stay compatible). */
 const REQUIRED_HEADERS = [
   'assessmentName',
   'status',
@@ -26,6 +33,35 @@ const REQUIRED_HEADERS = [
   'option4',
 ];
 
+/** Full template header order (MCQ columns optional for older uploads). */
+const TEMPLATE_HEADERS = [
+  'assessmentName',
+  'status',
+  'questionCount',
+  'questionOrderMode',
+  'jumbledOptionsMarks',
+  'personalResponseMarks',
+  'mcqOptionsMarks',
+  'weightingMode',
+  'passMarks',
+  'questionTitle',
+  'category',
+  'answerType',
+  'questionJumbledOptionsMarks',
+  'questionPersonalResponseMarks',
+  'questionMcqOptionsMarks',
+  'question',
+  'option1',
+  'option2',
+  'option3',
+  'option4',
+  'mcq1',
+  'mcq2',
+  'mcq3',
+  'mcq4',
+  'mcqCorrect',
+];
+
 const HEADER_ALIASES = {
   assessmentname: 'assessmentName',
   name: 'assessmentName',
@@ -34,6 +70,7 @@ const HEADER_ALIASES = {
   questionordermode: 'questionOrderMode',
   jumbledoptionsmarks: 'jumbledOptionsMarks',
   personalresponsemarks: 'personalResponseMarks',
+  mcqoptionsmarks: 'mcqOptionsMarks',
   weightingmode: 'weightingMode',
   passmarks: 'passMarks',
   questiontitle: 'questionTitle',
@@ -42,6 +79,7 @@ const HEADER_ALIASES = {
   questiontype: 'answerType',
   questionjumbledoptionsmarks: 'questionJumbledOptionsMarks',
   questionpersonalresponsemarks: 'questionPersonalResponseMarks',
+  questionmcqoptionsmarks: 'questionMcqOptionsMarks',
   title: 'questionTitle',
   question: 'question',
   questiontext: 'question',
@@ -49,7 +87,16 @@ const HEADER_ALIASES = {
   option2: 'option2',
   option3: 'option3',
   option4: 'option4',
+  mcq1: 'mcq1',
+  mcq2: 'mcq2',
+  mcq3: 'mcq3',
+  mcq4: 'mcq4',
+  mcqcorrect: 'mcqCorrect',
+  correctmcq: 'mcqCorrect',
 };
+
+const MCQ_OPTION_KEYS = ['mcq1', 'mcq2', 'mcq3', 'mcq4'];
+const DEFAULT_MCQ_OPTIONS_MARKS = 20;
 
 function badRequest(message, errors) {
   const err = new Error(message);
@@ -72,11 +119,12 @@ async function buildSampleWorkbookBuffer() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Assessments');
 
-  const headerRow = sheet.addRow(REQUIRED_HEADERS);
+  const headerRow = sheet.addRow(TEMPLATE_HEADERS);
   headerRow.eachCell((cell) => {
     cell.font = { bold: true };
   });
 
+  // BOTH examples (MCQ columns left blank)
   sheet.addRow([
     'Digital Literacy Assessment',
     'ACTIVE',
@@ -84,6 +132,7 @@ async function buildSampleWorkbookBuffer() {
     'sequential',
     60,
     40,
+    20,
     'EQUAL',
     70,
     'Core Competency: Community Impact',
@@ -91,11 +140,17 @@ async function buildSampleWorkbookBuffer() {
     'BOTH',
     60,
     40,
+    '',
     'How would you use technology to improve learning in your community?',
     'Identify local learning gaps with short community surveys',
     'Train peer mentors to support first-time learners',
     'Share learning resources through an accessible digital platform',
     'Track engagement and improve content based on results',
+    '',
+    '',
+    '',
+    '',
+    '',
   ]);
 
   sheet.addRow([
@@ -105,6 +160,7 @@ async function buildSampleWorkbookBuffer() {
     'sequential',
     60,
     40,
+    20,
     'EQUAL',
     70,
     'Core Competency: Career Readiness',
@@ -112,14 +168,78 @@ async function buildSampleWorkbookBuffer() {
     'BOTH',
     60,
     40,
+    '',
     'What skills do you most want to build, and how will you measure your progress?',
     'Choose 1-2 priority skills tied to your career door',
     'Practice weekly with small, measurable goals',
     'Build a simple portfolio piece that shows those skills',
     'Review progress every 30 days and adjust your plan',
+    '',
+    '',
+    '',
+    '',
+    '',
   ]);
 
-  REQUIRED_HEADERS.forEach((_, index) => {
+  // MCQ-only sample (jumbled options blank)
+  sheet.addRow([
+    'MCQ Fundamentals Assessment',
+    'ACTIVE',
+    2,
+    'sequential',
+    60,
+    0,
+    20,
+    'EQUAL',
+    10,
+    'Core Competency: Digital Basics',
+    'THINKING',
+    'MCQ',
+    0,
+    0,
+    20,
+    'Which practice best protects personal data online?',
+    '',
+    '',
+    '',
+    '',
+    'Share passwords with trusted friends',
+    'Use unique passwords and enable 2FA',
+    'Reuse one strong password everywhere',
+    'Disable account recovery options',
+    2,
+  ]);
+
+  // JUMBLED_MCQ sample (both jumbled options and MCQ choices filled)
+  sheet.addRow([
+    'MCQ Fundamentals Assessment',
+    'ACTIVE',
+    2,
+    'sequential',
+    60,
+    0,
+    20,
+    'EQUAL',
+    10,
+    'Core Competency: Problem Solving',
+    'BUILDING',
+    'JUMBLED_MCQ',
+    60,
+    0,
+    20,
+    'Order the steps to publish a learning resource, then pick the best hosting choice.',
+    'Draft the content and peer-review for clarity',
+    'Add captions and accessibility checks',
+    'Publish to the shared learning platform',
+    'Collect feedback and iterate',
+    'Personal blog only',
+    'Shared accessible learning platform',
+    'Private chat group',
+    'Printed handout only',
+    2,
+  ]);
+
+  TEMPLATE_HEADERS.forEach((_, index) => {
     sheet.getColumn(index + 1).width = 28;
   });
 
@@ -135,15 +255,19 @@ async function buildSampleWorkbookBuffer() {
     ['questionOrderMode', 'Yes', 'sequential | random | jumbled'],
     ['jumbledOptionsMarks', 'Yes', 'Marks for jumbled options per question (number >= 0)'],
     ['personalResponseMarks', 'Yes', 'Marks for personal response per question (number >= 0)'],
+    ['mcqOptionsMarks', 'Optional', `Marks for MCQ per question (number >= 0). Defaults to ${DEFAULT_MCQ_OPTIONS_MARKS}. Must match across rows of the same assessment.`],
     ['weightingMode', 'Yes', 'EQUAL or INDIVIDUAL. EQUAL uses the assessment marks; INDIVIDUAL uses the question marks below.'],
     ['passMarks', 'Yes', 'Absolute pass threshold for the assessment'],
     ['questionTitle', 'Yes', 'Question title'],
     ['category', 'Yes', 'OBSERVATION | THINKING | BUILDING'],
-    ['answerType', 'Yes', 'JUMBLED | PERSONAL | BOTH — controls which answer parts students complete'],
+    ['answerType', 'Yes', 'JUMBLED | PERSONAL | BOTH | MCQ | JUMBLED_MCQ | PERSONAL_MCQ | ALL — controls which answer parts students complete'],
     ['questionJumbledOptionsMarks', 'Yes', 'Per-question jumbled score cap; required when weightingMode is INDIVIDUAL and answerType includes jumbled.'],
     ['questionPersonalResponseMarks', 'Yes', 'Per-question personal score cap; required when weightingMode is INDIVIDUAL and answerType includes personal.'],
+    ['questionMcqOptionsMarks', 'Conditional', 'Per-question MCQ score cap; required when weightingMode is INDIVIDUAL and answerType includes MCQ.'],
     ['question', 'Yes', 'Main question text'],
-    ['option1..option4', 'Conditional', 'Required (exactly 4, correct order) for JUMBLED and BOTH. Leave blank for PERSONAL.'],
+    ['option1..option4', 'Conditional', 'Required (exactly 4, correct order) when answerType includes jumbled (JUMBLED, BOTH, JUMBLED_MCQ, ALL). Leave blank otherwise.'],
+    ['mcq1..mcq4', 'Conditional', 'MCQ choices. At least mcq1 and mcq2 required when answerType includes MCQ (MCQ, JUMBLED_MCQ, PERSONAL_MCQ, ALL). Leave blank otherwise.'],
+    ['mcqCorrect', 'Conditional', '1-based index of the correct MCQ choice (required when answerType includes MCQ).'],
   ].forEach((row) => instructions.addRow(row));
   instructions.getColumn(1).width = 24;
   instructions.getColumn(2).width = 16;
@@ -213,22 +337,31 @@ function mapRowsToAssessments(rawRows) {
     if (!['OBSERVATION', 'THINKING', 'BUILDING'].includes(category)) errors.push({ row: rowNumber, field: 'category', message: 'category must be OBSERVATION, THINKING, or BUILDING' });
 
     const answerType = cellToString(record.answerType).toUpperCase() || 'BOTH';
-    if (!['JUMBLED', 'PERSONAL', 'BOTH'].includes(answerType)) {
+    if (!ANSWER_TYPES.includes(answerType)) {
       errors.push({
         row: rowNumber,
         field: 'answerType',
-        message: 'answerType must be JUMBLED, PERSONAL, or BOTH',
+        message: `answerType must be one of: ${ANSWER_TYPES.join(', ')}`,
       });
     }
-    const requiresJumbled = answerType === 'JUMBLED' || answerType === 'BOTH';
-    const requiresPersonal = answerType === 'PERSONAL' || answerType === 'BOTH';
+    const requiresJumbled = needsJumbled(answerType);
+    const requiresPersonal = needsPersonal(answerType);
+    const requiresMcq = needsMcq(answerType);
 
     const questionCount = Number(record.questionCount);
     const jumbledOptionsMarks = Number(record.jumbledOptionsMarks);
     const personalResponseMarks = Number(record.personalResponseMarks);
+    const mcqMarksRaw = cellToString(record.mcqOptionsMarks);
+    const mcqOptionsMarks = mcqMarksRaw === ''
+      ? DEFAULT_MCQ_OPTIONS_MARKS
+      : Number(record.mcqOptionsMarks);
     const passMarks = Number(record.passMarks);
     const questionJumbledOptionsMarks = Number(record.questionJumbledOptionsMarks);
     const questionPersonalResponseMarks = Number(record.questionPersonalResponseMarks);
+    const questionMcqMarksRaw = cellToString(record.questionMcqOptionsMarks);
+    const questionMcqOptionsMarks = questionMcqMarksRaw === ''
+      ? NaN
+      : Number(record.questionMcqOptionsMarks);
 
     if (!Number.isFinite(questionCount) || questionCount < 1) {
       errors.push({
@@ -251,6 +384,13 @@ function mapRowsToAssessments(rawRows) {
         message: 'personalResponseMarks must be a number >= 0',
       });
     }
+    if (!Number.isFinite(mcqOptionsMarks) || mcqOptionsMarks < 0) {
+      errors.push({
+        row: rowNumber,
+        field: 'mcqOptionsMarks',
+        message: 'mcqOptionsMarks must be a number >= 0',
+      });
+    }
     if (!Number.isFinite(passMarks) || passMarks < 0) {
       errors.push({
         row: rowNumber,
@@ -261,7 +401,8 @@ function mapRowsToAssessments(rawRows) {
     if (
       weightingMode === 'INDIVIDUAL' &&
       ((requiresJumbled && (!Number.isFinite(questionJumbledOptionsMarks) || questionJumbledOptionsMarks < 0)) ||
-        (requiresPersonal && (!Number.isFinite(questionPersonalResponseMarks) || questionPersonalResponseMarks < 0)))
+        (requiresPersonal && (!Number.isFinite(questionPersonalResponseMarks) || questionPersonalResponseMarks < 0)) ||
+        (requiresMcq && (!Number.isFinite(questionMcqOptionsMarks) || questionMcqOptionsMarks < 0)))
     ) {
       errors.push({
         row: rowNumber,
@@ -286,14 +427,66 @@ function mapRowsToAssessments(rawRows) {
         errors.push({
           row: rowNumber,
           field: 'option1-option4',
-          message: 'Exactly 4 options are required (option1 to option4) for JUMBLED and BOTH',
+          message: 'Exactly 4 options are required (option1 to option4) when answerType includes jumbled',
         });
       }
     } else if (options.some((opt) => opt.label)) {
       errors.push({
         row: rowNumber,
         field: 'option1-option4',
-        message: 'Leave option1..option4 blank for PERSONAL answerType',
+        message: 'Leave option1..option4 blank when answerType does not include jumbled',
+      });
+    }
+
+    const mcqLabels = MCQ_OPTION_KEYS.map((key) => cellToString(record[key]));
+    const filledMcqLabels = mcqLabels.filter((label) => label);
+    let mcqOptions = [];
+
+    if (requiresMcq) {
+      if (!mcqLabels[0] || !mcqLabels[1]) {
+        errors.push({
+          row: rowNumber,
+          field: 'mcq1-mcq2',
+          message: 'At least mcq1 and mcq2 are required when answerType includes MCQ',
+        });
+      }
+
+      // Allow trailing blanks but not gaps (e.g. mcq1, mcq3 without mcq2 already caught above)
+      let trailingBlank = false;
+      for (let idx = 0; idx < mcqLabels.length; idx += 1) {
+        if (!mcqLabels[idx]) {
+          trailingBlank = true;
+        } else if (trailingBlank) {
+          errors.push({
+            row: rowNumber,
+            field: `mcq${idx + 1}`,
+            message: 'MCQ choices must be contiguous from mcq1 with no gaps',
+          });
+          break;
+        }
+      }
+
+      const mcqCorrectRaw = cellToString(record.mcqCorrect);
+      const mcqCorrect = Number(mcqCorrectRaw);
+      const mcqCount = filledMcqLabels.length;
+
+      if (!Number.isInteger(mcqCorrect) || mcqCorrect < 1 || (mcqCount > 0 && mcqCorrect > mcqCount)) {
+        errors.push({
+          row: rowNumber,
+          field: 'mcqCorrect',
+          message: `mcqCorrect must be a 1-based index between 1 and ${Math.max(mcqCount, 2)}`,
+        });
+      } else {
+        mcqOptions = filledMcqLabels.map((label, index) => ({
+          label,
+          isCorrect: index + 1 === mcqCorrect,
+        }));
+      }
+    } else if (filledMcqLabels.length > 0 || cellToString(record.mcqCorrect)) {
+      errors.push({
+        row: rowNumber,
+        field: 'mcq1-mcqCorrect',
+        message: 'Leave mcq1..mcq4 and mcqCorrect blank when answerType does not include MCQ',
       });
     }
 
@@ -307,6 +500,7 @@ function mapRowsToAssessments(rawRows) {
         questionOrderMode,
         jumbledOptionsMarks,
         personalResponseMarks,
+        mcqOptionsMarks,
         weightingMode,
         passMarks,
         questionIds: [],
@@ -324,9 +518,13 @@ function mapRowsToAssessments(rawRows) {
       tips: [],
       answerType,
       options: requiresJumbled ? options : [],
+      mcqOptions: requiresMcq ? mcqOptions : [],
       category,
       jumbledOptionsMarks: requiresJumbled ? questionJumbledOptionsMarks : 0,
       personalResponseMarks: requiresPersonal ? questionPersonalResponseMarks : 0,
+      mcqOptionsMarks: requiresMcq
+        ? (Number.isFinite(questionMcqOptionsMarks) ? questionMcqOptionsMarks : mcqOptionsMarks)
+        : 0,
     });
 
     if (group.name === assessmentName) {
@@ -363,6 +561,13 @@ function mapRowsToAssessments(rawRows) {
           row: rowNumber,
           field: 'personalResponseMarks',
           message: `personalResponseMarks must match other rows for assessment "${assessmentName}"`,
+        });
+      }
+      if (Number(group.mcqOptionsMarks) !== mcqOptionsMarks) {
+        errors.push({
+          row: rowNumber,
+          field: 'mcqOptionsMarks',
+          message: `mcqOptionsMarks must match other rows for assessment "${assessmentName}"`,
         });
       }
       if (Number(group.passMarks) !== passMarks) {
@@ -405,6 +610,7 @@ function mapRowsToAssessments(rawRows) {
         questionOrderMode: group.questionOrderMode,
         jumbledOptionsMarks: group.jumbledOptionsMarks,
         personalResponseMarks: group.personalResponseMarks,
+        mcqOptionsMarks: group.mcqOptionsMarks,
         weightingMode: group.weightingMode,
         passMarks: group.passMarks,
         // Sensible defaults for bulk uploads (admin can edit after).
@@ -477,4 +683,5 @@ module.exports = {
   buildSampleWorkbookBuffer,
   bulkCreateFromExcel,
   REQUIRED_HEADERS,
+  TEMPLATE_HEADERS,
 };

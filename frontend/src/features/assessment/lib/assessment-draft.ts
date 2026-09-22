@@ -6,6 +6,8 @@ export type AssessmentDraft = {
   questionIndex: number;
   answers: Record<string, string>;
   optionOrders: Record<string, string[]>;
+  /** Selected MCQ option id per question. */
+  mcqSelections: Record<string, string>;
   /** Epoch ms when the student first opened this assessment attempt. */
   startedAt: number;
   /** Question IDs locked after their per-question timer expired. */
@@ -113,6 +115,9 @@ export function loadAssessmentDraft(
       optionOrders: parseOptionOrders(
         parsed.optionOrders as Record<string, unknown>,
       ),
+      mcqSelections: parseAnswers(
+        parsed.mcqSelections as Record<string, unknown> | undefined,
+      ),
       startedAt: Number(parsed.startedAt) || Date.now(),
       lockedQuestionIds: parseLockedIds(parsed.lockedQuestionIds),
       questionEnteredAt: parseNumberMap(
@@ -131,6 +136,7 @@ export function saveAssessmentDraft(input: {
   questionIndex: number;
   answers: Record<number, string>;
   optionOrders: Record<number, string[]>;
+  mcqSelections: Record<number, string>;
   startedAt: number;
   lockedQuestionIds: number[];
   questionEnteredAt: Record<number, number>;
@@ -142,6 +148,7 @@ export function saveAssessmentDraft(input: {
     questionIndex: input.questionIndex,
     answers: toStringKeyed(input.answers) as Record<string, string>,
     optionOrders: toStringKeyed(input.optionOrders) as Record<string, string[]>,
+    mcqSelections: toStringKeyed(input.mcqSelections) as Record<string, string>,
     startedAt: input.startedAt,
     lockedQuestionIds: [...new Set(input.lockedQuestionIds)],
     questionEnteredAt: toStringKeyed(input.questionEnteredAt) as Record<

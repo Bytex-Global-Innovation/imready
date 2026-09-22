@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, Plus } from "@/components/icons";
+import { Search } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import ConfirmModal from "@/components/ui/confirm-modal";
 import EditStudentModal, { type StudentEditPayload } from "@/components/ui/edit-student-modal";
@@ -9,6 +9,7 @@ import Pagination from "@/components/ui/pagination";
 import Select from "@/components/ui/select";
 import StudentsTable from "@/components/tables/students-table";
 import { studentsApi, type Student } from "@/lib/api";
+import PremiumRequestModal from "@/components/ui/premium-request-modal";
 
 const BREADCRUMBS = [
   { label: "Dashboard", href: "/dashboard" },
@@ -17,7 +18,7 @@ const BREADCRUMBS = [
 
 const PAGE_SIZE = 10;
 
-type SubscriptionAction = "approve" | "undo" | "reject";
+type SubscriptionAction = "approve" | "reject";
 
 const SUBSCRIPTION_CONFIRM: Record<
   SubscriptionAction,
@@ -32,18 +33,10 @@ const SUBSCRIPTION_CONFIRM: Record<
   approve: {
     title: "Approve premium access",
     message: (name) =>
-      `Approve premium for "${name}"? This unlocks Bytex premium features for their account.`,
+      `Approve premium for "${name}"? This unlocks premium features for their account.`,
     confirmLabel: "Approve Premium",
     loadingLabel: "Approving…",
     tone: "primary",
-  },
-  undo: {
-    title: "Undo premium approval",
-    message: (name) =>
-      `Undo premium for "${name}"? Status goes back to Premium Pending and premium features lock again.`,
-    confirmLabel: "Undo Approval",
-    loadingLabel: "Undoing…",
-    tone: "danger",
   },
   reject: {
     title: "Reject premium subscription",
@@ -80,6 +73,8 @@ export default function StudentsPage() {
   const [editTarget, setEditTarget] = useState<Student | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [premiumRequestTarget, setPremiumRequestTarget] =
+    useState<Student | null>(null);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -136,9 +131,7 @@ export default function StudentsPage() {
       const apiAction =
         subscriptionAction === "approve"
           ? studentsApi.approvePremium
-          : subscriptionAction === "undo"
-            ? studentsApi.undoPremium
-            : studentsApi.rejectPremium;
+          : studentsApi.rejectPremium;
       const result = await apiAction(subscriptionTarget.id);
       setMessage(result.message);
       setSubscriptionTarget(null);
@@ -184,10 +177,6 @@ export default function StudentsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button className="admin-btn-outline" type="button">Export CSV</button>
-          <button className="admin-btn-primary gap-2" type="button">
-            <Plus className="h-4 w-4" />
-            Add Student
-          </button>
         </div>
       </div>
 
@@ -250,10 +239,13 @@ export default function StudentsPage() {
           ) : (
             <StudentsTable
               students={students}
+              onViewPremiumRequest={(student) => {
+                setError(null);
+                setPremiumRequestTarget(student);
+              }}
               onApprovePremium={(student) =>
                 openSubscriptionAction(student, "approve")
               }
-              onUndoPremium={(student) => openSubscriptionAction(student, "undo")}
               onRejectPremium={(student) =>
                 openSubscriptionAction(student, "reject")
               }
@@ -281,6 +273,25 @@ export default function StudentsPage() {
           </div>
         )}
       </div>
+
+      <PremiumRequestModal
+        open={Boolean(premiumRequestTarget)}
+        student={premiumRequestTarget}
+        isLoading={isUpdatingSubscription}
+        onClose={() => {
+          if (!isUpdatingSubscription) setPremiumRequestTarget(null);
+        }}
+        onApprove={() => {
+          if (!premiumRequestTarget) return;
+          setPremiumRequestTarget(null);
+          openSubscriptionAction(premiumRequestTarget, "approve");
+        }}
+        onReject={() => {
+          if (!premiumRequestTarget) return;
+          setPremiumRequestTarget(null);
+          openSubscriptionAction(premiumRequestTarget, "reject");
+        }}
+      />
 
       <ConfirmModal
         open={Boolean(subscriptionTarget && subscriptionAction)}

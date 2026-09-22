@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { X } from "@/components/icons";
-import type { Student } from "@/lib/api";
+import type { Student, SubscriptionStatus } from "@/lib/api";
 import Select from "@/components/ui/select";
 
 const DOMAIN_OPTIONS = [
@@ -14,6 +14,15 @@ const DOMAIN_OPTIONS = [
 
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
 
+const SUBSCRIPTION_OPTIONS: {
+  value: SubscriptionStatus;
+  label: string;
+}[] = [
+  { value: "FREE", label: "Free" },
+  { value: "PREMIUM_PENDING", label: "Premium Pending" },
+  { value: "PREMIUM", label: "Premium" },
+];
+
 export type StudentEditPayload = {
   studentName: string;
   email: string;
@@ -21,6 +30,7 @@ export type StudentEditPayload = {
   domain: string;
   level: string;
   phone?: string;
+  subscriptionStatus: SubscriptionStatus;
 };
 
 interface EditStudentModalProps {
@@ -48,6 +58,7 @@ export default function EditStudentModal({
     domain: "",
     level: "Beginner",
     phone: "",
+    subscriptionStatus: "FREE",
   });
 
   useEffect(() => {
@@ -59,6 +70,7 @@ export default function EditStudentModal({
       domain: student.domain || "",
       level: student.level || "Beginner",
       phone: student.phone || "",
+      subscriptionStatus: student.subscriptionStatus || "FREE",
     });
   }, [open, student]);
 
@@ -93,6 +105,7 @@ export default function EditStudentModal({
       domain: form.domain.trim(),
       level: form.level.trim(),
       phone: form.phone?.trim(),
+      subscriptionStatus: form.subscriptionStatus,
     });
   }
 
@@ -190,6 +203,31 @@ export default function EditStudentModal({
                 </option>
               ))}
             </Select>
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-medium text-gray-700">
+              Subscription status
+            </span>
+            <Select
+              value={form.subscriptionStatus}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  subscriptionStatus: e.target.value as SubscriptionStatus,
+                }))
+              }
+              required
+            >
+              {SUBSCRIPTION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1.5 text-xs text-gray-500">
+              Setting Premium unlocks premium features. Free moves the student
+              back to the free plan.
+            </p>
           </label>
         </div>
 

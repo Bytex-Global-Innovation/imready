@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell,
   Check,
   FolderKanban,
   HelpCircle,
@@ -68,13 +67,6 @@ function getNavItems(projectsUnlocked: boolean) {
       locked: !projectsUnlocked,
       match: (pathname: string) =>
         pathname === ROUTES.projects || pathname.startsWith(`${ROUTES.projects}/`),
-    },
-    {
-      label: "Notifications",
-      href: "#",
-      icon: Bell,
-      locked: false,
-      match: () => false,
     },
   ] as const;
 }
@@ -268,13 +260,17 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
               size="sm"
               onClick={() => {
                 setUpgradeTooltipOpen(false);
+                if (subscriptionStatus === "PREMIUM_PENDING") {
+                  router.push(ROUTES.details);
+                  return;
+                }
                 setUpgradeModalOpen(true);
               }}
             >
               {subscriptionStatus === "PREMIUM"
                 ? "Premium Active"
                 : subscriptionStatus === "PREMIUM_PENDING"
-                  ? "Premium Pending"
+                  ? "Complete Payment"
                   : "Upgrade Plan"}
             </Button>
 

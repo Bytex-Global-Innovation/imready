@@ -14,8 +14,12 @@ function resolvePostVerifyPath(
 ) {
   for (const value of candidates) {
     if (!value) continue;
-    if (value === "/bytex" || value === ROUTES.bytex) {
-      return ROUTES.bytex;
+    if (
+      value === "/details" ||
+      value === ROUTES.details ||
+      value === "/bytex"
+    ) {
+      return ROUTES.details;
     }
     if (value === "/dashboard" || value === ROUTES.dashboard) {
       return ROUTES.dashboard;
@@ -47,17 +51,17 @@ export function VerifyEmailView() {
         if (cancelled) return;
 
         // Prefer API redirect (from careerDoor); fall back to email `next` hint.
-        // bytex-unlock → /bytex ; written-challenge (free) → /dashboard
+        // bytex-unlock → /details ; written-challenge (free) → /dashboard
         const destination = resolvePostVerifyPath(
           result.redirectTo,
           nextHint,
         );
-        const isPremium = destination === ROUTES.bytex;
+        const isPremium = destination === ROUTES.details;
 
         setStatus("success");
         setMessage(
           isPremium
-            ? "Email verified. Taking you to Bytex…"
+            ? "Email verified. Taking you to premium payment details…"
             : "Email verified. Taking you to your dashboard…",
         );
         router.replace(destination);

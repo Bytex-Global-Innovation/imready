@@ -37,11 +37,32 @@ function defaultOrderFor(question: AssessmentQuestion) {
 }
 
 function needsJumbled(answerType: AssessmentQuestion["answerType"] | undefined) {
-  return answerType === "JUMBLED" || answerType === "BOTH" || !answerType;
+  return (
+    answerType === "JUMBLED" ||
+    answerType === "BOTH" ||
+    answerType === "JUMBLED_MCQ" ||
+    answerType === "ALL" ||
+    !answerType
+  );
 }
 
 function needsPersonal(answerType: AssessmentQuestion["answerType"] | undefined) {
-  return answerType === "PERSONAL" || answerType === "BOTH" || !answerType;
+  return (
+    answerType === "PERSONAL" ||
+    answerType === "BOTH" ||
+    answerType === "PERSONAL_MCQ" ||
+    answerType === "ALL" ||
+    !answerType
+  );
+}
+
+function needsMcq(answerType: AssessmentQuestion["answerType"] | undefined) {
+  return (
+    answerType === "MCQ" ||
+    answerType === "JUMBLED_MCQ" ||
+    answerType === "PERSONAL_MCQ" ||
+    answerType === "ALL"
+  );
 }
 
 function sanitizeOptionOrders(
@@ -66,6 +87,22 @@ function sanitizeOptionOrders(
   return next;
 }
 
+function sanitizeMcqSelections(
+  questions: AssessmentQuestion[],
+  saved: Record<number, string>,
+): Record<number, string> {
+  const next: Record<number, string> = {};
+  for (const q of questions) {
+    if (!needsMcq(q.answerType)) continue;
+    const validIds = new Set((q.mcqOptions ?? []).map((opt) => opt.id));
+    const candidate = saved[q.id];
+    if (candidate && validIds.has(candidate)) {
+      next[q.id] = candidate;
+    }
+  }
+  return next;
+}
+
 function formatCountdown(ms: number) {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
@@ -85,6 +122,9 @@ export function AssessmentView() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [optionOrders, setOptionOrders] = useState<Record<number, string[]>>({});
+  const [mcqSelections, setMcqSelections] = useState<Record<number, string>>(
+    {},
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved">(
@@ -111,6 +151,7 @@ export function AssessmentView() {
     questionIndex: 0,
     answers: {} as Record<number, string>,
     optionOrders: {} as Record<number, string[]>,
+    mcqSelections: {} as Record<number, string>,
     startedAt: 0,
     lockedQuestionIds: [] as number[],
     questionEnteredAt: {} as Record<number, number>,
@@ -157,6 +198,9 @@ export function AssessmentView() {
         setOptionOrders(
           sanitizeOptionOrders(data.questions, draft?.optionOrders ?? {}),
         );
+        setMcqSelections(
+          sanitizeMcqSelections(data.questions, draft?.mcqSelections ?? {}),
+        );
         setStartedAt(nextStartedAt);
         setLockedQuestionIds(draft?.lockedQuestionIds ?? []);
         setQuestionEnteredAt(nextEntered);
@@ -191,6 +235,9 @@ export function AssessmentView() {
   const progress = total > 0 ? ((questionIndex + 1) / total) * 100 : 0;
   const showJumbled = question ? needsJumbled(question.answerType) : false;
   const showPersonal = question ? needsPersonal(question.answerType) : false;
+  const showMcq = question ? needsMcq(question.answerType) : false;
+  const mcqOptions = question?.mcqOptions ?? [];
+  const mcqSelection = question ? (mcqSelections[question.id] ?? "") : "";
   const isQuestionLocked = question
     ? lockedQuestionIds.includes(question.id)
     : false;
@@ -205,6 +252,7 @@ export function AssessmentView() {
       questionIndex,
       answers,
       optionOrders,
+      mcqSelections,
       startedAt,
       lockedQuestionIds,
       questionEnteredAt,
@@ -215,6 +263,7 @@ export function AssessmentView() {
     questionIndex,
     answers,
     optionOrders,
+    mcqSelections,
     startedAt,
     lockedQuestionIds,
     questionEnteredAt,
@@ -224,6 +273,7 @@ export function AssessmentView() {
   function persistDraft(
     nextAnswers: Record<number, string>,
     nextOrders: Record<number, string[]>,
+    nextMcq: Record<number, string>,
     nextIndex: number,
     nextLocked: number[],
     nextEntered: Record<number, number>,
@@ -239,6 +289,7 @@ export function AssessmentView() {
         questionIndex: nextIndex,
         answers: nextAnswers,
         optionOrders: nextOrders,
+        mcqSelections: nextMcq,
         startedAt: nextStartedAt,
         lockedQuestionIds: nextLocked,
         questionEnteredAt: nextEntered,
@@ -280,6 +331,7 @@ export function AssessmentView() {
         questionIndex: s.questionIndex,
         answers: s.answers,
         optionOrders: s.optionOrders,
+        mcqSelections: s.mcqSelections,
         startedAt: s.startedAt,
         lockedQuestionIds: s.lockedQuestionIds,
         questionEnteredAt: s.questionEnteredAt,
@@ -313,6 +365,7 @@ export function AssessmentView() {
     persistDraft(
       s.answers,
       s.optionOrders,
+      s.mcqSelections,
       s.questionIndex,
       s.lockedQuestionIds,
       s.questionEnteredAt,
@@ -330,6 +383,9 @@ export function AssessmentView() {
           personalResponse: needsPersonal(q.answerType)
             ? (s.answers[q.id] ?? "")
             : "",
+          mcqSelection: needsMcq(q.answerType)
+            ? (s.mcqSelections[q.id] ?? null)
+            : null,
         })),
       });
       clearAssessmentDraft(s.assessment.id);
@@ -364,6 +420,7 @@ export function AssessmentView() {
       persistDraft(
         s.answers,
         s.optionOrders,
+        s.mcqSelections,
         s.questionIndex,
         nextLocked,
         s.questionEnteredAt,
@@ -394,6 +451,7 @@ export function AssessmentView() {
     persistDraft(
       s.answers,
       s.optionOrders,
+      s.mcqSelections,
       nextIndex,
       nextLocked,
       nextEntered,
@@ -468,6 +526,7 @@ export function AssessmentView() {
       persistDraft(
         next,
         optionOrders,
+        mcqSelections,
         questionIndex,
         lockedQuestionIds,
         questionEnteredAt,
@@ -483,6 +542,24 @@ export function AssessmentView() {
       const next = { ...prev, [question.id]: nextOrder };
       persistDraft(
         answers,
+        next,
+        mcqSelections,
+        questionIndex,
+        lockedQuestionIds,
+        questionEnteredAt,
+        startedAt,
+      );
+      return next;
+    });
+  }
+
+  function updateMcqSelection(optionId: string) {
+    if (!question || isQuestionLocked) return;
+    setMcqSelections((prev) => {
+      const next = { ...prev, [question.id]: optionId };
+      persistDraft(
+        answers,
+        optionOrders,
         next,
         questionIndex,
         lockedQuestionIds,
@@ -502,6 +579,7 @@ export function AssessmentView() {
       persistDraft(
         answers,
         optionOrders,
+        mcqSelections,
         nextIndex,
         lockedQuestionIds,
         nextEntered,
@@ -512,6 +590,7 @@ export function AssessmentView() {
       persistDraft(
         answers,
         optionOrders,
+        mcqSelections,
         questionIndex,
         lockedQuestionIds,
         questionEnteredAt,
@@ -531,6 +610,7 @@ export function AssessmentView() {
     persistDraft(
       answers,
       optionOrders,
+      mcqSelections,
       nextIndex,
       lockedQuestionIds,
       nextEntered,
@@ -690,6 +770,52 @@ export function AssessmentView() {
                 onChange={updateOptionOrder}
               />
             </div>
+          )}
+
+          {showMcq && mcqOptions.length > 0 && (
+            <fieldset
+              className={cn(
+                "mt-6",
+                isQuestionLocked && "pointer-events-none opacity-70",
+              )}
+              disabled={isQuestionLocked}
+            >
+              <legend className="mb-2 text-xs font-semibold tracking-wider text-muted uppercase">
+                Choose one answer
+              </legend>
+              <div
+                role="radiogroup"
+                aria-label="Multiple choice options"
+                className="space-y-2"
+              >
+                {mcqOptions.map((option) => {
+                  const selected = mcqSelection === option.id;
+                  return (
+                    <label
+                      key={option.id}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-[var(--radius-card)] border px-4 py-3 text-sm transition-colors",
+                        selected
+                          ? "border-primary bg-brand-50/50 text-foreground"
+                          : "border-border bg-white text-foreground hover:border-primary/40",
+                        isQuestionLocked && "cursor-not-allowed",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name={`mcq-${question.id}`}
+                        value={option.id}
+                        checked={selected}
+                        onChange={() => updateMcqSelection(option.id)}
+                        disabled={isQuestionLocked}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
           )}
 
           {showPersonal && (

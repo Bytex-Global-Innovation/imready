@@ -3,6 +3,7 @@
 const Assessment = require('@modules/assessment/assessment.model');
 const AssessmentQuestion = require('@modules/assessment/assessment-question.model');
 const AssessmentQuestionOption = require('@modules/assessment/assessment-question-option.model');
+const AssessmentQuestionMcqOption = require('@modules/assessment/assessment-question-mcq-option.model');
 const AssessmentQuestionLink = require('@modules/assessment/assessment-question-link.model');
 const AssessmentSubmission = require('@modules/assessment/assessment-submission.model');
 const AssessmentSubmissionAnswer = require('@modules/assessment/assessment-submission-answer.model');
@@ -19,6 +20,16 @@ function setupAssessmentAssociations() {
     onDelete: 'CASCADE',
   });
   AssessmentQuestionOption.belongsTo(AssessmentQuestion, {
+    as: 'question',
+    foreignKey: 'questionId',
+  });
+
+  AssessmentQuestion.hasMany(AssessmentQuestionMcqOption, {
+    as: 'mcqOptions',
+    foreignKey: 'questionId',
+    onDelete: 'CASCADE',
+  });
+  AssessmentQuestionMcqOption.belongsTo(AssessmentQuestion, {
     as: 'question',
     foreignKey: 'questionId',
   });
@@ -78,6 +89,7 @@ module.exports = {
   Assessment,
   AssessmentQuestion,
   AssessmentQuestionOption,
+  AssessmentQuestionMcqOption,
   AssessmentQuestionLink,
   AssessmentSubmission,
   AssessmentSubmissionAnswer,

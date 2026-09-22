@@ -116,6 +116,22 @@ async function requestPremium(req, res, next) {
   }
 }
 
+async function submitPremiumPayment(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload a payment screenshot' });
+    }
+    const screenshotPath = `/uploads/premium-payments/${req.file.filename}`;
+    const result = await studentService.submitPremiumPayment(
+      req.student.id,
+      screenshotPath,
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function listStudents(req, res, next) {
   try {
     const page = Number(req.query.page) || 1;
@@ -142,7 +158,11 @@ async function listStudents(req, res, next) {
 
 async function updateStudent(req, res, next) {
   try {
-    const result = await studentService.updateStudent(req.params.id, req.body);
+    const result = await studentService.updateStudent(
+      req.params.id,
+      req.body,
+      req.admin?.id,
+    );
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -190,6 +210,7 @@ module.exports = {
   resetPassword,
   me,
   requestPremium,
+  submitPremiumPayment,
   listStudents,
   updateStudent,
   approvePremium,
