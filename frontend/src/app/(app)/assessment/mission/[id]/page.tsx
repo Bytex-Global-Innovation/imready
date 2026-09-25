@@ -1,0 +1,41 @@
+"use client";
+
+import { useEffect } from "react";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
+import { isMissionUnlocked } from "@/features/missions/lib/mission-progress";
+import { Mission1Reality } from "@/features/missions/components/mission-1-reality";
+import { Mission2Engage } from "@/features/missions/components/mission-2-engage";
+import { Mission3Analyze } from "@/features/missions/components/mission-3-analyze";
+import { Mission4Do } from "@/features/missions/components/mission-4-do";
+import { Mission5Yield } from "@/features/missions/components/mission-5-yield";
+
+export default function MissionPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const id = Number(params.id);
+  const valid = Number.isInteger(id) && id >= 1 && id <= 5;
+
+  useEffect(() => {
+    if (valid && !isMissionUnlocked(id)) {
+      router.replace(ROUTES.assessment);
+    }
+  }, [valid, id, router]);
+
+  if (!valid) notFound();
+
+  switch (id) {
+    case 1:
+      return <Mission1Reality />;
+    case 2:
+      return <Mission2Engage />;
+    case 3:
+      return <Mission3Analyze />;
+    case 4:
+      return <Mission4Do />;
+    case 5:
+      return <Mission5Yield />;
+    default:
+      return null;
+  }
+}
