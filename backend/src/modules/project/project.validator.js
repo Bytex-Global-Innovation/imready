@@ -23,6 +23,7 @@ const createProjectSchema = Joi.object({
   slug: Joi.string().trim().max(160).optional().allow(''),
   category: Joi.string().trim().min(1).max(160).required(),
   badge: Joi.string().trim().max(64).allow('').default(''),
+  isFree: Joi.boolean().default(false),
   description: Joi.string().trim().min(1).max(5000).required(),
   imageSrc: Joi.string().trim().allow('').max(1000).default(''),
   imageAlt: Joi.string().trim().allow('').max(255).default(''),

@@ -44,6 +44,7 @@ function serializeAdminProject(project) {
     domain: project.category,
     category: project.category,
     badge: project.badge,
+    isFree: Boolean(project.isFree),
     description: project.description,
     imageSrc: project.imageSrc,
     imageAlt: project.imageAlt,
@@ -67,6 +68,7 @@ function serializeStudentProject(project) {
     dbId: String(project.id),
     category: project.category,
     badge: project.badge,
+    isFree: Boolean(project.isFree),
     title: project.title,
     description: project.description,
     imageSrc: project.imageSrc,
@@ -131,6 +133,7 @@ async function createProject(payload) {
     title: payload.title,
     category: category.slug,
     badge: payload.badge || category.name.toUpperCase().slice(0, 32),
+    isFree: Boolean(payload.isFree),
     description: payload.description,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || payload.title,
@@ -169,6 +172,7 @@ async function updateProject(id, payload) {
     title: payload.title,
     category: category.slug,
     badge: payload.badge || category.name.toUpperCase().slice(0, 32),
+    isFree: Boolean(payload.isFree),
     description: payload.description,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || payload.title,
@@ -231,8 +235,10 @@ async function deleteProject(id) {
   return { id: String(id), deleted: true };
 }
 
-async function listPublicProjects({ category } = {}) {
+async function listPublicProjects({ category, access } = {}) {
   const where = { status: 'ACTIVE', deletedAt: null };
+  if (access === 'free') where.isFree = true;
+  if (access === 'premium') where.isFree = false;
   if (category && String(category).trim()) {
     where.category = String(category).trim();
   }
@@ -245,9 +251,10 @@ async function listPublicProjects({ category } = {}) {
   return { projects: rows.map(serializeStudentProject) };
 }
 
-async function getPublicProjectBySlug(slug) {
+async function getPublicProjectBySlug(slug, access) {
+  const accessWhere = access === 'free' ? { isFree: true } : access === 'premium' ? { isFree: false } : {};
   const project = await IndustryProject.findOne({
-    where: { slug, status: 'ACTIVE', deletedAt: null },
+    where: { slug, status: 'ACTIVE', deletedAt: null, ...accessWhere },
   });
   if (!project) throw notFound('Project not found');
   return serializeStudentProject(project);
@@ -266,7 +273,7 @@ async function applyToProject(slugOrId, payload) {
   const email = String(payload.studentEmail).trim().toLowerCase();
   const studentService = require('@modules/student/student.service');
   const unlocked = await studentService.hasProjectsUnlocked(email);
-  if (!unlocked) {
+  if (!project.isFree && !unlocked) {
     const err = new Error(
       'Projects unlock after you pass the assessment, or after an admin approves premium access.',
     );

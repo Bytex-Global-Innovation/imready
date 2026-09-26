@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const StudentAccount = require('@modules/student/student.model');
-const AssessmentSubmission = require('@modules/assessment/assessment-submission.model');
 const { DOMAIN_LABELS } = require('@modules/student/student.validator');
 const {
   sendVerificationEmail,
@@ -29,7 +28,7 @@ const SUBSCRIPTION = {
 
 function subscriptionFromCareerDoor(careerDoor) {
   return careerDoor === 'bytex-unlock'
-    ? SUBSCRIPTION.PREMIUM_PENDING
+    ? SUBSCRIPTION.PREMIUM
     : SUBSCRIPTION.FREE;
 }
 
@@ -64,12 +63,6 @@ function forbidden(message, code) {
 }
 
 function redirectForDoor(careerDoor, subscriptionStatus) {
-  if (
-    careerDoor === 'bytex-unlock' &&
-    subscriptionStatus === SUBSCRIPTION.PREMIUM_PENDING
-  ) {
-    return '/details';
-  }
   return '/dashboard';
 }
 
@@ -168,25 +161,9 @@ function verificationExpiryDate() {
   return new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS);
 }
 
-async function hasPassedAssessment(email) {
-  const row = await AssessmentSubmission.findOne({
-    where: {
-      email: String(email).trim().toLowerCase(),
-      result: 'PASS',
-    },
-    attributes: ['id'],
-  });
-  return Boolean(row);
-}
-
-/**
- * Free path: passing the assessment still unlocks projects.
- * Premium path: admin-approved PREMIUM also unlocks projects (Bytex door).
- * PREMIUM_PENDING does not unlock anything extra.
- */
 async function resolveProjectsUnlocked(student) {
   if (isPremiumUnlocked(student)) return true;
-  return hasPassedAssessment(student.email);
+  return false;
 }
 
 async function hasProjectsUnlocked(email) {
@@ -196,7 +173,7 @@ async function hasProjectsUnlocked(email) {
     attributes: ['id', 'email', 'subscriptionStatus'],
   });
   if (isPremiumUnlocked(student)) return true;
-  return hasPassedAssessment(normalized);
+  return false;
 }
 
 function serializeStudent(student, extras = {}) {
@@ -856,7 +833,6 @@ module.exports = {
   rejectPremium,
   listStudents,
   serializeStudent,
-  hasPassedAssessment,
   hasProjectsUnlocked,
   resolveProjectsUnlocked,
   redirectForDoor,

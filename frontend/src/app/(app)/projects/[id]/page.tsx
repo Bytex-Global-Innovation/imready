@@ -6,5 +6,5 @@ export default async function ProjectBriefPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ProjectBriefView projectId={id} />;
+  return <ProjectBriefView projectId={id} access="premium" />;
 }

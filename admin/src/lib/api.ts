@@ -1036,6 +1036,7 @@ export interface Project {
   domain: string;
   category?: ProjectCategory;
   badge?: string;
+  isFree?: boolean;
   description?: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -1057,6 +1058,7 @@ export interface ProjectInput {
   slug?: string;
   category: ProjectCategory;
   badge?: string;
+  isFree: boolean;
   description: string;
   imageSrc?: string;
   imageAlt?: string;

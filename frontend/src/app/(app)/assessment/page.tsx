@@ -1,5 +1,6 @@
-import { AssessmentView } from "@/features/assessment/components/assessment-view";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 export default function AssessmentPage() {
-  return <AssessmentView />;
+  redirect(ROUTES.dashboard);
 }

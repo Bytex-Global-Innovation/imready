@@ -1,5 +1,6 @@
-import { AssessmentSubmittedView } from "@/features/assessment/components/assessment-submitted-view";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 export default function AssessmentSubmittedPage() {
-  return <AssessmentSubmittedView />;
+  redirect(ROUTES.dashboard);
 }
