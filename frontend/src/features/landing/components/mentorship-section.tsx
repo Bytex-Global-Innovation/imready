@@ -7,7 +7,6 @@ import {
   SUCCESSFUL_EXPLORERS,
   type MentorshipPerson,
 } from "@/constants/landing";
-
 function PersonCard({ person }: { person: MentorshipPerson }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
@@ -21,10 +20,10 @@ function PersonCard({ person }: { person: MentorshipPerson }) {
         />
       </div>
       <div className="p-4 text-center">
-        <p className="font-display text-base font-bold text-hero-heading">
-          {person.name}
-        </p>
-        <p className="mt-1 text-sm text-hero-body">{person.role}</p>
+        <p className="font-display text-base font-normal text-hero-heading">
+  {person.name}
+</p>
+<p className="mt-1 text-sm font-semibold text-hero-body">{person.role}</p>
       </div>
     </article>
   );
@@ -76,6 +75,7 @@ export function MentorshipSection() {
             </p>
           </div>
 
+                    {/* Successful explorers grid */}
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6">
             {SUCCESSFUL_EXPLORERS.map((explorer) => (
               <PersonCard key={explorer.name} person={explorer} />

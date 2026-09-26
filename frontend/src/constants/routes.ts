@@ -18,6 +18,9 @@ export const ROUTES = {
   dashboard: "/dashboard",
   assessment: "/assessment",
   assessmentSubmitted: "/assessment/submitted",
+  mission: (id: number) => `/assessment/mission/${id}`,
+  missionComplete: (id: number) => `/assessment/mission/${id}/complete`,
+  foundationComplete: "/assessment/complete",
   projects: "/projects",
   freeProjects: "/free-projects",
   projectDetail: (id: string) => `/projects/${id}`,
@@ -62,7 +65,6 @@ export function isGuestOnlyAuthRoute(pathname: string): boolean {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
-
 
 export function isSignupStep(value: number): value is SignupStep {
   return SIGNUP_STEP_NUMBERS.includes(value as SignupStep);

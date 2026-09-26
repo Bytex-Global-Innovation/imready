@@ -128,7 +128,7 @@ export function SignupForm() {
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema) as Resolver<SignupFormValues>,
-    defaultValues,
+    defaultValues: { ...defaultValues, ...readDraft() },
     mode: "onTouched",
   });
 
@@ -149,6 +149,12 @@ export function SignupForm() {
   const selectedDoor = watch("careerDoor");
   const selectedDomain = watch("targetDomain");
   const agreedToTerms = watch("agreedToTerms");
+  const watchedValues = watch();
+
+  // Keep the draft in sync as the person types/selects, on every step.
+  useEffect(() => {
+    writeDraft(watchedValues);
+  }, [watchedValues]);
 
   function goToStep(step: SignupStep) {
     writeDraft(getValues());

@@ -9,6 +9,7 @@ export {
   Brain,
   Briefcase,
   Building2,
+  Camera,
   CircuitBoard,
   Cloud,
   CalendarDays,
@@ -26,6 +27,9 @@ export {
   Database,
   DollarSign,
   Eye,
+  ExternalLink,
+  Flag,
+  Flame,
   FolderKanban,
   FolderOpen,
   Gift,
@@ -48,10 +52,12 @@ export {
   Lock,
   LogOut,
   Mail,
+  MapPin,
   Maximize2,
   MemoryStick,
   Menu,
   MessageSquare,
+  Mic,
   Monitor,
   MousePointerClick,
   Play,
@@ -64,6 +70,7 @@ export {
   ShieldCheck,
   Smartphone,
   Star,
+  StickyNote,
   Tablet,
   TableProperties,
   Tag,
@@ -73,6 +80,7 @@ export {
   Tv,
   UserRound,
   Users,
+  Video,
   Wifi,
   WifiOff,
   Wrench,
@@ -82,6 +90,5 @@ export {
   Zap,
   BarChart3,
 } from "lucide-react";
-
 
 export type { LucideIcon } from "lucide-react";
