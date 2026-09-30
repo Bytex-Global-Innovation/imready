@@ -28,7 +28,7 @@ import {
 } from "@/features/dashboard/components/upgrade-plan-modal";
 
 const PROJECTS_LOCKED_MESSAGE =
-  "Premium Projects are available after premium access is approved.";
+  "Projects unlock after you complete all 5 Foundation missions, or after premium access is approved.";
 
 const HELP_CENTER_EMAIL = "support@imready.io";
 

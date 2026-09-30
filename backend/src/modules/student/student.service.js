@@ -16,6 +16,9 @@ const { STUDENT_ISSUER } = require('@modules/auth/student.guard');
 const {
   REMEMBER_REFRESH_MS,
 } = require('@modules/auth/student.cookies');
+const {
+  isFoundationCompleteForStudent,
+} = require('@modules/foundation/foundation.service');
 
 /** New signups must verify within this window or the pending account is deleted. */
 const EMAIL_VERIFICATION_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -162,18 +165,18 @@ function verificationExpiryDate() {
 }
 
 async function resolveProjectsUnlocked(student) {
+  if (!student) return false;
   if (isPremiumUnlocked(student)) return true;
-  return false;
+  return isFoundationCompleteForStudent(student);
 }
 
 async function hasProjectsUnlocked(email) {
   const normalized = String(email).trim().toLowerCase();
   const student = await StudentAccount.findOne({
     where: { email: normalized },
-    attributes: ['id', 'email', 'subscriptionStatus'],
+    attributes: ['id', 'email', 'subscriptionStatus', 'foundationCompletedAt'],
   });
-  if (isPremiumUnlocked(student)) return true;
-  return false;
+  return await resolveProjectsUnlocked(student);
 }
 
 function serializeStudent(student, extras = {}) {
@@ -196,6 +199,8 @@ function serializeStudent(student, extras = {}) {
     premiumApprovedAt: student.premiumApprovedAt,
     premiumPaymentScreenshot: student.premiumPaymentScreenshot || null,
     premiumPaymentSubmittedAt: student.premiumPaymentSubmittedAt || null,
+    foundationCompletedAt: student.foundationCompletedAt || null,
+    foundationComplete: Boolean(student.foundationCompletedAt),
     createdAt: student.createdAt,
     ...extras,
   };

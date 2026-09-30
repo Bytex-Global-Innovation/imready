@@ -1181,3 +1181,93 @@ export const projectsApi = {
     );
   },
 };
+
+export type FoundationStatusFilter = "ALL" | "IN_PROGRESS" | "COMPLETE";
+
+export interface FoundationProgressListItem {
+  studentId: string;
+  studentUuid: string;
+  studentName: string;
+  email: string;
+  collegeName: string;
+  completedCount: number;
+  totalMissions: number;
+  currentMission: number;
+  totalXp: number;
+  foundationComplete: boolean;
+  foundationCompletedAt: string | null;
+  lastUpdatedAt: string | null;
+}
+
+export interface FoundationProgressListResponse {
+  results: FoundationProgressListItem[];
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export interface FoundationMissionDetail {
+  missionId: number;
+  label: string;
+  answers: Record<string, unknown>;
+  evidence: {
+    fileName: string | null;
+    fileType: string | null;
+    filePath: string | null;
+    fileUrl?: string | null;
+  } | null;
+  completed: boolean;
+  completedAt: number | null;
+  xpEarned: number;
+  updatedAt: number | null;
+}
+
+export interface FoundationStudentProgressDetail {
+  student: {
+    id: string;
+    uuid: string;
+    studentName: string;
+    email: string;
+    collegeName: string;
+    streamMajor: string;
+    graduationYear: string;
+    foundationCompletedAt: string | null;
+    createdAt: string;
+  };
+  progress: {
+    totalXp: number;
+    completedCount: number;
+    totalMissions: number;
+    foundationComplete: boolean;
+    foundationCompletedAt: string | null;
+  };
+  missions: FoundationMissionDetail[];
+}
+
+export const foundationApi = {
+  getProgressList: async (
+    page = 1,
+    opts?: { search?: string; status?: FoundationStatusFilter },
+  ): Promise<FoundationProgressListResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return { results: [], page: 1, totalPages: 1, total: 0 };
+    }
+    const params = new URLSearchParams({ page: String(page) });
+    if (opts?.search) params.set("search", opts.search);
+    if (opts?.status) params.set("status", opts.status);
+    return request<FoundationProgressListResponse>(
+      `/admin/foundation/progress?${params.toString()}`,
+    );
+  },
+
+  getStudentProgress: async (studentId: string): Promise<FoundationStudentProgressDetail> => {
+    if (USE_MOCK) {
+      await delay(400);
+      throw new Error("Foundation progress is not available in mock mode.");
+    }
+    return request<FoundationStudentProgressDetail>(
+      `/admin/foundation/progress/${studentId}`,
+    );
+  },
+};

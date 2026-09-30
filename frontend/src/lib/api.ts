@@ -1,3 +1,4 @@
+import { invalidateFoundationProgressCache } from "@/features/missions/lib/mission-progress";
 import { clearStudentSessionCache, setCachedStudentSession } from "@/lib/student-session";
 import { clearLegacyStudentToken } from "@/lib/auth";
 
@@ -260,6 +261,8 @@ export interface StudentProfile {
   premiumApprovedAt?: string | null;
   premiumPaymentScreenshot?: string | null;
   premiumPaymentSubmittedAt?: string | null;
+  foundationCompletedAt?: string | null;
+  foundationComplete?: boolean;
   projectsUnlocked?: boolean;
 }
 
@@ -393,5 +396,6 @@ export const authApi = {
       // Still clear local session if the network call fails.
     }
     clearStudentSessionCache();
+    invalidateFoundationProgressCache();
   },
 };

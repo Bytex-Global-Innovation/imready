@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { ShieldCheck } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
   AutosaveStatus,
   EvidenceCapture,
+  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionDetailsCard,
   MissionFooterNav,
@@ -31,33 +32,54 @@ const FRICTION_EXAMPLES = [
 
 export function Mission1Reality() {
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, previewUrl: null });
+  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [caption, setCaption] = useState("");
   const [reflection, setReflection] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const record = getMissionRecord(MISSION_ID);
-    setCaption((record.answers.caption as string) ?? "");
-    setReflection((record.answers.reflection as string) ?? "");
-    if (record.evidence?.fileName) {
-      setEvidence({ fileName: record.evidence.fileName, previewUrl: null });
-    }
+    ensureFoundationProgress().then(() => {
+      const record = getMissionRecord(MISSION_ID);
+      setCaption((record.answers.caption as string) ?? "");
+      setReflection((record.answers.reflection as string) ?? "");
+      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
+        setEvidence({
+          fileName: record.evidence!.fileName,
+          filePath: record.evidence?.filePath ?? null,
+          previewUrl: null,
+        });
+      }
+      setHydrated(true);
+    });
   }, []);
 
-  function persist() {
-    saveMissionDraft(MISSION_ID, { caption, reflection }, { fileName: evidence.fileName, fileType: null, previewDataUrl: null });
+  async function persist() {
+    await saveMissionDraft(
+      MISSION_ID,
+      { caption, reflection },
+      toEvidenceMeta(evidence),
+    );
   }
 
   const reflectionWords = reflection.trim() ? reflection.trim().split(/\s+/).length : 0;
   const canComplete = caption.trim().length > 0 && reflection.trim().length > 0;
 
-  function handleComplete() {
-    if (!canComplete) return;
+  async function handleComplete() {
+    if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
-    persist();
-    completeMission(MISSION_ID, mission.xpReward);
-    router.push(ROUTES.missionComplete(MISSION_ID));
+    try {
+      const evidenceMeta = toEvidenceMeta(evidence);
+      await saveMissionDraft(MISSION_ID, { caption, reflection }, evidenceMeta);
+      await completeMission(MISSION_ID, { caption, reflection }, evidenceMeta);
+      router.push(ROUTES.missionComplete(MISSION_ID));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!hydrated) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
   return (
@@ -72,14 +94,16 @@ export function Mission1Reality() {
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your observation</h2>
-          <p className="mt-1 text-sm text-muted">Capture what you saw in the moment to ground your analysis.</p>
+          <p className="mt-1 text-sm text-muted">
+            Upload a document describing what you saw. Include Google Drive links to any photos or recordings.
+          </p>
           <span className="mt-3 inline-block rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary">
             Step 1 of 2: Observation &amp; Evidence
           </span>
 
           <div className="mt-5">
             <EvidenceCapture
-              methods={["photo", "note", "voice"]}
+              missionId={MISSION_ID}
               value={evidence}
               onChange={setEvidence}
               caption={caption}

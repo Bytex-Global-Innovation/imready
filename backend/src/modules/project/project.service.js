@@ -275,7 +275,7 @@ async function applyToProject(slugOrId, payload) {
   const unlocked = await studentService.hasProjectsUnlocked(email);
   if (!project.isFree && !unlocked) {
     const err = new Error(
-      'Projects unlock after you pass the assessment, or after an admin approves premium access.',
+      'Projects unlock after you complete all 5 Foundation missions, or after an admin approves premium access.',
     );
     err.statusCode = 403;
     err.code = 'PROJECTS_LOCKED';

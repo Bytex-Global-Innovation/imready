@@ -25,6 +25,7 @@ export {
   RotateCcw,
   Search,
   ShieldCheck,
+  Target,
   Trash2,
   Upload,
   User,

@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { Check, Flag } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
+  EvidenceCapture,
+  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
   TaskChecklist,
   TipFromReady,
+  type EvidenceValue,
 } from "./mission-ui";
 
 const MISSION_ID = 3;
@@ -33,27 +36,43 @@ const PATTERN_TAG_OPTIONS = ["Information Gap", "Counter Congestion", "Communica
 
 export function Mission3Analyze() {
   const router = useRouter();
+  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [whys, setWhys] = useState<Record<string, string>>({});
   const [rootCause, setRootCause] = useState("");
   const [pattern, setPattern] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const record = getMissionRecord(MISSION_ID);
-    setWhys({
-      why1: (record.answers.why1 as string) ?? "",
-      why2: (record.answers.why2 as string) ?? "",
-      why3: (record.answers.why3 as string) ?? "",
-      why4: (record.answers.why4 as string) ?? "",
+    ensureFoundationProgress().then(() => {
+      const record = getMissionRecord(MISSION_ID);
+      setWhys({
+        why1: (record.answers.why1 as string) ?? "",
+        why2: (record.answers.why2 as string) ?? "",
+        why3: (record.answers.why3 as string) ?? "",
+        why4: (record.answers.why4 as string) ?? "",
+      });
+      setRootCause((record.answers.rootCause as string) ?? "");
+      setPattern((record.answers.pattern as string) ?? "");
+      setTags((record.answers.tags as string[]) ?? []);
+      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
+        setEvidence({
+          fileName: record.evidence!.fileName,
+          filePath: record.evidence?.filePath ?? null,
+          previewUrl: null,
+        });
+      }
+      setHydrated(true);
     });
-    setRootCause((record.answers.rootCause as string) ?? "");
-    setPattern((record.answers.pattern as string) ?? "");
-    setTags((record.answers.tags as string[]) ?? []);
   }, []);
 
-  function persist() {
-    saveMissionDraft(MISSION_ID, { ...whys, rootCause, pattern, tags }, null);
+  async function persist() {
+    await saveMissionDraft(
+      MISSION_ID,
+      { ...whys, rootCause, pattern, tags },
+      toEvidenceMeta(evidence),
+    );
   }
 
   function toggleTag(tag: string) {
@@ -64,16 +83,28 @@ export function Mission3Analyze() {
   const checklist = [
     { label: "Review your observations", caption: "Reviewed interviews with 3 students & 2 staff.", done: whysFilled },
     { label: "Find recurring patterns", caption: "Noticed constant verbal checks from waiting customers.", done: pattern.trim().length > 0 },
+    { label: "Upload synthesis document", caption: "Document with analysis notes and Drive links", done: Boolean(evidence.filePath) },
     { label: "Identify the real root problem", caption: "Completed all 5 layers with confirmed root cause.", done: rootCause.trim().length > 0 },
   ];
-  const canComplete = whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0;
+  const canComplete =
+    whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
 
-  function handleComplete() {
-    if (!canComplete) return;
+  async function handleComplete() {
+    if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
-    persist();
-    completeMission(MISSION_ID, mission.xpReward);
-    router.push(ROUTES.missionComplete(MISSION_ID));
+    try {
+      const answers = { ...whys, rootCause, pattern, tags };
+      const evidenceMeta = toEvidenceMeta(evidence);
+      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
+      await completeMission(MISSION_ID, answers, evidenceMeta);
+      router.push(ROUTES.missionComplete(MISSION_ID));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!hydrated) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
   return (
@@ -163,7 +194,13 @@ export function Mission3Analyze() {
                 Step 2 of 2
               </span>
             </div>
-            <p className="mt-3 text-sm font-medium text-foreground">
+            <p className="mt-3 text-sm text-muted">
+              Upload a document summarizing your analysis. Include Google Drive links to supporting notes or recordings.
+            </p>
+            <div className="mt-4">
+              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+            </div>
+            <p className="mt-6 text-sm font-medium text-foreground">
               What fundamental pattern did you detect from student quotes and canteen observations?
             </p>
             <textarea
