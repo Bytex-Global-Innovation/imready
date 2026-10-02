@@ -21,9 +21,18 @@ const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
 
 const SAMPLE_QUESTIONS = [
-  "How do you decide when to order?",
-  "What do you do while waiting for food?",
-  "What is the most frustrating part of this?",
+  {
+    question: "How do you decide when to order?",
+    answer: "Usually when the queue looks short, but I've been wrong a few times and ended up waiting even longer.",
+  },
+  {
+    question: "What do you do while waiting for food?",
+    answer: "I just stand near the counter and keep glancing at the staff, hoping they'll call my number soon.",
+  },
+  {
+    question: "What is the most frustrating part of this?",
+    answer: "Not knowing how long it'll actually take — if I knew, I'd just go sit down instead of hovering.",
+  },
 ];
 
 export function Mission2Engage() {
@@ -135,18 +144,22 @@ export function Mission2Engage() {
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
           <TaskChecklist items={checklist} />
           <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              Need help? Sample questions
-            </p>
-            <ul className="space-y-2">
-              {SAMPLE_QUESTIONS.map((question) => (
-                <li key={question} className="rounded-[var(--radius-card)] bg-white px-3 py-2 text-sm text-foreground shadow-sm">
-                  &ldquo;{question}&rdquo;
-                </li>
-              ))}
-            </ul>
-          </div>
+  <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+    <MessageSquare className="h-4 w-4 text-primary" />
+    Need help? Sample questions
+  </p>
+  <ul className="space-y-3">
+    {SAMPLE_QUESTIONS.map((item) => (
+      <li key={item.question} className="rounded-[var(--radius-card)] bg-white p-3 shadow-sm">
+        <p className="text-sm font-medium text-foreground">&ldquo;{item.question}&rdquo;</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted">
+          <span className="font-semibold text-primary">Sample answer: </span>
+          {item.answer}
+        </p>
+      </li>
+    ))}
+  </ul>
+</div>
           <MissionDetailsCard estTime={mission.estTime} target={mission.target} location={mission.location} />
           <div className="flex gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface p-4">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
