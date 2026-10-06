@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { MessageSquare, ShieldCheck } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
+  EvidenceCapture,
+  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionDetailsCard,
   MissionFooterNav,
@@ -15,6 +17,7 @@ import {
   QuestionField,
   TaskChecklist,
   TipFromReady,
+  type EvidenceValue,
 } from "./mission-ui";
 
 const MISSION_ID = 2;
@@ -28,38 +31,64 @@ const SAMPLE_QUESTIONS = [
 
 export function Mission2Engage() {
   const router = useRouter();
+  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [observation, setObservation] = useState("");
   const [surprise, setSurprise] = useState("");
   const [quotes, setQuotes] = useState("");
   const [patterns, setPatterns] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const record = getMissionRecord(MISSION_ID);
-    setObservation((record.answers.observation as string) ?? "");
-    setSurprise((record.answers.surprise as string) ?? "");
-    setQuotes((record.answers.quotes as string) ?? "");
-    setPatterns((record.answers.patterns as string) ?? "");
+    ensureFoundationProgress().then(() => {
+      const record = getMissionRecord(MISSION_ID);
+      setObservation((record.answers.observation as string) ?? "");
+      setSurprise((record.answers.surprise as string) ?? "");
+      setQuotes((record.answers.quotes as string) ?? "");
+      setPatterns((record.answers.patterns as string) ?? "");
+      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
+        setEvidence({
+          fileName: record.evidence!.fileName,
+          filePath: record.evidence?.filePath ?? null,
+          previewUrl: null,
+        });
+      }
+      setHydrated(true);
+    });
   }, []);
 
-  function persist() {
-    saveMissionDraft(MISSION_ID, { observation, surprise, quotes, patterns }, null);
+  async function persist() {
+    await saveMissionDraft(
+      MISSION_ID,
+      { observation, surprise, quotes, patterns },
+      toEvidenceMeta(evidence),
+    );
   }
 
   const checklist = [
     { label: "Talk to at least 2–3 people", caption: "Completed with campus peers", done: observation.trim().length > 0 },
     { label: "Ask open questions", caption: 'Used "How", "Why", and "Tell me about..."', done: surprise.trim().length > 0 },
     { label: "Listen without interrupting", caption: "Gave full space for pauses and stories", done: quotes.trim().length > 0 },
-    { label: "Capture what you heard", caption: "Voice snippet + insights logged below", done: patterns.trim().length > 0 },
+    { label: "Capture what you heard", caption: "Evidence document with Drive links uploaded", done: Boolean(evidence.filePath) && patterns.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done);
 
-  function handleComplete() {
-    if (!canComplete) return;
+  async function handleComplete() {
+    if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
-    persist();
-    completeMission(MISSION_ID, mission.xpReward);
-    router.push(ROUTES.missionComplete(MISSION_ID));
+    try {
+      const answers = { observation, surprise, quotes, patterns };
+      const evidenceMeta = toEvidenceMeta(evidence);
+      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
+      await completeMission(MISSION_ID, answers, evidenceMeta);
+      router.push(ROUTES.missionComplete(MISSION_ID));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!hydrated) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
   return (
@@ -75,8 +104,13 @@ export function Mission2Engage() {
               <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your conversation</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">Capture direct sound bites, notes, or field photos</p>
-            <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+            <p className="mt-1 text-sm text-muted">
+              Upload a document with your notes and Google Drive links to any recordings or photos.
+            </p>
+            <div className="mt-4">
+              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+            </div>
+            <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               Field observation
             </label>
             <textarea

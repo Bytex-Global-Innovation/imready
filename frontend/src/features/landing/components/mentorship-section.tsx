@@ -82,7 +82,6 @@ export function MentorshipSection() {
             ))}
           </div>
 
-          {/* Industry logos strip */}
           <div className="mt-12 text-center sm:mt-14">
             <p className="text-sm font-semibold uppercase tracking-widest text-hero-accent">
               {INDUSTRY_LOGOS_LABEL}
@@ -104,14 +103,12 @@ export function MentorshipSection() {
                 </div>
               ))}
 
-              {/* + more indicator */}
               <div className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-hero-accent bg-white shadow-sm sm:h-16 sm:w-16">
                 <span className="text-xl font-bold text-hero-accent">+</span>
               </div>
             </div>
           </div>
-
-        </div> {/* end rounded-3xl */}
+        </div>
       </div>
     </section>
   );

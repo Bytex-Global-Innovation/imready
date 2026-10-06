@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   FolderKanban,
+  Gift,
   HelpCircle,
   LayoutDashboard,
   Lock,
@@ -27,7 +28,7 @@ import {
 } from "@/features/dashboard/components/upgrade-plan-modal";
 
 const PROJECTS_LOCKED_MESSAGE =
-  "To unlock Projects, pass the assessment or wait for an admin to approve premium access.";
+  "Projects unlock after you complete all 5 Foundation missions, or after premium access is approved.";
 
 const HELP_CENTER_EMAIL = "support@imready.io";
 
@@ -57,8 +58,15 @@ function getNavItems(projectsUnlocked: boolean) {
       icon: LayoutDashboard,
       locked: false,
       match: (pathname: string) =>
-        pathname === ROUTES.dashboard ||
-        pathname.startsWith(ROUTES.assessment),
+        pathname === ROUTES.dashboard,
+    },
+    {
+      label: "Free Projects",
+      href: ROUTES.freeProjects,
+      icon: Gift,
+      locked: false,
+      match: (pathname: string) =>
+        pathname === ROUTES.freeProjects || pathname.startsWith(`${ROUTES.freeProjects}/`),
     },
     {
       label: "Projects",

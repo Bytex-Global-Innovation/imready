@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Award, BadgeCheck, Briefcase, Check, ExternalLink, Flame, Trophy, Users } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_USER } from "@/constants/dashboard";
 import { MISSIONS, READY_SCORE_LABELS } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { getTotalXp } from "../lib/mission-progress";
+import { ensureFoundationProgress, getTotalXp } from "../lib/mission-progress";
 
 const SCORE_BREAKDOWN: Record<string, number> = { R: 80, E: 75, A: 70, D: 80, Y: 85 };
 const OVERALL_SCORE = Math.round(
@@ -43,7 +43,17 @@ const NEXT_HORIZON = [
 
 export function FoundationCompleteView() {
   const router = useRouter();
-  const totalXp = useMemo(() => getTotalXp(), []);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    ensureFoundationProgress().finally(() => setReady(true));
+  }, []);
+
+  const totalXp = useMemo(() => (ready ? getTotalXp() : 0), [ready]);
+
+  if (!ready) {
+    return <div className="py-12 text-center text-sm text-muted">Loading…</div>;
+  }
 
   return (
     <div className="mx-auto max-w-6xl">

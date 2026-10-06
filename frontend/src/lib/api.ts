@@ -1,3 +1,4 @@
+import { invalidateFoundationProgressCache } from "@/features/missions/lib/mission-progress";
 import { clearStudentSessionCache, setCachedStudentSession } from "@/lib/student-session";
 import { clearLegacyStudentToken } from "@/lib/auth";
 
@@ -178,6 +179,7 @@ export interface ApiProjectItem {
   dbId?: string;
   category: ProjectCategory;
   badge: string;
+  isFree?: boolean;
   title: string;
   description: string;
   imageSrc: string;
@@ -197,17 +199,23 @@ export const projectsApi = {
   listCategories: (): Promise<{ categories: ApiProjectCategory[] }> =>
     request<{ categories: ApiProjectCategory[] }>("/projects/categories"),
 
-  list: (category?: ProjectCategory): Promise<{ projects: ApiProjectItem[] }> => {
+  list: (
+    category?: ProjectCategory,
+    access?: "free" | "premium",
+  ): Promise<{ projects: ApiProjectItem[] }> => {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
+    if (access) params.set("access", access);
     const query = params.toString();
     return request<{ projects: ApiProjectItem[] }>(
       `/projects${query ? `?${query}` : ""}`,
     );
   },
 
-  getBySlug: (slug: string): Promise<ApiProjectItem> =>
-    request<ApiProjectItem>(`/projects/${slug}`),
+  getBySlug: (slug: string, access?: "free" | "premium"): Promise<ApiProjectItem> => {
+    const query = access ? `?access=${access}` : "";
+    return request<ApiProjectItem>(`/projects/${slug}${query}`);
+  },
 
   apply: (slug: string) =>
     request<{ id: string; status: string; projectSlug: string }>(
@@ -253,6 +261,8 @@ export interface StudentProfile {
   premiumApprovedAt?: string | null;
   premiumPaymentScreenshot?: string | null;
   premiumPaymentSubmittedAt?: string | null;
+  foundationCompletedAt?: string | null;
+  foundationComplete?: boolean;
   projectsUnlocked?: boolean;
 }
 
@@ -386,5 +396,6 @@ export const authApi = {
       // Still clear local session if the network call fails.
     }
     clearStudentSessionCache();
+    invalidateFoundationProgressCache();
   },
 };

@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
+import { ensureFoundationProgress } from "@/features/missions/lib/mission-progress";
 import type { StudentProfile } from "@/lib/api";
 import {
   clearStudentSessionCache,
@@ -133,6 +134,8 @@ function StudentSessionProvider({
       try {
         const session = await loadStudentSession();
         if (cancelled) return;
+
+        ensureFoundationProgress().catch(() => undefined);
 
         if (requireProjectsUnlocked && !session.projectsUnlocked) {
           router.replace(ROUTES.dashboard);

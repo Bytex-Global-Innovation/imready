@@ -79,7 +79,13 @@ function mapApiProject(project: ApiProjectItem): ProjectItem {
   };
 }
 
-function ProjectCard({ project }: { project: ProjectItem }) {
+function ProjectCard({
+  project,
+  access,
+}: {
+  project: ProjectItem;
+  access: "free" | "premium";
+}) {
   const isRemote =
     project.imageSrc.startsWith("http") || project.imageSrc.startsWith("blob:");
 
@@ -148,7 +154,11 @@ function ProjectCard({ project }: { project: ProjectItem }) {
         <Button
           size="sm"
           className="mt-4 w-full"
-          href={ROUTES.projectDetail(project.id)}
+          href={
+            access === "free"
+              ? ROUTES.freeProjectDetail(project.id)
+              : ROUTES.projectDetail(project.id)
+          }
         >
           Apply for Project
           <ArrowRight className="h-3.5 w-3.5" />
@@ -158,13 +168,15 @@ function ProjectCard({ project }: { project: ProjectItem }) {
   );
 }
 
-export function ProjectsView() {
+export function ProjectsView({ access = "premium" }: { access?: "free" | "premium" }) {
   const [categories, setCategories] =
     useState<ProjectCategoryTab[]>(PROJECT_CATEGORIES);
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(
     PROJECT_CATEGORIES[0]?.id || "",
   );
-  const [projects, setProjects] = useState<ProjectItem[]>(PROJECTS);
+  const [projects, setProjects] = useState<ProjectItem[]>(
+    access === "premium" ? PROJECTS : [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -176,7 +188,7 @@ export function ProjectsView() {
       try {
         const [categoriesData, projectsData] = await Promise.all([
           projectsApi.listCategories(),
-          projectsApi.list(),
+          projectsApi.list(undefined, access),
         ]);
         if (cancelled) return;
 
@@ -194,9 +206,7 @@ export function ProjectsView() {
           );
         }
 
-        if (projectsData.projects.length > 0) {
-          setProjects(projectsData.projects.map(mapApiProject));
-        }
+        setProjects(projectsData.projects.map(mapApiProject));
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -213,7 +223,7 @@ export function ProjectsView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [access]);
 
   const filteredProjects = useMemo(
     () => projects.filter((project) => project.category === activeCategory),
@@ -224,11 +234,12 @@ export function ProjectsView() {
     <div className="mx-auto max-w-5xl">
       <header className="mb-6 sm:mb-8">
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          Available Projects – Stage 1
+          {access === "free" ? "Free Projects" : "Available Projects – Stage 1"}
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-muted sm:text-base">
-          Select a project that aligns with your career goals. This selection
-          will define your mentor track and final assessment criteria.
+          {access === "free"
+            ? "Explore projects available to every verified student."
+            : "Select a premium project that aligns with your career goals."}
         </p>
       </header>
 
@@ -272,7 +283,7 @@ export function ProjectsView() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard key={project.id} project={project} access={access} />
           ))}
         </div>
       )}

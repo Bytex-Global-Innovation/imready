@@ -51,6 +51,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [isFree, setIsFree] = useState(false);
   const [description, setDescription] = useState("");
   const [imageSrc, setImageSrc] = useState("");
   const [imageAlt, setImageAlt] = useState("");
@@ -96,6 +97,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           if (cancelled) return;
           setTitle(project.title || project.name);
           setCategory(project.category || activeCategories[0]?.slug || "");
+          setIsFree(Boolean(project.isFree));
           setDescription(project.description || "");
           setImageSrc(project.imageSrc || "");
           setImageAlt(project.imageAlt || "");
@@ -159,6 +161,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
     return {
       title: title.trim(),
       category,
+      isFree,
       description: description.trim(),
       imageSrc: imageSrc.trim(),
       imageAlt: imageAlt.trim() || title.trim(),
@@ -334,6 +337,17 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 <option value="PENDING">PENDING</option>
                 <option value="REVIEW">REVIEW</option>
                 <option value="ARCHIVED">ARCHIVED</option>
+              </Select>
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">Access</span>
+              <Select
+                value={isFree ? "FREE" : "PREMIUM"}
+                onChange={(e) => setIsFree(e.target.value === "FREE")}
+              >
+                <option value="FREE">FREE - shown in Free Projects</option>
+                <option value="PREMIUM">PREMIUM - locked projects</option>
               </Select>
             </label>
 

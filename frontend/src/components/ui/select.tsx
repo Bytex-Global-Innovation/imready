@@ -262,7 +262,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             setOpen((current) => !current);
           }}
           onKeyDown={handleTriggerKeyDown}
-          onBlur={onBlur}
+          onBlur={(event) =>
+            onBlur?.(event as unknown as React.FocusEvent<HTMLSelectElement>)
+          }
           className={cn(
             "flex h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-[var(--radius-button)] border bg-white px-3.5 text-left text-sm transition-[border-color,background-color] duration-150",
             "outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",

@@ -32,6 +32,7 @@ export {
   Flame,
   FolderKanban,
   FolderOpen,
+  Gift,
   Globe,
   Grid3x3,
   Grip,

@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Lightbulb } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
   EvidenceCapture,
+  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionDetailsCard,
   MissionFooterNav,
@@ -26,45 +27,66 @@ const INSPIRATION_LINKS = ["Paper Tickets & Slips", "Numbered Desk Cards", "Whit
 
 export function Mission4Do() {
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, previewUrl: null });
+  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [description, setDescription] = useState("");
   const [respond, setRespond] = useState("");
   const [worked, setWorked] = useState("");
   const [didntWork, setDidntWork] = useState("");
   const [improve, setImprove] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const record = getMissionRecord(MISSION_ID);
-    setDescription((record.answers.description as string) ?? "");
-    setRespond((record.answers.respond as string) ?? "");
-    setWorked((record.answers.worked as string) ?? "");
-    setDidntWork((record.answers.didntWork as string) ?? "");
-    setImprove((record.answers.improve as string) ?? "");
+    ensureFoundationProgress().then(() => {
+      const record = getMissionRecord(MISSION_ID);
+      setDescription((record.answers.description as string) ?? "");
+      setRespond((record.answers.respond as string) ?? "");
+      setWorked((record.answers.worked as string) ?? "");
+      setDidntWork((record.answers.didntWork as string) ?? "");
+      setImprove((record.answers.improve as string) ?? "");
+      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
+        setEvidence({
+          fileName: record.evidence!.fileName,
+          filePath: record.evidence?.filePath ?? null,
+          previewUrl: null,
+        });
+      }
+      setHydrated(true);
+    });
   }, []);
 
-  function persist() {
-    saveMissionDraft(
+  async function persist() {
+    await saveMissionDraft(
       MISSION_ID,
       { description, respond, worked, didntWork, improve },
-      { fileName: evidence.fileName, fileType: null, previewDataUrl: null },
+      toEvidenceMeta(evidence),
     );
   }
 
   const checklist = [
-    { label: "Make a simple prototype (keep it small)", done: Boolean(evidence.fileName) },
+    { label: "Upload prototype evidence document", done: Boolean(evidence.filePath) },
     { label: "Test it with real users", done: respond.trim().length > 0 },
     { label: "Observe what happens", done: worked.trim().length > 0 && didntWork.trim().length > 0 },
     { label: "Make one improvement", done: improve.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done) && description.trim().length > 0;
 
-  function handleComplete() {
-    if (!canComplete) return;
+  async function handleComplete() {
+    if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
-    persist();
-    completeMission(MISSION_ID, mission.xpReward);
-    router.push(ROUTES.missionComplete(MISSION_ID));
+    try {
+      const answers = { description, respond, worked, didntWork, improve };
+      const evidenceMeta = toEvidenceMeta(evidence);
+      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
+      await completeMission(MISSION_ID, answers, evidenceMeta);
+      router.push(ROUTES.missionComplete(MISSION_ID));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!hydrated) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
   return (
@@ -87,8 +109,11 @@ export function Mission4Do() {
               <h2 className="font-display text-lg font-bold text-foreground">Show What You Built: Prototype Evidence</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
+            <p className="mt-1 text-sm text-muted">
+              Upload a document describing your prototype. Include Google Drive links to photos or demo videos.
+            </p>
             <div className="mt-4">
-              <EvidenceCapture methods={["photo", "video", "note"]} value={evidence} onChange={setEvidence} />
+              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
             </div>
             <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               Artifact Description

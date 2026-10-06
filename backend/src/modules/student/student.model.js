@@ -165,6 +165,12 @@ const StudentAccount = sequelize.define(
       defaultValue: false,
       field: 'refresh_remember_me',
     },
+    foundationCompletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_completed_at',
+    },
   },
   {
     tableName: 'student_accounts',
