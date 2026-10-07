@@ -34,6 +34,12 @@ const IndustryProject = sequelize.define(
       allowNull: false,
       defaultValue: '',
     },
+    isFree: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_free',
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: false,

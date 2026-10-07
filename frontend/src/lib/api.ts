@@ -1,3 +1,4 @@
+import { invalidateFoundationProgressCache } from "@/features/missions/lib/mission-progress";
 import { clearStudentSessionCache, setCachedStudentSession } from "@/lib/student-session";
 import { clearLegacyStudentToken } from "@/lib/auth";
 
@@ -101,7 +102,14 @@ export interface AssessmentOption {
   label: string;
 }
 
-export type AnswerType = "JUMBLED" | "PERSONAL" | "BOTH";
+export type AnswerType =
+  | "JUMBLED"
+  | "PERSONAL"
+  | "BOTH"
+  | "MCQ"
+  | "JUMBLED_MCQ"
+  | "PERSONAL_MCQ"
+  | "ALL";
 
 export interface AssessmentQuestion {
   id: number;
@@ -115,6 +123,8 @@ export interface AssessmentQuestion {
   /** Optional per-question timer in seconds. null = no question lock timer. */
   durationSeconds?: number | null;
   options: AssessmentOption[];
+  /** MCQ choices when answerType includes MCQ. */
+  mcqOptions?: AssessmentOption[];
 }
 
 export interface ActiveAssessment {
@@ -134,6 +144,7 @@ export interface SubmitAssessmentPayload {
     questionId: number;
     optionOrder: string[];
     personalResponse: string;
+    mcqSelection?: string | null;
   }[];
 }
 
@@ -168,6 +179,7 @@ export interface ApiProjectItem {
   dbId?: string;
   category: ProjectCategory;
   badge: string;
+  isFree?: boolean;
   title: string;
   description: string;
   imageSrc: string;
@@ -187,17 +199,23 @@ export const projectsApi = {
   listCategories: (): Promise<{ categories: ApiProjectCategory[] }> =>
     request<{ categories: ApiProjectCategory[] }>("/projects/categories"),
 
-  list: (category?: ProjectCategory): Promise<{ projects: ApiProjectItem[] }> => {
+  list: (
+    category?: ProjectCategory,
+    access?: "free" | "premium",
+  ): Promise<{ projects: ApiProjectItem[] }> => {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
+    if (access) params.set("access", access);
     const query = params.toString();
     return request<{ projects: ApiProjectItem[] }>(
       `/projects${query ? `?${query}` : ""}`,
     );
   },
 
-  getBySlug: (slug: string): Promise<ApiProjectItem> =>
-    request<ApiProjectItem>(`/projects/${slug}`),
+  getBySlug: (slug: string, access?: "free" | "premium"): Promise<ApiProjectItem> => {
+    const query = access ? `?access=${access}` : "";
+    return request<ApiProjectItem>(`/projects/${slug}${query}`);
+  },
 
   apply: (slug: string) =>
     request<{ id: string; status: string; projectSlug: string }>(
@@ -239,6 +257,12 @@ export interface StudentProfile {
   careerDoor?: string;
   status?: string;
   emailVerified?: boolean;
+  subscriptionStatus?: "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+  premiumApprovedAt?: string | null;
+  premiumPaymentScreenshot?: string | null;
+  premiumPaymentSubmittedAt?: string | null;
+  foundationCompletedAt?: string | null;
+  foundationComplete?: boolean;
   projectsUnlocked?: boolean;
 }
 
@@ -315,6 +339,48 @@ export const authApi = {
     redirectTo: string;
   }> => request("/auth/students/me", {}, true),
 
+  requestPremium: async (): Promise<{
+    message: string;
+    student: StudentProfile;
+    projectsUnlocked: boolean;
+  }> => {
+    const result = await request<{
+      message: string;
+      student: StudentProfile;
+      projectsUnlocked: boolean;
+    }>("/auth/students/request-premium", { method: "POST" }, true);
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
+
+  submitPremiumPayment: async (
+    screenshot: File,
+  ): Promise<{
+    message: string;
+    student: StudentProfile;
+    projectsUnlocked: boolean;
+  }> => {
+    const formData = new FormData();
+    formData.append("screenshot", screenshot);
+    const result = await request<{
+      message: string;
+      student: StudentProfile;
+      projectsUnlocked: boolean;
+    }>(
+      "/auth/students/submit-premium-payment",
+      { method: "POST", body: formData },
+      true,
+    );
+    setCachedStudentSession({
+      student: result.student,
+      projectsUnlocked: Boolean(result.projectsUnlocked),
+    });
+    return result;
+  },
+
   refresh: () =>
     request<AuthSession>("/auth/students/refresh", { method: "POST" }, false),
 
@@ -330,5 +396,6 @@ export const authApi = {
       // Still clear local session if the network call fails.
     }
     clearStudentSessionCache();
+    invalidateFoundationProgressCache();
   },
 };

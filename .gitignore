@@ -1,0 +1,15 @@
+# Environment files
+.env
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Docker
+docker-compose.override.yml

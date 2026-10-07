@@ -105,6 +105,11 @@ function frontendUrl(path = '/') {
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+/** Where the student app should land after email verification. */
+function postVerifyPath(careerDoor) {
+  return '/dashboard';
+}
+
 async function sendMail({ to, subject, html, text }) {
   const mailer = await getTransporter();
   const from =
@@ -136,12 +141,15 @@ async function sendMail({ to, subject, html, text }) {
 }
 
 async function sendVerificationEmail({ email, fullName, token, careerDoor }) {
+  const next = postVerifyPath(careerDoor);
+  // Embed `next` so the student app can route even before the API responds.
+  // FRONTEND_URL must point at the student app (port 3000), never admin (3001).
   const verifyUrl = frontendUrl(
-    `/verify-email?token=${encodeURIComponent(token)}`,
+    `/verify-email?token=${encodeURIComponent(token)}&next=${encodeURIComponent(next)}`,
   );
   const isPremium = careerDoor === 'bytex-unlock';
   const nextStep = isPremium
-    ? 'After verification you will continue to the Bytex premium page.'
+    ? 'After verification you will continue to your dashboard with premium access.'
     : 'After verification you will continue to your dashboard.';
 
   const subject = 'Verify your ImReady account';

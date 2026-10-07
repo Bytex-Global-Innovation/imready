@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell,
   Check,
   FolderKanban,
+  Gift,
   HelpCircle,
   LayoutDashboard,
   Lock,
@@ -28,7 +28,7 @@ import {
 } from "@/features/dashboard/components/upgrade-plan-modal";
 
 const PROJECTS_LOCKED_MESSAGE =
-  "To unlock Projects, pass the assessment first.";
+  "Projects unlock after you complete all 5 Foundation missions, or after premium access is approved.";
 
 const HELP_CENTER_EMAIL = "support@imready.io";
 
@@ -58,8 +58,15 @@ function getNavItems(projectsUnlocked: boolean) {
       icon: LayoutDashboard,
       locked: false,
       match: (pathname: string) =>
-        pathname === ROUTES.dashboard ||
-        pathname.startsWith(ROUTES.assessment),
+        pathname === ROUTES.dashboard,
+    },
+    {
+      label: "Free Projects",
+      href: ROUTES.freeProjects,
+      icon: Gift,
+      locked: false,
+      match: (pathname: string) =>
+        pathname === ROUTES.freeProjects || pathname.startsWith(`${ROUTES.freeProjects}/`),
     },
     {
       label: "Projects",
@@ -68,13 +75,6 @@ function getNavItems(projectsUnlocked: boolean) {
       locked: !projectsUnlocked,
       match: (pathname: string) =>
         pathname === ROUTES.projects || pathname.startsWith(`${ROUTES.projects}/`),
-    },
-    {
-      label: "Notifications",
-      href: "#",
-      icon: Bell,
-      locked: false,
-      match: () => false,
     },
   ] as const;
 }
@@ -125,10 +125,11 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
   const router = useRouter();
   const projectsTooltip = useAutoDismissTooltip();
   const helpTooltip = useAutoDismissTooltip();
-  const { student, projectsUnlocked } = useStudentProfile();
+  const { student, projectsUnlocked, refresh } = useStudentProfile();
   const navItems = getNavItems(projectsUnlocked);
   const displayName = student?.studentName || DASHBOARD_USER.name;
   const displayRole = student?.level || DASHBOARD_USER.role;
+  const subscriptionStatus = student?.subscriptionStatus || "FREE";
   const [upgradeTooltipOpen, setUpgradeTooltipOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
@@ -267,10 +268,18 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
               size="sm"
               onClick={() => {
                 setUpgradeTooltipOpen(false);
+                if (subscriptionStatus === "PREMIUM_PENDING") {
+                  router.push(ROUTES.details);
+                  return;
+                }
                 setUpgradeModalOpen(true);
               }}
             >
-              Upgrade Plan
+              {subscriptionStatus === "PREMIUM"
+                ? "Premium Active"
+                : subscriptionStatus === "PREMIUM_PENDING"
+                  ? "Complete Payment"
+                  : "Upgrade Plan"}
             </Button>
 
             {upgradeTooltipOpen ? (
@@ -346,7 +355,9 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
 
       <UpgradePlanModal
         isOpen={upgradeModalOpen}
+        subscriptionStatus={subscriptionStatus}
         onClose={() => setUpgradeModalOpen(false)}
+        onRequested={refresh}
       />
     </>
   );

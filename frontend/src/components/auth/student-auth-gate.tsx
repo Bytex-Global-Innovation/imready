@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
+import { ensureFoundationProgress } from "@/features/missions/lib/mission-progress";
 import type { StudentProfile } from "@/lib/api";
 import {
   clearStudentSessionCache,
@@ -134,6 +135,8 @@ function StudentSessionProvider({
         const session = await loadStudentSession();
         if (cancelled) return;
 
+        ensureFoundationProgress().catch(() => undefined);
+
         if (requireProjectsUnlocked && !session.projectsUnlocked) {
           router.replace(ROUTES.dashboard);
           return;
@@ -185,6 +188,7 @@ export function useStudentProfile() {
       student: null as StudentProfile | null,
       projectsUnlocked: false,
       loading: true,
+      refresh: async () => {},
     };
   }
 
@@ -192,6 +196,7 @@ export function useStudentProfile() {
     student: session.student,
     projectsUnlocked: session.projectsUnlocked,
     loading: !session.ready,
+    refresh: session.refresh,
   };
 }
 

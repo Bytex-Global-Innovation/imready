@@ -74,7 +74,13 @@ function mapApiProject(project: ApiProjectItem): ProjectItem {
   };
 }
 
-export function ProjectBriefView({ projectId }: { projectId: string }) {
+export function ProjectBriefView({
+  projectId,
+  access = "premium",
+}: {
+  projectId: string;
+  access?: "free" | "premium";
+}) {
   const [project, setProject] = useState<ProjectItem | null>(
     PROJECTS.find((item) => item.id === projectId) || null,
   );
@@ -88,11 +94,14 @@ export function ProjectBriefView({ projectId }: { projectId: string }) {
     async function load() {
       setIsLoading(true);
       try {
-        const data = await projectsApi.getBySlug(projectId);
+        const data = await projectsApi.getBySlug(projectId, access);
         if (!cancelled) setProject(mapApiProject(data));
       } catch {
         if (!cancelled) {
-          const fallback = PROJECTS.find((item) => item.id === projectId) || null;
+          const fallback =
+            access === "premium"
+              ? PROJECTS.find((item) => item.id === projectId) || null
+              : null;
           setProject(fallback);
         }
       } finally {
@@ -103,7 +112,7 @@ export function ProjectBriefView({ projectId }: { projectId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectId, access]);
 
   async function handleApply() {
     if (!project) return;
@@ -141,10 +150,10 @@ export function ProjectBriefView({ projectId }: { projectId: string }) {
     <div className="mx-auto max-w-3xl">
       <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted">
         <Link
-          href={ROUTES.projects}
+          href={access === "free" ? ROUTES.freeProjects : ROUTES.projects}
           className="cursor-pointer hover:text-foreground"
         >
-          Projects
+          {access === "free" ? "Free Projects" : "Projects"}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground">{project.title}</span>

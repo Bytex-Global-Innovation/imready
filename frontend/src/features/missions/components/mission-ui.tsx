@@ -1,17 +1,16 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { foundationApi } from "@/lib/foundation-api";
+import { hydrateFoundationProgress, type MissionRecord } from "../lib/mission-progress";
 import {
-  Camera,
   Check,
   ChevronRight,
   Clock,
+  FileText,
   Info,
   MapPin,
-  Mic,
-  StickyNote,
   Target,
-  Video,
   X,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -223,127 +222,169 @@ export function MissionDetailsCard({
   );
 }
 
-export type CaptureMethod = "photo" | "note" | "voice" | "video";
+const EVIDENCE_DOCUMENT_ACCEPT =
+  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-const METHOD_ICONS: Record<CaptureMethod, typeof Camera> = {
-  photo: Camera,
-  note: StickyNote,
-  voice: Mic,
-  video: Video,
-};
+const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/octet-stream",
+]);
 
-const METHOD_LABELS: Record<CaptureMethod, string> = {
-  photo: "Photo",
-  note: "Note",
-  voice: "Voice",
-  video: "Video",
-};
+export function isAllowedEvidenceFileName(fileName: string | null | undefined): boolean {
+  if (!fileName) return false;
+  const lower = fileName.toLowerCase();
+  return lower.endsWith(".pdf") || lower.endsWith(".doc") || lower.endsWith(".docx");
+}
+
+export function isAllowedEvidenceFile(file: File): boolean {
+  if (!isAllowedEvidenceFileName(file.name)) return false;
+  if (!file.type) return true;
+  return ALLOWED_EVIDENCE_MIME_TYPES.has(file.type);
+}
 
 export interface EvidenceValue {
   fileName: string | null;
+  filePath: string | null;
   previewUrl: string | null;
 }
 
 export function EvidenceCapture({
-  methods,
+  missionId,
   value,
   onChange,
   caption,
   captionLabel = "Short title / caption",
   captionHelper,
   onCaptionChange,
+  uploadHelper = "Upload a PDF or Word document (.pdf, .doc, .docx) that describes your evidence. Include Google Drive links to any photos, videos, or recordings.",
 }: {
-  methods: CaptureMethod[];
+  missionId: number;
   value: EvidenceValue;
   onChange: (value: EvidenceValue) => void;
   caption?: string;
   captionLabel?: string;
   captionHelper?: string;
+  uploadHelper?: string;
   onCaptionChange?: (value: string) => void;
 }) {
-  const [active, setActive] = useState<CaptureMethod>(methods[0]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isMedia = active === "photo" || active === "video";
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFile = useCallback(
-    (file: File | undefined) => {
+    async (file: File | undefined) => {
       if (!file) return;
-      onChange({ fileName: file.name, previewUrl: URL.createObjectURL(file) });
+      if (!isAllowedEvidenceFile(file)) {
+        setFileError("Only PDF or Word files are allowed (.pdf, .doc, .docx).");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+
+      setFileError(null);
+      setIsUploading(true);
+      try {
+        const result = await foundationApi.uploadEvidence(missionId, file);
+        onChange({
+          fileName: result.evidence.fileName,
+          filePath: result.evidence.filePath,
+          previewUrl: null,
+        });
+        if (result.progress?.missions) {
+          const missions: Record<number, MissionRecord> = {};
+          Object.entries(result.progress.missions).forEach(([id, record]) => {
+            missions[Number(id)] = {
+              answers: record.answers ?? {},
+              evidence: record.evidence
+                ? {
+                    fileName: record.evidence.fileName,
+                    fileType: record.evidence.fileType,
+                    filePath: record.evidence.filePath,
+                    previewDataUrl: null,
+                  }
+                : null,
+              completed: Boolean(record.completed),
+              completedAt: record.completedAt ?? null,
+              xpEarned: Number(record.xpEarned) || 0,
+              updatedAt: record.updatedAt ?? Date.now(),
+            };
+          });
+          hydrateFoundationProgress({
+            missions,
+            totalXp: result.progress.totalXp,
+            completedCount: result.progress.completedCount,
+            foundationComplete: result.progress.foundationComplete,
+            foundationCompletedAt: result.progress.foundationCompletedAt,
+            projectsUnlocked: result.progress.projectsUnlocked,
+          });
+        }
+      } catch (err) {
+        setFileError(err instanceof Error ? err.message : "Failed to upload evidence.");
+        if (inputRef.current) inputRef.current.value = "";
+      } finally {
+        setIsUploading(false);
+      }
     },
-    [onChange],
+    [missionId, onChange],
   );
+
+  function clearFile() {
+    setFileError(null);
+    onChange({ fileName: null, filePath: null, previewUrl: null });
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  const selectedFileName =
+    value.fileName && isAllowedEvidenceFileName(value.fileName) ? value.fileName : null;
 
   return (
     <div>
-      <div className="flex gap-2 rounded-[var(--radius-card)] border border-border bg-surface p-1">
-        {methods.map((method) => {
-          const Icon = METHOD_ICONS[method];
-          const isActive = active === method;
-          return (
-            <button
-              key={method}
-              type="button"
-              onClick={() => setActive(method)}
-              className={cn(
-                "flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[var(--radius-button)] py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-white text-foreground shadow-sm" : "text-muted hover:text-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {METHOD_LABELS[method]}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-4">
-        {isMedia ? (
-          value.previewUrl ? (
-            <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-border">
-              {active === "photo" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={value.previewUrl} alt={value.fileName ?? "Uploaded evidence"} className="max-h-64 w-full object-cover" />
-              ) : (
-                <video src={value.previewUrl} className="max-h-64 w-full" controls />
-              )}
-              <button
-                type="button"
-                onClick={() => onChange({ fileName: null, previewUrl: null })}
-                aria-label="Remove evidence"
-                className="absolute top-2 right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-foreground/70 text-white"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-              <p className="absolute right-0 bottom-0 left-0 truncate bg-foreground/60 px-3 py-1.5 text-xs text-white">
-                {value.fileName}
+      <div className="mt-1">
+        {selectedFileName ? (
+          <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">{selectedFileName}</p>
+              <p className="text-xs text-muted">
+                {isUploading ? "Uploading evidence…" : "Evidence document uploaded"}
               </p>
             </div>
-          ) : (
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
-              className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius-card)] border-2 border-dashed border-border bg-surface py-10 text-sm text-muted hover:border-primary hover:text-primary"
+              onClick={clearFile}
+              aria-label="Remove evidence document"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-white hover:text-foreground"
             >
-              <Camera className="h-6 w-6" />
-              Upload {METHOD_LABELS[active].toLowerCase()} evidence
+              <X className="h-4 w-4" />
             </button>
-          )
+          </div>
         ) : (
-          <textarea
-            value={value.fileName ?? ""}
-            onChange={(event) => onChange({ fileName: event.target.value, previewUrl: null })}
-            rows={4}
-            placeholder={active === "voice" ? "Type a transcript of what you recorded..." : "Type your note here..."}
-            className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          <button
+            type="button"
+            onClick={() => !isUploading && inputRef.current?.click()}
+            disabled={isUploading}
+            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius-card)] border-2 border-dashed border-border bg-surface px-4 py-10 text-sm text-muted hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <FileText className="h-6 w-6" />
+            {isUploading ? "Uploading evidence…" : "Upload evidence document"}
+          </button>
         )}
         <input
           ref={inputRef}
           type="file"
-          accept={active === "video" ? "video/*" : "image/*"}
+          accept={EVIDENCE_DOCUMENT_ACCEPT}
           className="hidden"
-          onChange={(event) => handleFile(event.target.files?.[0])}
+          onChange={(event) => {
+            void handleFile(event.target.files?.[0]);
+          }}
         />
+        <p className="mt-2 text-xs leading-relaxed text-muted">{uploadHelper}</p>
+        {fileError ? (
+          <p className="mt-2 text-xs text-red-600" role="alert">{fileError}</p>
+        ) : null}
       </div>
 
       {onCaptionChange ? (

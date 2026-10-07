@@ -258,30 +258,28 @@ export const SUCCESSFUL_EXPLORERS: MentorshipPerson[] = [
   {
     name: "Urja Wagh",
     role: "Marketing head at Softbyte Pvt.Ltd.",
-    imageSrc:
-      "/achievement-2.jpeg",
+    imageSrc: "/achievement-2.jpeg",
     imageAlt: "Portrait of Urja Wagh",
   },
   {
     name: "Krishna Marathe, Samarth, Rutuja, Kartik, Indranil",
     role: "Patent Published",
-    imageSrc:
-      "/achievement-1.jpeg",
+    imageSrc: "/achievement-1.jpeg",
     imageAlt: "Portrait of Patent",
   },
   {
     name: "Teesha Madan",
     role: "Research paper published at IEEE conference",
-    imageSrc:
-      "/achievement-3.jpeg",
+    imageSrc: "/achievement-3.jpeg",
     imageAlt: "Portrait of Teesha",
   },
 ];
+
 export const INDUSTRY_LOGOS = [
-  { name: "BNY",         src: "/bny.png"         },
-  { name: "PhonePe",     src: "/phonepe.png"     },
-  { name: "Mastercard",  src: "/mastercard.png"  },
-  { name: "TCS",         src: "/tcs.png"         },
+  { name: "BNY", src: "/bny.png" },
+  { name: "PhonePe", src: "/phonepe.png" },
+  { name: "Mastercard", src: "/mastercard.png" },
+  { name: "TCS", src: "/tcs.png" },
   { name: "Institution", src: "/institution.png" },
 ] as const;
 

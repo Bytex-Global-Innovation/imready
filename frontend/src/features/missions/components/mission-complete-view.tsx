@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Flame, Lock, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { MISSIONS, MISSION_COMPLETE_CONTENT, getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { getMissionRecord, getTotalXp } from "../lib/mission-progress";
+import { ensureFoundationProgress, getMissionRecord, getTotalXp } from "../lib/mission-progress";
 
 const STAGE_TRACKER = [
   { label: "Stage 0: Foundation", status: "active" as const },
@@ -17,17 +17,27 @@ const STAGE_TRACKER = [
 
 export function MissionCompleteView({ missionId }: { missionId: number }) {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
   const mission = getMission(missionId);
   const content = MISSION_COMPLETE_CONTENT[missionId];
   const nextMission = MISSIONS.find((m) => m.id === missionId + 1);
-  const record = useMemo(() => getMissionRecord(missionId), [missionId]);
-  const totalXp = getTotalXp();
+
+  useEffect(() => {
+    ensureFoundationProgress().finally(() => setReady(true));
+  }, []);
+
+  const record = useMemo(() => (ready ? getMissionRecord(missionId) : { answers: {} }), [missionId, ready]);
+  const totalXp = ready ? getTotalXp() : 0;
   const recap = content.getRecap(record.answers);
   const completedCount = missionId;
   const percent = Math.round((completedCount / MISSIONS.length) * 100);
 
   function goNext() {
     router.push(nextMission ? ROUTES.mission(nextMission.id) : ROUTES.foundationComplete);
+  }
+
+  if (!ready) {
+    return <div className="py-12 text-center text-sm text-muted">Loading…</div>;
   }
 
   return (

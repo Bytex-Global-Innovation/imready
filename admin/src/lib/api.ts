@@ -7,10 +7,23 @@ import {
 clearLegacyAdminToken();
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+/** Origin for static assets like /uploads (not versioned under /api/v1). */
+const API_ORIGIN = BASE_URL.replace(/\/api\/v\d+$/i, "");
 /** Use mock data when explicitly enabled or when no API URL is configured (local dev). */
 const USE_MOCK =
   process.env.NEXT_PUBLIC_USE_MOCK === "true" ||
   (process.env.NEXT_PUBLIC_USE_MOCK !== "false" && BASE_URL === "");
+
+export function resolveMediaUrl(pathOrUrl?: string | null): string {
+  if (!pathOrUrl) return "";
+  if (/^https?:\/\//i.test(pathOrUrl) || pathOrUrl.startsWith("blob:")) {
+    return pathOrUrl;
+  }
+  if (pathOrUrl.startsWith("/")) {
+    return `${API_ORIGIN}${pathOrUrl}`;
+  }
+  return pathOrUrl;
+}
 
 function redirectToLogin() {
   clearAdminSession();
@@ -100,6 +113,9 @@ export const authApi = {
   },
 };
 
+export type StudentStatus = "VERIFIED" | "PENDING" | "FLAGGED";
+export type SubscriptionStatus = "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+
 export interface Student {
   id: string;
   uuid?: string;
@@ -113,47 +129,164 @@ export interface Student {
   domain: string;
   level: string;
   careerDoor?: string;
-  status: "VERIFIED" | "PENDING" | "FLAGGED";
+  status: StudentStatus;
+  emailVerified?: boolean;
+  subscriptionStatus?: SubscriptionStatus;
+  premiumApprovedAt?: string | null;
+  premiumPaymentScreenshot?: string | null;
+  premiumPaymentSubmittedAt?: string | null;
   createdAt?: string;
 }
 
 export interface StudentsResponse {
   students: Student[];
   page: number;
+  pageSize?: number;
   totalPages: number;
   total: number;
 }
 
 const mockStudents: Student[] = [
-  { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED" },
-  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING" },
-  { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED" },
-  { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED" },
-  { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING" },
-  { id: "STU-1006", studentName: "Ethan Cole", email: "ethan@example.com", college: "Global Arts Acad.", domain: "Data Science", level: "Beginner", status: "VERIFIED" },
+  { id: "STU-1001", studentName: "Ava Patel", email: "ava@example.com", college: "Tech Central Inst.", domain: "Cyber Security", level: "Beginner", status: "VERIFIED", subscriptionStatus: "FREE" },
+  { id: "STU-1002", studentName: "Mia Chen", email: "mia@example.com", college: "Bio Labs Univ.", domain: "Data Science", level: "Intermediate", status: "PENDING", subscriptionStatus: "PREMIUM_PENDING", premiumPaymentScreenshot: "/uploads/premium-payments/demo.png", premiumPaymentSubmittedAt: "2026-09-05T10:00:00.000Z" },
+  { id: "STU-1003", studentName: "Noah Brooks", email: "noah@example.com", college: "Global Arts Acad.", domain: "UX Architecture", level: "Advanced", status: "FLAGGED", subscriptionStatus: "FREE" },
+  { id: "STU-1004", studentName: "Liam Ortiz", email: "liam@example.com", college: "Tech Central Inst.", domain: "Quantum Comp", level: "Beginner", status: "VERIFIED", subscriptionStatus: "PREMIUM" },
+  { id: "STU-1005", studentName: "Sophia Reed", email: "sophia@example.com", college: "Bio Labs Univ.", domain: "Cyber Security", level: "Intermediate", status: "PENDING", subscriptionStatus: "FREE" },
+  { id: "STU-1006", studentName: "Ethan Cole", email: "ethan@example.com", college: "Global Arts Acad.", domain: "Data Science", level: "Beginner", status: "VERIFIED", subscriptionStatus: "PREMIUM_PENDING" },
 ];
+
+function filterMockStudents(
+  opts?: { search?: string; status?: string; subscriptionStatus?: string },
+) {
+  const search = opts?.search?.trim().toLowerCase() ?? "";
+  return mockStudents.filter((student) => {
+    const matchesSearch =
+      !search ||
+      student.studentName.toLowerCase().includes(search) ||
+      student.email.toLowerCase().includes(search) ||
+      student.college.toLowerCase().includes(search) ||
+      student.domain.toLowerCase().includes(search);
+    const matchesStatus =
+      !opts?.status || opts.status === "ALL" || student.status === opts.status;
+    const matchesSubscription =
+      !opts?.subscriptionStatus ||
+      opts.subscriptionStatus === "ALL" ||
+      student.subscriptionStatus === opts.subscriptionStatus;
+    return matchesSearch && matchesStatus && matchesSubscription;
+  });
+}
 
 export const studentsApi = {
   getStudents: async (
     page = 1,
-    opts?: { search?: string; status?: string },
+    opts?: { search?: string; status?: string; subscriptionStatus?: string },
   ): Promise<StudentsResponse> => {
     if (USE_MOCK) {
       await delay(600);
-      const pageSize = 4;
+      const pageSize = 10;
+      const filtered = filterMockStudents(opts);
       const start = (page - 1) * pageSize;
-      const pagedStudents = mockStudents.slice(start, start + pageSize);
+      const pagedStudents = filtered.slice(start, start + pageSize);
       return {
         students: pagedStudents,
         page,
-        totalPages: Math.max(1, Math.ceil(mockStudents.length / pageSize)),
-        total: mockStudents.length,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+        total: filtered.length,
       };
     }
     const params = new URLSearchParams({ page: String(page) });
     if (opts?.search) params.set("search", opts.search);
     if (opts?.status && opts.status !== "ALL") params.set("status", opts.status);
+    if (opts?.subscriptionStatus && opts.subscriptionStatus !== "ALL") {
+      params.set("subscriptionStatus", opts.subscriptionStatus);
+    }
     return request<StudentsResponse>(`/admin/students?${params.toString()}`);
+  },
+
+  approvePremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "PREMIUM";
+      return {
+        message: "Premium access approved. Premium features are now unlocked.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/approve-premium`,
+      { method: "POST" },
+    );
+  },
+
+  undoPremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "PREMIUM_PENDING";
+      return {
+        message:
+          "Premium approval undone. Status is Premium Pending again and premium features are locked.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/undo-premium`,
+      { method: "POST" },
+    );
+  },
+
+  rejectPremium: async (id: string): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.subscriptionStatus = "FREE";
+      return {
+        message: "Premium subscription rejected. The student is back on the Free plan.",
+        student,
+      };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}/reject-premium`,
+      { method: "POST" },
+    );
+  },
+
+  updateStudent: async (
+    id: string,
+    payload: {
+      studentName: string;
+      email: string;
+      college: string;
+      domain: string;
+      level: string;
+      phone?: string;
+      subscriptionStatus?: SubscriptionStatus;
+    },
+  ): Promise<{ message: string; student: Student }> => {
+    if (USE_MOCK) {
+      await delay(400);
+      const student = mockStudents.find((row) => row.id === id);
+      if (!student) throw new Error("Student not found");
+      student.studentName = payload.studentName;
+      student.email = payload.email;
+      student.college = payload.college;
+      student.domain = payload.domain;
+      student.level = payload.level;
+      if (payload.phone !== undefined) student.phone = payload.phone;
+      if (payload.subscriptionStatus) {
+        student.subscriptionStatus = payload.subscriptionStatus;
+      }
+      return { message: "Student details updated.", student };
+    }
+    return request<{ message: string; student: Student }>(
+      `/admin/students/${id}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+    );
   },
 };
 
@@ -290,9 +423,47 @@ export type AssessmentStatus = "ACTIVE" | "DRAFT" | "ARCHIVED";
 export type QuestionOrderMode = "sequential" | "random" | "jumbled";
 export type QuestionCategory = "OBSERVATION" | "THINKING" | "BUILDING";
 export type WeightingMode = "EQUAL" | "INDIVIDUAL";
-export type AnswerType = "JUMBLED" | "PERSONAL" | "BOTH";
+export type AnswerType =
+  | "JUMBLED"
+  | "PERSONAL"
+  | "BOTH"
+  | "MCQ"
+  | "JUMBLED_MCQ"
+  | "PERSONAL_MCQ"
+  | "ALL";
 export type SubmissionResult = "PASS" | "FAIL" | null;
 export type SubmissionStatus = "SUBMITTED" | "PARTIALLY_EVALUATED" | "EVALUATED";
+
+/** Capability helpers — keep in sync with backend answer-type.helpers.js */
+export function needsJumbled(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "JUMBLED" ||
+    type === "BOTH" ||
+    type === "JUMBLED_MCQ" ||
+    type === "ALL"
+  );
+}
+
+export function needsPersonal(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "PERSONAL" ||
+    type === "BOTH" ||
+    type === "PERSONAL_MCQ" ||
+    type === "ALL"
+  );
+}
+
+export function needsMcq(answerType: AnswerType | string | undefined | null): boolean {
+  const type = String(answerType || "BOTH").toUpperCase();
+  return (
+    type === "MCQ" ||
+    type === "JUMBLED_MCQ" ||
+    type === "PERSONAL_MCQ" ||
+    type === "ALL"
+  );
+}
 
 export interface Assessment {
   id: string;
@@ -305,6 +476,7 @@ export interface Assessment {
   questionOrderMode?: QuestionOrderMode;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
   weightingMode?: WeightingMode;
   passMarksValue?: number;
   durationMinutes?: number;
@@ -323,6 +495,18 @@ export interface AssessmentOptionInput {
   correctOrder: number;
 }
 
+export interface AssessmentMcqOptionInput {
+  label: string;
+  isCorrect: boolean;
+}
+
+/** MCQ choice as returned from the API (admin detail / results). */
+export interface AssessmentQuestionMcqOption {
+  id?: string;
+  label: string;
+  isCorrect?: boolean;
+}
+
 export interface AssessmentQuestionInput {
   title: string;
   prompt: string;
@@ -330,9 +514,11 @@ export interface AssessmentQuestionInput {
   tips: string[];
   answerType: AnswerType;
   options: AssessmentOptionInput[];
+  mcqOptions?: AssessmentMcqOptionInput[];
   category: QuestionCategory;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
   weightingMode?: WeightingMode;
   /** Optional per-question timer in seconds. null/omit = no question timer. */
   durationSeconds?: number | null;
@@ -353,8 +539,10 @@ export interface AssessmentQuestionBankItem {
   category?: QuestionCategory;
   jumbledOptionsMarks?: number | null;
   personalResponseMarks?: number | null;
+  mcqOptionsMarks?: number | null;
   durationSeconds?: number | null;
   options: { id: string; label: string; correctOrder: number }[];
+  mcqOptions?: AssessmentQuestionMcqOption[];
 }
 
 export interface CreateAssessmentPayload {
@@ -365,6 +553,7 @@ export interface CreateAssessmentPayload {
   questionOrderMode: QuestionOrderMode;
   jumbledOptionsMarks: number;
   personalResponseMarks: number;
+  mcqOptionsMarks: number;
   weightingMode: WeightingMode;
   passMarks: number;
   durationMinutes: number;
@@ -394,6 +583,7 @@ export interface AssessmentResultListItem {
   result: SubmissionResult;
   jumbledScore: number;
   personalScore: number | null;
+  mcqScore?: number;
   totalScore: number | null;
   maxScore: number;
   submittedAt: string;
@@ -416,6 +606,7 @@ export interface AssessmentResultDetail {
   result: SubmissionResult;
   jumbledScore: number;
   personalScore: number | null;
+  mcqScore?: number;
   totalScore: number | null;
   maxScore: number;
   passMarksValue: number;
@@ -431,10 +622,14 @@ export interface AssessmentResultDetail {
     optionOrder: { id: string; label: string }[];
     correctOrder: { id: string; label: string; correctOrder: number }[];
     personalResponse: string;
+    mcqSelection?: { id: string; label: string } | null;
+    mcqOptions?: AssessmentQuestionMcqOption[];
     jumbledScore: number;
     personalScore: number | null;
+    mcqScore?: number;
     jumbledMax: number;
     personalMax: number;
+    mcqMax?: number;
   }[];
 }
 
@@ -525,6 +720,11 @@ export const assessmentsApi = {
           id: `mock-o${i + 1}`,
           label: o.label,
           correctOrder: o.correctOrder,
+        })),
+        mcqOptions: (payload.mcqOptions || []).map((o, i) => ({
+          id: `mock-mcq${i + 1}`,
+          label: o.label,
+          isCorrect: o.isCorrect,
         })),
       };
     }
@@ -836,6 +1036,7 @@ export interface Project {
   domain: string;
   category?: ProjectCategory;
   badge?: string;
+  isFree?: boolean;
   description?: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -857,6 +1058,7 @@ export interface ProjectInput {
   slug?: string;
   category: ProjectCategory;
   badge?: string;
+  isFree: boolean;
   description: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -976,6 +1178,96 @@ export const projectsApi = {
         method: "POST",
         body: formData,
       },
+    );
+  },
+};
+
+export type FoundationStatusFilter = "ALL" | "IN_PROGRESS" | "COMPLETE";
+
+export interface FoundationProgressListItem {
+  studentId: string;
+  studentUuid: string;
+  studentName: string;
+  email: string;
+  collegeName: string;
+  completedCount: number;
+  totalMissions: number;
+  currentMission: number;
+  totalXp: number;
+  foundationComplete: boolean;
+  foundationCompletedAt: string | null;
+  lastUpdatedAt: string | null;
+}
+
+export interface FoundationProgressListResponse {
+  results: FoundationProgressListItem[];
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export interface FoundationMissionDetail {
+  missionId: number;
+  label: string;
+  answers: Record<string, unknown>;
+  evidence: {
+    fileName: string | null;
+    fileType: string | null;
+    filePath: string | null;
+    fileUrl?: string | null;
+  } | null;
+  completed: boolean;
+  completedAt: number | null;
+  xpEarned: number;
+  updatedAt: number | null;
+}
+
+export interface FoundationStudentProgressDetail {
+  student: {
+    id: string;
+    uuid: string;
+    studentName: string;
+    email: string;
+    collegeName: string;
+    streamMajor: string;
+    graduationYear: string;
+    foundationCompletedAt: string | null;
+    createdAt: string;
+  };
+  progress: {
+    totalXp: number;
+    completedCount: number;
+    totalMissions: number;
+    foundationComplete: boolean;
+    foundationCompletedAt: string | null;
+  };
+  missions: FoundationMissionDetail[];
+}
+
+export const foundationApi = {
+  getProgressList: async (
+    page = 1,
+    opts?: { search?: string; status?: FoundationStatusFilter },
+  ): Promise<FoundationProgressListResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return { results: [], page: 1, totalPages: 1, total: 0 };
+    }
+    const params = new URLSearchParams({ page: String(page) });
+    if (opts?.search) params.set("search", opts.search);
+    if (opts?.status) params.set("status", opts.status);
+    return request<FoundationProgressListResponse>(
+      `/admin/foundation/progress?${params.toString()}`,
+    );
+  },
+
+  getStudentProgress: async (studentId: string): Promise<FoundationStudentProgressDetail> => {
+    if (USE_MOCK) {
+      await delay(400);
+      throw new Error("Foundation progress is not available in mock mode.");
+    }
+    return request<FoundationStudentProgressDetail>(
+      `/admin/foundation/progress/${studentId}`,
     );
   },
 };

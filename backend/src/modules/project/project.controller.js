@@ -52,7 +52,8 @@ async function deleteProject(req, res, next) {
 async function listPublicProjects(req, res, next) {
   try {
     const category = req.query.category ? String(req.query.category) : undefined;
-    const result = await projectService.listPublicProjects({ category });
+    const access = req.query.access ? String(req.query.access) : undefined;
+    const result = await projectService.listPublicProjects({ category, access });
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -61,7 +62,8 @@ async function listPublicProjects(req, res, next) {
 
 async function getPublicProject(req, res, next) {
   try {
-    const result = await projectService.getPublicProjectBySlug(req.params.slug);
+    const access = req.query.access ? String(req.query.access) : undefined;
+    const result = await projectService.getPublicProjectBySlug(req.params.slug, access);
     return res.status(200).json(result);
   } catch (err) {
     return next(err);

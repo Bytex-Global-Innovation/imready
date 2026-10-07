@@ -18,6 +18,7 @@ app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    frameguard: false,
   }),
 );
 
@@ -39,7 +40,18 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use(require('cookie-parser')());
-app.use('/uploads', express.static(uploadsRoot));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+app.use('/uploads', express.static(uploadsRoot, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+    }
+  },
+}));
 
 app.get('/health', async (req, res) => {
   try {

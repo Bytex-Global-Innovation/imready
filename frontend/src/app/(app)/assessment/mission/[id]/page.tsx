@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { isMissionUnlocked } from "@/features/missions/lib/mission-progress";
+import { ensureFoundationProgress, isMissionUnlocked } from "@/features/missions/lib/mission-progress";
 import { Mission1Reality } from "@/features/missions/components/mission-1-reality";
 import { Mission2Engage } from "@/features/missions/components/mission-2-engage";
 import { Mission3Analyze } from "@/features/missions/components/mission-3-analyze";
@@ -15,14 +15,25 @@ export default function MissionPage() {
   const router = useRouter();
   const id = Number(params.id);
   const valid = Number.isInteger(id) && id >= 1 && id <= 5;
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (valid && !isMissionUnlocked(id)) {
-      router.replace(ROUTES.assessment);
-    }
+    if (!valid) return;
+    ensureFoundationProgress()
+      .then(() => {
+        if (!isMissionUnlocked(id)) {
+          router.replace(ROUTES.assessment);
+          return;
+        }
+        setReady(true);
+      })
+      .catch(() => setReady(true));
   }, [valid, id, router]);
 
   if (!valid) notFound();
+  if (!ready) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
+  }
 
   switch (id) {
     case 1:

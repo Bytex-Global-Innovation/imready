@@ -6,6 +6,9 @@ import { CheckCircle2 } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
   assessmentsApi,
+  needsJumbled,
+  needsMcq,
+  needsPersonal,
   type AssessmentResultDetail,
 } from "@/lib/api";
 
@@ -163,7 +166,7 @@ export default function AssessmentResultDetailPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="admin-stat-card">
           <p className="admin-section-label">Jumbled (auto)</p>
           <p className="mt-2 text-2xl font-bold text-gray-900">{detail.jumbledScore}</p>
@@ -172,6 +175,12 @@ export default function AssessmentResultDetailPage() {
           <p className="admin-section-label">Personal (manual)</p>
           <p className="mt-2 text-2xl font-bold text-gray-900">
             {detail.personalScore == null ? "—" : detail.personalScore}
+          </p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-section-label">MCQ (auto)</p>
+          <p className="mt-2 text-2xl font-bold text-gray-900">
+            {detail.mcqScore == null ? "—" : detail.mcqScore}
           </p>
         </div>
         <div className="admin-stat-card">
@@ -209,7 +218,7 @@ export default function AssessmentResultDetailPage() {
               </p>
             </div>
 
-            {answer.answerType !== "PERSONAL" && (
+            {needsJumbled(answer.answerType) && (
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -250,7 +259,63 @@ export default function AssessmentResultDetailPage() {
               </div>
             )}
 
-            {answer.answerType !== "JUMBLED" && (
+            {needsMcq(answer.answerType) && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  MCQ selection (auto-scored {answer.mcqScore ?? 0}/{answer.mcqMax ?? 0})
+                </p>
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-3 text-sm">
+                  <p className="text-gray-700">
+                    Student chose:{" "}
+                    <span className="font-semibold text-gray-900">
+                      {answer.mcqSelection?.label || "No selection"}
+                    </span>
+                  </p>
+                </div>
+                {(answer.mcqOptions || []).length > 0 && (
+                  <ul className="mt-2 space-y-1.5">
+                    {(answer.mcqOptions || []).map((opt, oi) => {
+                      const isSelected = opt.id != null && opt.id === answer.mcqSelection?.id;
+                      const isCorrect = Boolean(opt.isCorrect);
+                      return (
+                        <li
+                          key={opt.id || oi}
+                          className={`rounded-md border px-3 py-2 text-sm ${
+                            isCorrect
+                              ? "border-emerald-200 bg-emerald-50/60"
+                              : isSelected
+                                ? "border-red-200 bg-red-50/60"
+                                : "border-gray-200 bg-white"
+                          }`}
+                        >
+                          <span className="mr-2 text-xs font-semibold text-gray-400">
+                            {String.fromCharCode(65 + oi)}.
+                          </span>
+                          {opt.label}
+                          {isCorrect ? (
+                            <span className="ml-2 text-xs font-semibold text-emerald-600">
+                              Correct
+                            </span>
+                          ) : null}
+                          {isSelected && !isCorrect ? (
+                            <span className="ml-2 text-xs font-semibold text-red-600">
+                              Selected
+                            </span>
+                          ) : null}
+                          {isSelected && isCorrect ? (
+                            <span className="ml-2 text-xs font-semibold text-emerald-600">
+                              Selected
+                            </span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {needsPersonal(answer.answerType) && (
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                   Personal response

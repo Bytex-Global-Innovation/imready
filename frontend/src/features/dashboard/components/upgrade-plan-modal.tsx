@@ -1,31 +1,65 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
+import { authApi } from "@/lib/api";
 
 const PREMIUM_BENEFITS = [
   "Unlock Stage 01 premium curriculum",
-  "Access specialized Bytex hardware paths",
+  "Access specialized premium learning paths",
   "Work on exclusive industry projects",
   "Priority mentor guidance & community",
   "Verified portfolio boost for placements",
 ] as const;
 
+type SubscriptionStatus = "FREE" | "PREMIUM_PENDING" | "PREMIUM";
+
 interface UpgradePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
+  subscriptionStatus?: SubscriptionStatus;
+  onRequested?: () => Promise<void> | void;
 }
 
-export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
+export function UpgradePlanModal({
+  isOpen,
+  onClose,
+  subscriptionStatus = "FREE",
+  onRequested,
+}: UpgradePlanModalProps) {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  function handleSelectPlan() {
+  const isPremium = subscriptionStatus === "PREMIUM";
+
+  async function handleSelectPlan() {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await authApi.requestPremium();
+      await onRequested?.();
+      onClose();
+      router.push(ROUTES.details);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not submit your premium request.",
+      );
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleClose() {
+    if (isSubmitting) return;
+    setError(null);
     onClose();
-    router.push(ROUTES.bytex);
   }
 
   return (
@@ -38,7 +72,7 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close"
           className="absolute top-4 right-4 cursor-pointer rounded-md p-1.5 text-muted hover:bg-surface hover:text-foreground"
         >
@@ -52,11 +86,14 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
           id="upgrade-plan-title"
           className="mt-1 font-display text-2xl font-bold text-foreground"
         >
-          Bytex Unlock
+          Premium Unlock
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Upgrade to the premium path and unlock specialized hardware learning,
-          advanced stages, and exclusive industry projects.
+          {isPremium
+            ? "Premium is active on your account. Advanced stages and exclusive industry projects are unlocked."
+            : subscriptionStatus === "PREMIUM_PENDING"
+              ? "Your premium request is waiting for admin approval. Complete payment on the details page if you have not already."
+              : "Upgrade to the premium path and unlock advanced stages and exclusive industry projects. Pay via UPI, upload your screenshot, and an admin will approve access."}
         </p>
 
         <ul className="mt-5 space-y-2.5">
@@ -68,21 +105,34 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
           ))}
         </ul>
 
+        {error ? (
+          <p className="mt-4 text-sm text-red-600">{error}</p>
+        ) : null}
+
         <div className="mt-7 flex flex-col gap-3">
-          <Button
-            type="button"
-            onClick={handleSelectPlan}
-            className="w-full bg-[#153a75] hover:bg-[#102b55]"
-          >
-            Select Plan
-          </Button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="cursor-pointer text-sm font-medium text-muted hover:text-foreground"
-          >
-            Maybe later
-          </button>
+          {isPremium ? (
+            <Button type="button" onClick={handleClose} className="w-full">
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                onClick={handleSelectPlan}
+                disabled={isSubmitting}
+                className="w-full bg-[#153a75] hover:bg-[#102b55]"
+              >
+                {isSubmitting ? "Opening details…" : "Continue to Payment"}
+              </Button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="cursor-pointer text-sm font-medium text-muted hover:text-foreground"
+              >
+                Maybe later
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -91,7 +141,7 @@ export function UpgradePlanModal({ isOpen, onClose }: UpgradePlanModalProps) {
 
 export const UPGRADE_TOOLTIP_BENEFITS = [
   "Unlock Stage 01 curriculum",
-  "Bytex hardware learning paths",
+  "Premium learning paths",
   "Premium industry projects",
   "Priority mentor support",
 ] as const;

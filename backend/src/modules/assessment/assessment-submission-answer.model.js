@@ -33,6 +33,12 @@ const AssessmentSubmissionAnswer = sequelize.define(
       defaultValue: '',
       field: 'personal_response',
     },
+    mcqSelection: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+      defaultValue: null,
+      field: 'mcq_selection',
+    },
     jumbledScore: {
       type: DataTypes.DECIMAL(8, 2),
       allowNull: false,
@@ -45,6 +51,12 @@ const AssessmentSubmissionAnswer = sequelize.define(
       defaultValue: null,
       field: 'personal_score',
     },
+    mcqScore: {
+      type: DataTypes.DECIMAL(8, 2),
+      allowNull: false,
+      defaultValue: 0,
+      field: 'mcq_score',
+    },
     jumbledMax: {
       type: DataTypes.DECIMAL(8, 2),
       allowNull: false,
@@ -56,6 +68,12 @@ const AssessmentSubmissionAnswer = sequelize.define(
       allowNull: false,
       defaultValue: 0,
       field: 'personal_max',
+    },
+    mcqMax: {
+      type: DataTypes.DECIMAL(8, 2),
+      allowNull: false,
+      defaultValue: 0,
+      field: 'mcq_max',
     },
   },
   {

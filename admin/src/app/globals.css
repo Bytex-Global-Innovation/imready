@@ -43,11 +43,11 @@
 
   /* Forms & Inputs */
   .admin-input {
-    @apply rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
+    @apply rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-gray-400 focus:outline-none focus:ring-0;
   }
 
   select.admin-input {
-    @apply cursor-pointer;
+    @apply w-full min-w-0 cursor-pointer appearance-none truncate bg-white focus:outline-none focus:ring-0;
   }
 
   button:not(:disabled),
@@ -59,7 +59,7 @@
 
   /* Left padding reserved for an absolutely positioned leading icon */
   .admin-input-icon {
-    @apply rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm transition-colors focus:border-admin-primary focus:outline-none focus:ring-1 focus:ring-admin-primary;
+    @apply rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm transition-colors focus:border-gray-400 focus:outline-none focus:ring-0;
   }
 
   /* Buttons */

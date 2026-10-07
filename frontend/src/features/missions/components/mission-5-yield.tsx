@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { ExternalLink } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
+import { useStudentProfile } from "@/components/auth/student-auth-gate";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
   EvidenceCapture,
+  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionDetailsCard,
   MissionFooterNav,
@@ -23,34 +25,63 @@ const mission = getMission(MISSION_ID);
 
 export function Mission5Yield() {
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, previewUrl: null });
+  const { refresh } = useStudentProfile();
+  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [validation, setValidation] = useState("");
   const [impact, setImpact] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const record = getMissionRecord(MISSION_ID);
-    setValidation((record.answers.validation as string) ?? "");
-    setImpact((record.answers.impact as string) ?? "");
+    ensureFoundationProgress().then(() => {
+      const record = getMissionRecord(MISSION_ID);
+      setValidation((record.answers.validation as string) ?? "");
+      setImpact((record.answers.impact as string) ?? "");
+      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
+        setEvidence({
+          fileName: record.evidence!.fileName,
+          filePath: record.evidence?.filePath ?? null,
+          previewUrl: null,
+        });
+      }
+      setHydrated(true);
+    });
   }, []);
 
-  function persist() {
-    saveMissionDraft(MISSION_ID, { validation, impact }, { fileName: evidence.fileName, fileType: null, previewDataUrl: null });
+  async function persist() {
+    await saveMissionDraft(
+      MISSION_ID,
+      { validation, impact },
+      toEvidenceMeta(evidence),
+    );
   }
 
   const checklist = [
-    { label: "Show your final artifact", done: Boolean(evidence.fileName) },
+    { label: "Upload final proof document", done: Boolean(evidence.filePath) },
     { label: "Describe how you validated it", done: validation.trim().length > 0 },
     { label: "Reflect on the impact", done: impact.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done);
 
-  function handleComplete() {
-    if (!canComplete) return;
+  async function handleComplete() {
+    if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
-    persist();
-    completeMission(MISSION_ID, mission.xpReward);
-    router.push(ROUTES.foundationComplete);
+    try {
+      const answers = { validation, impact };
+      const evidenceMeta = toEvidenceMeta(evidence);
+      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
+      const result = await completeMission(MISSION_ID, answers, evidenceMeta);
+      if (result.projectsUnlocked) {
+        await refresh();
+      }
+      router.push(ROUTES.foundationComplete);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!hydrated) {
+    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
   return (
@@ -63,10 +94,10 @@ export function Mission5Yield() {
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">Show your final proof</h2>
           <p className="mt-1 text-sm text-muted">
-            Bring back your prototype from Mission 4 and show what changed for the people who tried it.
+            Upload a document with your final proof and Google Drive links to photos, videos, or recordings.
           </p>
           <div className="mt-4">
-            <EvidenceCapture methods={["photo", "video", "note"]} value={evidence} onChange={setEvidence} />
+            <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
           </div>
 
           <label className="mt-6 mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted uppercase">

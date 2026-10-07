@@ -46,6 +46,21 @@ const resetPasswordSchema = Joi.object({
   password: Joi.string().min(8).max(128).required(),
 }).unknown(false);
 
+const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+const SUBSCRIPTION_STATUSES = ['FREE', 'PREMIUM_PENDING', 'PREMIUM'];
+
+const updateStudentSchema = Joi.object({
+  studentName: Joi.string().trim().min(2).max(255).required(),
+  email: Joi.string().trim().email().max(255).required(),
+  college: Joi.string().trim().min(2).max(255).required(),
+  domain: Joi.string().trim().min(1).max(120).required(),
+  level: Joi.string().trim().min(1).max(64).required(),
+  phone: Joi.string().trim().max(40).allow('').optional(),
+  subscriptionStatus: Joi.string()
+    .valid(...SUBSCRIPTION_STATUSES)
+    .optional(),
+}).unknown(false);
+
 function validateBody(schema) {
   return (req, res, next) => {
     const { error, value } = schema.validate(req.body, {
@@ -64,10 +79,12 @@ function validateBody(schema) {
 
 module.exports = {
   DOMAIN_LABELS,
+  LEVELS,
   signupSchema,
   loginSchema,
   emailOnlySchema,
   verifyEmailSchema,
   resetPasswordSchema,
+  updateStudentSchema,
   validateBody,
 };

@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const StudentAccount = require('@modules/student/student.model');
-const AssessmentSubmission = require('@modules/assessment/assessment-submission.model');
 const { DOMAIN_LABELS } = require('@modules/student/student.validator');
 const {
   sendVerificationEmail,
@@ -17,9 +16,33 @@ const { STUDENT_ISSUER } = require('@modules/auth/student.guard');
 const {
   REMEMBER_REFRESH_MS,
 } = require('@modules/auth/student.cookies');
+const {
+  isFoundationCompleteForStudent,
+} = require('@modules/foundation/foundation.service');
 
 /** New signups must verify within this window or the pending account is deleted. */
 const EMAIL_VERIFICATION_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+const SUBSCRIPTION = {
+  FREE: 'FREE',
+  PREMIUM_PENDING: 'PREMIUM_PENDING',
+  PREMIUM: 'PREMIUM',
+};
+
+function subscriptionFromCareerDoor(careerDoor) {
+  return careerDoor === 'bytex-unlock'
+    ? SUBSCRIPTION.PREMIUM
+    : SUBSCRIPTION.FREE;
+}
+
+function isPremiumUnlocked(student) {
+  return student?.subscriptionStatus === SUBSCRIPTION.PREMIUM;
+}
+
+function verificationStatus(student) {
+  if (student.status === 'FLAGGED') return 'FLAGGED';
+  return student.emailVerifiedAt ? 'VERIFIED' : 'PENDING';
+}
 
 function badRequest(message, code) {
   const err = new Error(message);
@@ -42,8 +65,12 @@ function forbidden(message, code) {
   return err;
 }
 
-function redirectForDoor(careerDoor) {
-  return careerDoor === 'bytex-unlock' ? '/bytex' : '/dashboard';
+function redirectForDoor(careerDoor, subscriptionStatus) {
+  return '/dashboard';
+}
+
+function redirectForStudent(student) {
+  return redirectForDoor(student.careerDoor, student.subscriptionStatus);
 }
 
 function hashToken(token) {
@@ -90,7 +117,7 @@ async function issueAuthSession(student, { rememberMe = false } = {}) {
   student.refreshRememberMe = Boolean(rememberMe);
   await student.save();
 
-  const projectsUnlocked = await hasPassedAssessment(student.email);
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
 
   return {
     accessToken,
@@ -99,7 +126,7 @@ async function issueAuthSession(student, { rememberMe = false } = {}) {
     refreshExpiresAt: student.refreshTokenExpiresAt,
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
@@ -137,15 +164,19 @@ function verificationExpiryDate() {
   return new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS);
 }
 
-async function hasPassedAssessment(email) {
-  const row = await AssessmentSubmission.findOne({
-    where: {
-      email: String(email).trim().toLowerCase(),
-      result: 'PASS',
-    },
-    attributes: ['id'],
+async function resolveProjectsUnlocked(student) {
+  if (!student) return false;
+  if (isPremiumUnlocked(student)) return true;
+  return isFoundationCompleteForStudent(student);
+}
+
+async function hasProjectsUnlocked(email) {
+  const normalized = String(email).trim().toLowerCase();
+  const student = await StudentAccount.findOne({
+    where: { email: normalized },
+    attributes: ['id', 'email', 'subscriptionStatus', 'foundationCompletedAt'],
   });
-  return Boolean(row);
+  return await resolveProjectsUnlocked(student);
 }
 
 function serializeStudent(student, extras = {}) {
@@ -162,8 +193,14 @@ function serializeStudent(student, extras = {}) {
     domain: student.domain,
     level: student.level,
     careerDoor: student.careerDoor,
-    status: student.status,
+    status: verificationStatus(student),
     emailVerified: Boolean(student.emailVerifiedAt),
+    subscriptionStatus: student.subscriptionStatus || SUBSCRIPTION.FREE,
+    premiumApprovedAt: student.premiumApprovedAt,
+    premiumPaymentScreenshot: student.premiumPaymentScreenshot || null,
+    premiumPaymentSubmittedAt: student.premiumPaymentSubmittedAt || null,
+    foundationCompletedAt: student.foundationCompletedAt || null,
+    foundationComplete: Boolean(student.foundationCompletedAt),
     createdAt: student.createdAt,
     ...extras,
   };
@@ -195,6 +232,7 @@ async function signup(payload) {
     domain,
     level: 'Beginner',
     careerDoor: payload.careerDoor,
+    subscriptionStatus: subscriptionFromCareerDoor(payload.careerDoor),
     status: 'PENDING',
     isActive: true,
     emailVerifiedAt: null,
@@ -220,7 +258,7 @@ async function signup(payload) {
     email: student.email,
     requiresVerification: true,
     emailSent,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 
   if (!emailSent) {
@@ -228,8 +266,9 @@ async function signup(payload) {
   }
 
   if (!emailSent && process.env.NODE_ENV !== 'production') {
+    const next = redirectForStudent(student);
     response.devVerifyUrl = frontendUrl(
-      `/verify-email?token=${encodeURIComponent(rawToken)}`,
+      `/verify-email?token=${encodeURIComponent(rawToken)}&next=${encodeURIComponent(next)}`,
     );
   }
 
@@ -373,7 +412,7 @@ async function refreshSession(rawRefreshToken) {
   student.refreshRememberMe = rememberMe;
   await student.save();
 
-  const projectsUnlocked = await hasPassedAssessment(student.email);
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
 
   return {
     accessToken,
@@ -382,7 +421,7 @@ async function refreshSession(rawRefreshToken) {
     refreshExpiresAt: absoluteExpiry,
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
@@ -453,20 +492,306 @@ async function getMe(studentId) {
     throw unauthorized('Unauthorized');
   }
 
-  const projectsUnlocked = await hasPassedAssessment(student.email);
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
   return {
     student: serializeStudent(student, { projectsUnlocked }),
     projectsUnlocked,
-    redirectTo: redirectForDoor(student.careerDoor),
+    redirectTo: redirectForStudent(student),
   };
 }
 
-async function listStudents({ page = 1, pageSize = 10, search, status } = {}) {
+async function requestPremium(studentId) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student || !student.isActive) {
+    throw unauthorized('Unauthorized');
+  }
+
+  if (student.subscriptionStatus === SUBSCRIPTION.PREMIUM) {
+    const projectsUnlocked = await resolveProjectsUnlocked(student);
+    return {
+      message: 'Premium is already active on this account.',
+      student: serializeStudent(student, { projectsUnlocked }),
+      projectsUnlocked,
+    };
+  }
+
+  if (student.subscriptionStatus !== SUBSCRIPTION.PREMIUM_PENDING) {
+    student.careerDoor = 'bytex-unlock';
+    student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+    student.premiumApprovedAt = null;
+    student.premiumApprovedBy = null;
+    student.premiumPaymentScreenshot = null;
+    student.premiumPaymentSubmittedAt = null;
+    await student.save();
+  }
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message:
+      'Premium request started. Complete payment on the details page and upload your screenshot for admin review.',
+    student: serializeStudent(student, { projectsUnlocked }),
+    projectsUnlocked,
+  };
+}
+
+async function submitPremiumPayment(studentId, screenshotPath) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student || !student.isActive) {
+    throw unauthorized('Unauthorized');
+  }
+
+  if (student.subscriptionStatus === SUBSCRIPTION.PREMIUM) {
+    throw badRequest('Premium is already active on this account.');
+  }
+
+  if (!screenshotPath) {
+    throw badRequest('Please upload a payment screenshot.');
+  }
+
+  student.careerDoor = 'bytex-unlock';
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+  student.premiumApprovedAt = null;
+  student.premiumApprovedBy = null;
+  student.premiumPaymentScreenshot = screenshotPath;
+  student.premiumPaymentSubmittedAt = new Date();
+  await student.save();
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message:
+      'Payment screenshot submitted. An admin will review and approve your premium access.',
+    student: serializeStudent(student, { projectsUnlocked }),
+    projectsUnlocked,
+  };
+}
+
+async function updateStudent(studentId, payload, adminId) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student) {
+    const err = new Error('Student not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const email = String(payload.email).trim().toLowerCase();
+  if (email !== student.email) {
+    const taken = await StudentAccount.findOne({
+      where: { email, id: { [Op.ne]: student.id } },
+      attributes: ['id'],
+    });
+    if (taken) {
+      throw badRequest('An account with this email already exists');
+    }
+    student.email = email;
+  }
+
+  student.fullName = payload.studentName.trim();
+  student.collegeName = payload.college.trim();
+  student.domain = payload.domain.trim();
+  student.level = payload.level.trim();
+
+  if (typeof payload.phone === 'string') {
+    const raw = payload.phone.trim();
+    const match = raw.match(/^(\+\d{1,4})\s*(.*)$/);
+    if (match) {
+      student.countryCode = match[1];
+      student.phone = match[2].replace(/\s+/g, '');
+    } else if (raw) {
+      student.phone = raw.replace(/\s+/g, '');
+    }
+  }
+
+  if (
+    payload.subscriptionStatus === SUBSCRIPTION.FREE ||
+    payload.subscriptionStatus === SUBSCRIPTION.PREMIUM_PENDING ||
+    payload.subscriptionStatus === SUBSCRIPTION.PREMIUM
+  ) {
+    applySubscriptionStatus(student, payload.subscriptionStatus, adminId);
+  }
+
+  await student.save();
+  return {
+    message: 'Student details updated.',
+    student: serializeStudent(student),
+  };
+}
+
+function applySubscriptionStatus(student, nextStatus, adminId) {
+  const previous = student.subscriptionStatus || SUBSCRIPTION.FREE;
+  if (previous === nextStatus) return;
+
+  if (nextStatus === SUBSCRIPTION.FREE) {
+    student.subscriptionStatus = SUBSCRIPTION.FREE;
+    student.careerDoor = 'written-challenge';
+    clearPremiumGrant(student);
+    clearPremiumPayment(student);
+    return;
+  }
+
+  if (nextStatus === SUBSCRIPTION.PREMIUM_PENDING) {
+    student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+    student.careerDoor = 'bytex-unlock';
+    clearPremiumGrant(student);
+    return;
+  }
+
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM;
+  student.careerDoor = 'bytex-unlock';
+  student.premiumApprovedAt = new Date();
+  student.premiumApprovedBy = adminId ? String(adminId) : null;
+}
+
+async function approvePremium(studentId, adminId) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student) {
+    const err = new Error('Student not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
+  }
+
+  if (student.subscriptionStatus === SUBSCRIPTION.PREMIUM) {
+    const projectsUnlocked = await resolveProjectsUnlocked(student);
+    return {
+      message: 'This student already has premium access.',
+      student: serializeStudent(student, { projectsUnlocked }),
+    };
+  }
+
+  if (student.subscriptionStatus !== SUBSCRIPTION.PREMIUM_PENDING) {
+    throw badRequest(
+      'This student has not requested premium. Only Premium Pending accounts can be approved.',
+    );
+  }
+
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM;
+  student.careerDoor = 'bytex-unlock';
+  student.premiumApprovedAt = new Date();
+  student.premiumApprovedBy = adminId ? String(adminId) : null;
+  await student.save();
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message: 'Premium access approved. Premium features are now unlocked.',
+    student: serializeStudent(student, { projectsUnlocked }),
+  };
+}
+
+function studentNotFound() {
+  const err = new Error('Student not found');
+  err.statusCode = 404;
+  return err;
+}
+
+function clearPremiumGrant(student) {
+  student.premiumApprovedAt = null;
+  student.premiumApprovedBy = null;
+}
+
+function clearPremiumPayment(student) {
+  student.premiumPaymentScreenshot = null;
+  student.premiumPaymentSubmittedAt = null;
+}
+
+async function undoPremium(studentId) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student) throw studentNotFound();
+
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
+  }
+
+  if (student.subscriptionStatus !== SUBSCRIPTION.PREMIUM) {
+    throw badRequest(
+      'Only an approved Premium subscription can be undone.',
+    );
+  }
+
+  student.subscriptionStatus = SUBSCRIPTION.PREMIUM_PENDING;
+  student.careerDoor = 'bytex-unlock';
+  clearPremiumGrant(student);
+  await student.save();
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message:
+      'Premium approval undone. Status is Premium Pending again and premium features are locked.',
+    student: serializeStudent(student, { projectsUnlocked }),
+  };
+}
+
+async function rejectPremium(studentId) {
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student) throw studentNotFound();
+
+  if (!student.emailVerifiedAt) {
+    throw badRequest(
+      'This student has not verified their email yet. Premium can only be managed after email verification.',
+    );
+  }
+
+  if (
+    student.subscriptionStatus !== SUBSCRIPTION.PREMIUM &&
+    student.subscriptionStatus !== SUBSCRIPTION.PREMIUM_PENDING
+  ) {
+    throw badRequest(
+      'This student does not have a premium request or approval to reject.',
+    );
+  }
+
+  student.subscriptionStatus = SUBSCRIPTION.FREE;
+  student.careerDoor = 'written-challenge';
+  clearPremiumGrant(student);
+  clearPremiumPayment(student);
+  await student.save();
+
+  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  return {
+    message:
+      'Premium subscription rejected. The student is back on the Free plan.',
+    student: serializeStudent(student, { projectsUnlocked }),
+  };
+}
+
+async function listStudents({
+  page = 1,
+  pageSize = 10,
+  search,
+  status,
+  subscriptionStatus,
+  college,
+} = {}) {
   const safePage = Math.max(1, Number(page) || 1);
+  const safePageSize = Math.min(50, Math.max(1, Number(pageSize) || 10));
   const where = {};
 
-  if (status === 'VERIFIED' || status === 'PENDING' || status === 'FLAGGED') {
-    where.status = status;
+  if (status === 'VERIFIED') {
+    where.emailVerifiedAt = { [Op.ne]: null };
+    where.status = { [Op.ne]: 'FLAGGED' };
+  } else if (status === 'PENDING') {
+    where.emailVerifiedAt = null;
+    where.status = { [Op.ne]: 'FLAGGED' };
+  } else if (status === 'FLAGGED') {
+    where.status = 'FLAGGED';
+  }
+
+  if (
+    subscriptionStatus === SUBSCRIPTION.FREE ||
+    subscriptionStatus === SUBSCRIPTION.PREMIUM_PENDING ||
+    subscriptionStatus === SUBSCRIPTION.PREMIUM
+  ) {
+    where.subscriptionStatus = subscriptionStatus;
+  }
+
+  if (college && String(college).trim() && String(college).trim() !== 'ALL') {
+    where.collegeName = String(college).trim();
   }
 
   if (search && String(search).trim()) {
@@ -482,14 +807,15 @@ async function listStudents({ page = 1, pageSize = 10, search, status } = {}) {
   const { rows, count } = await StudentAccount.findAndCountAll({
     where,
     order: [['id', 'DESC']],
-    limit: pageSize,
-    offset: (safePage - 1) * pageSize,
+    limit: safePageSize,
+    offset: (safePage - 1) * safePageSize,
   });
 
   return {
     students: rows.map((row) => serializeStudent(row)),
     page: safePage,
-    totalPages: Math.max(1, Math.ceil(count / pageSize)),
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(count / safePageSize)),
     total: count,
   };
 }
@@ -504,10 +830,19 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getMe,
+  requestPremium,
+  submitPremiumPayment,
+  updateStudent,
+  approvePremium,
+  undoPremium,
+  rejectPremium,
   listStudents,
   serializeStudent,
-  hasPassedAssessment,
+  hasProjectsUnlocked,
+  resolveProjectsUnlocked,
   redirectForDoor,
+  redirectForStudent,
   purgeExpiredUnverifiedStudents,
   EMAIL_VERIFICATION_TTL_MS,
+  SUBSCRIPTION,
 };

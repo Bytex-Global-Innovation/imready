@@ -76,6 +76,36 @@ const StudentAccount = sequelize.define(
       defaultValue: '',
       field: 'career_door',
     },
+    subscriptionStatus: {
+      type: DataTypes.ENUM('FREE', 'PREMIUM_PENDING', 'PREMIUM'),
+      allowNull: false,
+      defaultValue: 'FREE',
+      field: 'subscription_status',
+    },
+    premiumApprovedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_approved_at',
+    },
+    premiumApprovedBy: {
+      type: DataTypes.STRING(36),
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_approved_by',
+    },
+    premiumPaymentScreenshot: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_payment_screenshot',
+    },
+    premiumPaymentSubmittedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'premium_payment_submitted_at',
+    },
     status: {
       type: DataTypes.ENUM('VERIFIED', 'PENDING', 'FLAGGED'),
       allowNull: false,
@@ -134,6 +164,12 @@ const StudentAccount = sequelize.define(
       allowNull: false,
       defaultValue: false,
       field: 'refresh_remember_me',
+    },
+    foundationCompletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_completed_at',
     },
   },
   {

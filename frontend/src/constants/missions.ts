@@ -27,7 +27,7 @@ export const MISSIONS: MissionMeta[] = [
     activeBadgeLabel: "Active Mission: Reality",
     frameworkPhaseLabel: null,
     estTime: "~15 minutes",
-    target: "1 friction observation + photo",
+    target: "1 friction observation + evidence doc",
     location: "Anywhere on campus (or nearby)",
     xpReward: 50,
     tip: {
@@ -37,7 +37,7 @@ export const MISSIONS: MissionMeta[] = [
     },
     whatYoullDo: [
       "Spot one real moment of friction on campus.",
-      "Capture a quick photo or note as evidence.",
+      "Upload an evidence document with Google Drive links.",
       "Write 2–3 lines on what surprised you.",
     ],
   },
@@ -60,7 +60,7 @@ export const MISSIONS: MissionMeta[] = [
     whatYoullDo: [
       "Talk directly with 2–3 students or staff experiencing the delay.",
       'Ask open exploratory questions (e.g. "How does this wait alter your routine?").',
-      "Capture quick audio quotes or typed notes into the READY tool.",
+      "Upload a document with conversation notes and Google Drive links.",
     ],
   },
   {

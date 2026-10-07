@@ -9,10 +9,17 @@ const {
   Assessment,
   AssessmentQuestion,
   AssessmentQuestionOption,
+  AssessmentQuestionMcqOption,
   AssessmentQuestionLink,
   AssessmentSubmission,
   AssessmentSubmissionAnswer,
 } = require('@modules/assessment/assessment.associations');
+const {
+  normalizeAnswerType,
+  needsJumbled,
+  needsPersonal,
+  needsMcq,
+} = require('@modules/assessment/answer-type.helpers');
 
 setupAssessmentAssociations();
 
@@ -22,22 +29,10 @@ const DEFAULT_TIPS = [
   'Mention a metric of success',
 ];
 
-const ANSWER_TYPES = new Set(['JUMBLED', 'PERSONAL', 'BOTH']);
-
-function normalizeAnswerType(value) {
-  const type = String(value || 'BOTH').toUpperCase();
-  return ANSWER_TYPES.has(type) ? type : 'BOTH';
-}
-
-function needsJumbled(answerType) {
-  const type = normalizeAnswerType(answerType);
-  return type === 'JUMBLED' || type === 'BOTH';
-}
-
-function needsPersonal(answerType) {
-  const type = normalizeAnswerType(answerType);
-  return type === 'PERSONAL' || type === 'BOTH';
-}
+const questionOptionIncludes = [
+  { model: AssessmentQuestionOption, as: 'options' },
+  { model: AssessmentQuestionMcqOption, as: 'mcqOptions' },
+];
 
 function badRequest(message) {
   const err = new Error(message);
@@ -106,8 +101,10 @@ async function assertCanActivateAssessment(excludeId, transaction) {
   }
 }
 
-function formatPassMarks(passMarks, questionCount, jumbledMarks, personalMarks) {
-  const total = questionCount * (toNumber(jumbledMarks) + toNumber(personalMarks));
+function formatPassMarks(passMarks, questionCount, jumbledMarks, personalMarks, mcqMarks = 0) {
+  const total =
+    questionCount *
+    (toNumber(jumbledMarks) + toNumber(personalMarks) + toNumber(mcqMarks));
   return `${toNumber(passMarks)}/${total || 100}`;
 }
 
@@ -136,16 +133,38 @@ function scoreJumbledOrder(submittedOrder, correctOrder, maxMarks) {
   return Number(((correctPositions / correctOrder.length) * maxMarks).toFixed(2));
 }
 
+function scoreMcqSelection(selection, mcqOptions, maxMarks) {
+  if (!selection || !Array.isArray(mcqOptions) || mcqOptions.length === 0 || maxMarks <= 0) {
+    return 0;
+  }
+  const correct = mcqOptions.find((option) => option.isCorrect);
+  if (!correct) return 0;
+  return selection === correct.optionKey ? Number(Number(maxMarks).toFixed(2)) : 0;
+}
+
 async function createQuestionRecord(questionInput, transaction) {
   const answerType = normalizeAnswerType(questionInput.answerType);
   const options = Array.isArray(questionInput.options) ? questionInput.options : [];
+  const mcqOptions = Array.isArray(questionInput.mcqOptions) ? questionInput.mcqOptions : [];
 
   if (needsJumbled(answerType)) {
     if (options.length !== 4) {
       throw badRequest('Jumbled and combined questions must have exactly 4 options');
     }
   } else if (options.length > 0) {
-    throw badRequest('Personal-response-only questions must not include options');
+    throw badRequest('Non-jumbled questions must not include jumbled options');
+  }
+
+  if (needsMcq(answerType)) {
+    if (mcqOptions.length < 2 || mcqOptions.length > 6) {
+      throw badRequest('MCQ questions must have between 2 and 6 choices');
+    }
+    const correctCount = mcqOptions.filter((option) => option.isCorrect).length;
+    if (correctCount !== 1) {
+      throw badRequest('MCQ questions must mark exactly one correct choice');
+    }
+  } else if (mcqOptions.length > 0) {
+    throw badRequest('Non-MCQ questions must not include MCQ options');
   }
 
   const question = await AssessmentQuestion.create(
@@ -181,12 +200,34 @@ async function createQuestionRecord(questionInput, transaction) {
     await AssessmentQuestionOption.bulkCreate(optionRows, { transaction });
   }
 
+  if (mcqOptions.length > 0) {
+    const mcqRows = mcqOptions.map((option, index) => ({
+      questionId: question.id,
+      optionKey: `q${question.id}-mcq-${crypto.randomBytes(6).toString('hex')}`,
+      label: option.label,
+      isCorrect: Boolean(option.isCorrect),
+      sortOrder: index + 1,
+    }));
+
+    const used = new Set();
+    mcqRows.forEach((row, index) => {
+      let key = row.optionKey;
+      if (used.has(key)) {
+        key = `q${question.id}-mcq-${index + 1}-${crypto.randomBytes(4).toString('hex')}`;
+        row.optionKey = key;
+      }
+      used.add(key);
+    });
+
+    await AssessmentQuestionMcqOption.bulkCreate(mcqRows, { transaction });
+  }
+
   return question;
 }
 
 async function cloneQuestionById(questionId, transaction) {
   const source = await AssessmentQuestion.findByPk(questionId, {
-    include: [{ model: AssessmentQuestionOption, as: 'options' }],
+    include: questionOptionIncludes,
     transaction,
   });
 
@@ -205,6 +246,16 @@ async function cloneQuestionById(questionId, transaction) {
         }))
     : [];
 
+  const mcqOptions = needsMcq(answerType)
+    ? (source.mcqOptions || [])
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((option) => ({
+          label: option.label,
+          isCorrect: Boolean(option.isCorrect),
+        }))
+    : [];
+
   return createQuestionRecord(
     {
       title: source.title,
@@ -213,12 +264,16 @@ async function cloneQuestionById(questionId, transaction) {
       tips: normalizeTips(source.tips),
       answerType,
       options,
+      mcqOptions,
     },
     transaction,
   );
 }
 
-function serializeQuestion(question, { includeCorrectOrder = false } = {}) {
+function serializeQuestion(
+  question,
+  { includeCorrectOrder = false, includeMcqCorrect = false } = {},
+) {
   const answerType = normalizeAnswerType(question.answerType);
   const options = needsJumbled(answerType)
     ? (question.options || [])
@@ -236,6 +291,22 @@ function serializeQuestion(question, { includeCorrectOrder = false } = {}) {
         })
     : [];
 
+  const mcqOptions = needsMcq(answerType)
+    ? (question.mcqOptions || [])
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((option) => {
+          const item = {
+            id: option.optionKey,
+            label: option.label,
+          };
+          if (includeMcqCorrect) {
+            item.isCorrect = Boolean(option.isCorrect);
+          }
+          return item;
+        })
+    : [];
+
   return {
     id: Number(question.id),
     uuid: question.uuid,
@@ -245,22 +316,27 @@ function serializeQuestion(question, { includeCorrectOrder = false } = {}) {
     tips: normalizeTips(question.tips),
     answerType,
     options,
+    mcqOptions,
   };
 }
 
 async function listQuestions() {
   const questions = await AssessmentQuestion.findAll({
-    include: [{ model: AssessmentQuestionOption, as: 'options' }],
+    include: questionOptionIncludes,
     order: [
       ['id', 'DESC'],
       [{ model: AssessmentQuestionOption, as: 'options' }, 'correctOrder', 'ASC'],
+      [{ model: AssessmentQuestionMcqOption, as: 'mcqOptions' }, 'sortOrder', 'ASC'],
     ],
   });
 
   const seen = new Set();
   const unique = [];
   for (const question of questions) {
-    const serialized = serializeQuestion(question, { includeCorrectOrder: true });
+    const serialized = serializeQuestion(question, {
+      includeCorrectOrder: true,
+      includeMcqCorrect: true,
+    });
     const fingerprint = `${String(serialized.title).trim().toLowerCase()}::${String(serialized.question).trim().toLowerCase()}`;
     if (seen.has(fingerprint)) continue;
     seen.add(fingerprint);
@@ -273,6 +349,7 @@ async function listQuestions() {
 async function createQuestion(payload) {
   const answerType = normalizeAnswerType(payload.answerType);
   const options = Array.isArray(payload.options) ? payload.options : [];
+  const mcqOptions = Array.isArray(payload.mcqOptions) ? payload.mcqOptions : [];
 
   if (needsJumbled(answerType)) {
     if (options.length !== 4) {
@@ -285,7 +362,19 @@ async function createQuestion(payload) {
       }
     }
   } else if (options.length > 0) {
-    throw badRequest('Personal-response-only questions must not include options');
+    throw badRequest('Non-jumbled questions must not include jumbled options');
+  }
+
+  if (needsMcq(answerType)) {
+    if (mcqOptions.length < 2 || mcqOptions.length > 6) {
+      throw badRequest('MCQ questions must have between 2 and 6 choices');
+    }
+    const correctCount = mcqOptions.filter((option) => option.isCorrect).length;
+    if (correctCount !== 1) {
+      throw badRequest('MCQ questions must mark exactly one correct choice');
+    }
+  } else if (mcqOptions.length > 0) {
+    throw badRequest('Non-MCQ questions must not include MCQ options');
   }
 
   const question = await sequelize.transaction(async (transaction) =>
@@ -293,10 +382,10 @@ async function createQuestion(payload) {
   );
 
   const full = await AssessmentQuestion.findByPk(question.id, {
-    include: [{ model: AssessmentQuestionOption, as: 'options' }],
+    include: questionOptionIncludes,
   });
 
-  return serializeQuestion(full, { includeCorrectOrder: true });
+  return serializeQuestion(full, { includeCorrectOrder: true, includeMcqCorrect: true });
 }
 
 function questionFingerprint(title, questionText) {
@@ -318,6 +407,7 @@ async function resolveOwnedQuestionIds(payload, transaction) {
       category: questionInput.category,
       jumbledOptionsMarks: needsJumbled(answerType) ? questionInput.jumbledOptionsMarks : 0,
       personalResponseMarks: needsPersonal(answerType) ? questionInput.personalResponseMarks : 0,
+      mcqOptionsMarks: needsMcq(answerType) ? questionInput.mcqOptionsMarks : 0,
       durationSeconds:
         questionInput.durationSeconds == null
           ? null
@@ -328,7 +418,7 @@ async function resolveOwnedQuestionIds(payload, transaction) {
   const bankIds = [...new Set((payload.questionIds || []).map(Number))];
   for (const questionId of bankIds) {
     const source = await AssessmentQuestion.findByPk(questionId, {
-      include: [{ model: AssessmentQuestionOption, as: 'options' }],
+      include: questionOptionIncludes,
       transaction,
     });
     if (!source) {
@@ -382,6 +472,7 @@ async function createAssessment(payload) {
         questionOrderMode: payload.questionOrderMode || 'sequential',
         jumbledOptionsMarks: payload.jumbledOptionsMarks,
         personalResponseMarks: payload.personalResponseMarks,
+        mcqOptionsMarks: payload.mcqOptionsMarks ?? 20,
         weightingMode: payload.weightingMode || 'EQUAL',
         passMarks: payload.passMarks,
         durationMinutes: payload.durationMinutes,
@@ -397,6 +488,7 @@ async function createAssessment(payload) {
         category: item.category,
         jumbledOptionsMarks: payload.weightingMode === 'INDIVIDUAL' ? item.jumbledOptionsMarks : null,
         personalResponseMarks: payload.weightingMode === 'INDIVIDUAL' ? item.personalResponseMarks : null,
+        mcqOptionsMarks: payload.weightingMode === 'INDIVIDUAL' ? item.mcqOptionsMarks : null,
         durationSeconds: item.durationSeconds == null ? null : Number(item.durationSeconds),
       })),
       { transaction },
@@ -434,6 +526,7 @@ async function updateAssessment(id, payload) {
     assessment.questionOrderMode = payload.questionOrderMode || 'sequential';
     assessment.jumbledOptionsMarks = payload.jumbledOptionsMarks;
     assessment.personalResponseMarks = payload.personalResponseMarks;
+    assessment.mcqOptionsMarks = payload.mcqOptionsMarks ?? 20;
     assessment.weightingMode = payload.weightingMode || 'EQUAL';
     assessment.passMarks = payload.passMarks;
     assessment.durationMinutes = payload.durationMinutes;
@@ -452,6 +545,7 @@ async function updateAssessment(id, payload) {
         category: item.category,
         jumbledOptionsMarks: payload.weightingMode === 'INDIVIDUAL' ? item.jumbledOptionsMarks : null,
         personalResponseMarks: payload.weightingMode === 'INDIVIDUAL' ? item.personalResponseMarks : null,
+        mcqOptionsMarks: payload.weightingMode === 'INDIVIDUAL' ? item.mcqOptionsMarks : null,
         durationSeconds: item.durationSeconds == null ? null : Number(item.durationSeconds),
       })),
       { transaction },
@@ -471,6 +565,10 @@ async function updateAssessment(id, payload) {
       if (answerRefs > 0) continue;
 
       await AssessmentQuestionOption.destroy({
+        where: { questionId },
+        transaction,
+      });
+      await AssessmentQuestionMcqOption.destroy({
         where: { questionId },
         transaction,
       });
@@ -495,12 +593,14 @@ function serializeAssessmentListItem(assessment) {
       assessment.questionCount,
       assessment.jumbledOptionsMarks,
       assessment.personalResponseMarks,
+      assessment.mcqOptionsMarks,
     ),
     status: assessment.status,
     questionCount: assessment.questionCount,
     questionOrderMode: assessment.questionOrderMode,
     jumbledOptionsMarks: toNumber(assessment.jumbledOptionsMarks),
     personalResponseMarks: toNumber(assessment.personalResponseMarks),
+    mcqOptionsMarks: toNumber(assessment.mcqOptionsMarks),
     weightingMode: assessment.weightingMode || 'EQUAL',
     passMarksValue: toNumber(assessment.passMarks),
     durationMinutes: Number(assessment.durationMinutes) || 60,
@@ -561,7 +661,7 @@ async function getAssessmentById(id) {
           {
             model: AssessmentQuestion,
             as: 'question',
-            include: [{ model: AssessmentQuestionOption, as: 'options' }],
+            include: questionOptionIncludes,
           },
         ],
       },
@@ -575,10 +675,14 @@ async function getAssessmentById(id) {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .filter((link) => link.question)
     .map((link) => ({
-      ...serializeQuestion(link.question, { includeCorrectOrder: true }),
+      ...serializeQuestion(link.question, {
+        includeCorrectOrder: true,
+        includeMcqCorrect: true,
+      }),
       category: link.category,
       jumbledOptionsMarks: link.jumbledOptionsMarks == null ? null : toNumber(link.jumbledOptionsMarks),
       personalResponseMarks: link.personalResponseMarks == null ? null : toNumber(link.personalResponseMarks),
+      mcqOptionsMarks: link.mcqOptionsMarks == null ? null : toNumber(link.mcqOptionsMarks),
       durationSeconds:
         link.durationSeconds == null ? null : Number(link.durationSeconds),
     }));
@@ -654,7 +758,10 @@ function pickQuestionsForStudent(assessment, linkedQuestions) {
           .map((option) => option.optionKey)
       : [];
 
-    const serialized = serializeQuestion(question, { includeCorrectOrder: false });
+    const serialized = serializeQuestion(question, {
+      includeCorrectOrder: false,
+      includeMcqCorrect: false,
+    });
     serialized.category = link.category || 'OBSERVATION';
     serialized.durationSeconds =
       link.durationSeconds == null ? null : Number(link.durationSeconds);
@@ -663,6 +770,11 @@ function pickQuestionsForStudent(assessment, linkedQuestions) {
       serialized.options = shuffleAwayFromCorrect(serialized.options, correctOrderIds);
     } else {
       serialized.options = [];
+    }
+    if (needsMcq(answerType)) {
+      serialized.mcqOptions = shuffle(serialized.mcqOptions || []);
+    } else {
+      serialized.mcqOptions = [];
     }
     return serialized;
   });
@@ -680,7 +792,7 @@ async function getActiveAssessmentForStudent() {
           {
             model: AssessmentQuestion,
             as: 'question',
-            include: [{ model: AssessmentQuestionOption, as: 'options' }],
+            include: questionOptionIncludes,
           },
         ],
       },
@@ -713,6 +825,10 @@ async function getActiveAssessmentForStudent() {
         id: option.id,
         label: option.label,
       })),
+      mcqOptions: (q.mcqOptions || []).map((option) => ({
+        id: option.id,
+        label: option.label,
+      })),
     })),
   };
 }
@@ -727,7 +843,7 @@ async function submitAssessment(assessmentId, payload) {
           {
             model: AssessmentQuestion,
             as: 'question',
-            include: [{ model: AssessmentQuestionOption, as: 'options' }],
+            include: questionOptionIncludes,
           },
         ],
       },
@@ -781,7 +897,21 @@ async function submitAssessment(assessmentId, payload) {
         throw badRequest('Invalid option order for one or more questions');
       }
     } else if (answer.optionOrder && answer.optionOrder.length > 0) {
-      throw badRequest('Option order is not allowed for personal-response-only questions');
+      throw badRequest('Option order is not allowed for non-jumbled questions');
+    }
+
+    const mcqSelection =
+      answer.mcqSelection == null || answer.mcqSelection === ''
+        ? null
+        : String(answer.mcqSelection).trim();
+
+    if (needsMcq(answerType)) {
+      const mcqKeys = new Set((question.mcqOptions || []).map((o) => o.optionKey));
+      if (mcqSelection && !mcqKeys.has(mcqSelection)) {
+        throw badRequest('Invalid MCQ selection for one or more questions');
+      }
+    } else if (mcqSelection) {
+      throw badRequest('MCQ selection is not allowed for non-MCQ questions');
     }
   }
 
@@ -800,9 +930,13 @@ async function submitAssessment(assessmentId, payload) {
       let personalMax = assessment.weightingMode === 'INDIVIDUAL'
         ? toNumber(questionLink?.personalResponseMarks)
         : toNumber(assessment.personalResponseMarks);
+      let mcqMax = assessment.weightingMode === 'INDIVIDUAL'
+        ? toNumber(questionLink?.mcqOptionsMarks)
+        : toNumber(assessment.mcqOptionsMarks);
 
       if (!needsJumbled(answerType)) jumbledMax = 0;
       if (!needsPersonal(answerType)) personalMax = 0;
+      if (!needsMcq(answerType)) mcqMax = 0;
 
       const correctOrder = needsJumbled(answerType)
         ? (question.options || [])
@@ -816,19 +950,34 @@ async function submitAssessment(assessmentId, payload) {
         : 0;
       totalJumbled += jumbledScore;
 
+      const mcqSelection =
+        needsMcq(answerType) && answer.mcqSelection != null && answer.mcqSelection !== ''
+          ? String(answer.mcqSelection).trim()
+          : null;
+
+      const mcqScore = needsMcq(answerType)
+        ? scoreMcqSelection(mcqSelection, question.mcqOptions || [], mcqMax)
+        : 0;
+
       answerRows.push({
         questionId: Number(answer.questionId),
         category: questionLink?.category || 'OBSERVATION',
         optionOrder: needsJumbled(answerType) ? answer.optionOrder || [] : [],
         personalResponse: needsPersonal(answerType) ? answer.personalResponse || '' : '',
+        mcqSelection,
         jumbledScore,
         personalScore: needsPersonal(answerType) ? null : 0,
+        mcqScore,
         jumbledMax,
         personalMax,
+        mcqMax,
       });
     }
 
-    const maxScore = answerRows.reduce((sum, row) => sum + row.jumbledMax + row.personalMax, 0);
+    const maxScore = answerRows.reduce(
+      (sum, row) => sum + row.jumbledMax + row.personalMax + row.mcqMax,
+      0,
+    );
 
     const submission = await AssessmentSubmission.create(
       {
@@ -918,7 +1067,7 @@ async function getResultDetail(submissionId) {
           {
             model: AssessmentQuestion,
             as: 'question',
-            include: [{ model: AssessmentQuestionOption, as: 'options' }],
+            include: questionOptionIncludes,
           },
         ],
       },
@@ -926,6 +1075,11 @@ async function getResultDetail(submissionId) {
   });
 
   if (!submission) throw notFound('Submission not found');
+
+  const answerMcqTotal = (submission.answers || []).reduce(
+    (sum, answer) => sum + toNumber(answer.mcqScore),
+    0,
+  );
 
   return {
     id: String(submission.id),
@@ -938,6 +1092,7 @@ async function getResultDetail(submissionId) {
     jumbledScore: toNumber(submission.jumbledScore),
     personalScore:
       submission.personalScore == null ? null : toNumber(submission.personalScore),
+    mcqScore: Number(answerMcqTotal.toFixed(2)),
     totalScore: submission.totalScore == null ? null : toNumber(submission.totalScore),
     maxScore: toNumber(submission.maxScore),
     passMarksValue: toNumber(submission.assessment?.passMarks),
@@ -946,33 +1101,61 @@ async function getResultDetail(submissionId) {
       : null,
     answers: (submission.answers || []).map((answer) => {
       const question = answer.question;
-      const correctOrder = (question?.options || [])
-        .slice()
-        .sort((a, b) => a.correctOrder - b.correctOrder)
-        .map((o) => ({ id: o.optionKey, label: o.label, correctOrder: o.correctOrder }));
+      const answerType = normalizeAnswerType(question?.answerType);
+
+      const correctOrder = needsJumbled(answerType)
+        ? (question?.options || [])
+            .slice()
+            .sort((a, b) => a.correctOrder - b.correctOrder)
+            .map((o) => ({ id: o.optionKey, label: o.label, correctOrder: o.correctOrder }))
+        : [];
 
       const optionByKey = new Map(
         (question?.options || []).map((o) => [o.optionKey, o.label]),
       );
 
+      const mcqOptions = needsMcq(answerType)
+        ? (question?.mcqOptions || [])
+            .slice()
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((o) => ({
+              id: o.optionKey,
+              label: o.label,
+              isCorrect: Boolean(o.isCorrect),
+            }))
+        : [];
+
+      const mcqByKey = new Map(mcqOptions.map((o) => [o.id, o.label]));
+
       return {
         id: String(answer.id),
         questionId: Number(answer.questionId),
         category: answer.category || 'OBSERVATION',
-        answerType: normalizeAnswerType(question?.answerType),
+        answerType,
         title: question?.title || '',
         prompt: question?.prompt || '',
         question: question?.question || '',
-        optionOrder: (answer.optionOrder || []).map((key) => ({
-          id: key,
-          label: optionByKey.get(key) || key,
-        })),
+        optionOrder: needsJumbled(answerType)
+          ? (answer.optionOrder || []).map((key) => ({
+              id: key,
+              label: optionByKey.get(key) || key,
+            }))
+          : [],
         correctOrder,
-        personalResponse: answer.personalResponse,
+        personalResponse: needsPersonal(answerType) ? answer.personalResponse : '',
+        mcqSelection: answer.mcqSelection
+          ? {
+              id: answer.mcqSelection,
+              label: mcqByKey.get(answer.mcqSelection) || answer.mcqSelection,
+            }
+          : null,
+        mcqOptions,
         jumbledScore: toNumber(answer.jumbledScore),
         personalScore: answer.personalScore == null ? null : toNumber(answer.personalScore),
+        mcqScore: toNumber(answer.mcqScore),
         jumbledMax: toNumber(answer.jumbledMax),
         personalMax: toNumber(answer.personalMax),
+        mcqMax: toNumber(answer.mcqMax),
       };
     }),
   };
@@ -1039,7 +1222,7 @@ async function fullEvaluate(submissionId) {
     throw badRequest('Score all personal responses before full evaluation');
   }
 
-  // Auto-zero personal scores for jumbled-only answers that somehow stayed null
+  // Auto-zero personal scores for answers with no personal component that somehow stayed null
   for (const answer of answers) {
     if (toNumber(answer.personalMax) <= 0 && answer.personalScore == null) {
       answer.personalScore = 0;
@@ -1048,7 +1231,8 @@ async function fullEvaluate(submissionId) {
   }
   const jumbledTotal = answers.reduce((sum, a) => sum + toNumber(a.jumbledScore), 0);
   const personalTotal = answers.reduce((sum, a) => sum + toNumber(a.personalScore), 0);
-  const totalScore = Number((jumbledTotal + personalTotal).toFixed(2));
+  const mcqTotal = answers.reduce((sum, a) => sum + toNumber(a.mcqScore), 0);
+  const totalScore = Number((jumbledTotal + personalTotal + mcqTotal).toFixed(2));
   const passMarks = toNumber(submission.assessment?.passMarks);
 
   submission.jumbledScore = Number(jumbledTotal.toFixed(2));
@@ -1172,4 +1356,5 @@ module.exports = {
   deleteResult,
   bulkDeleteResults,
   exportResultsWorkbook,
+  needsMcq,
 };

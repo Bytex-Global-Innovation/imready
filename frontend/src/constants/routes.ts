@@ -10,9 +10,7 @@ export const ROUTES = {
   signup: "/signup",
   forColleges: "/for-colleges",
   domainExplorer: "/domain-explorer",
-  bytex: "/bytex",
-  productComparison: "/product-comparison",
-  product: (id: string) => `/product/${id}`,
+  details: "/details",
   privacy: "/privacy",
   terms: "/terms",
   cookies: "/cookies",
@@ -24,7 +22,9 @@ export const ROUTES = {
   missionComplete: (id: number) => `/assessment/mission/${id}/complete`,
   foundationComplete: "/assessment/complete",
   projects: "/projects",
+  freeProjects: "/free-projects",
   projectDetail: (id: string) => `/projects/${id}`,
+  freeProjectDetail: (id: string) => `/free-projects/${id}`,
 } as const;
 
 /** Routes that use the authenticated app shell (no marketing navbar). */
@@ -32,6 +32,8 @@ export const APP_ROUTE_PREFIXES = [
   ROUTES.dashboard,
   ROUTES.assessment,
   ROUTES.projects,
+  ROUTES.freeProjects,
+  ROUTES.details,
 ] as const;
 
 export function isAppRoute(pathname: string): boolean {

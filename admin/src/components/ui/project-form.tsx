@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import Select from "@/components/ui/select";
 import {
   projectCategoriesApi,
   projectsApi,
@@ -50,6 +51,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [isFree, setIsFree] = useState(false);
   const [description, setDescription] = useState("");
   const [imageSrc, setImageSrc] = useState("");
   const [imageAlt, setImageAlt] = useState("");
@@ -95,6 +97,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           if (cancelled) return;
           setTitle(project.title || project.name);
           setCategory(project.category || activeCategories[0]?.slug || "");
+          setIsFree(Boolean(project.isFree));
           setDescription(project.description || "");
           setImageSrc(project.imageSrc || "");
           setImageAlt(project.imageAlt || "");
@@ -158,6 +161,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
     return {
       title: title.trim(),
       category,
+      isFree,
       description: description.trim(),
       imageSrc: imageSrc.trim(),
       imageAlt: imageAlt.trim() || title.trim(),
@@ -291,8 +295,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Category</span>
-              <select
-                className="admin-input w-full"
+              <Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
@@ -306,7 +309,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                     </option>
                   ))
                 )}
-              </select>
+              </Select>
               {categories.length === 0 && (
                 <span className="mt-1 block text-xs text-amber-600">
                   Create a category under Project Categories first.
@@ -326,8 +329,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Status</span>
-              <select
-                className="admin-input w-full"
+              <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ProjectStatus)}
               >
@@ -335,7 +337,18 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 <option value="PENDING">PENDING</option>
                 <option value="REVIEW">REVIEW</option>
                 <option value="ARCHIVED">ARCHIVED</option>
-              </select>
+              </Select>
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">Access</span>
+              <Select
+                value={isFree ? "FREE" : "PREMIUM"}
+                onChange={(e) => setIsFree(e.target.value === "FREE")}
+              >
+                <option value="FREE">FREE - shown in Free Projects</option>
+                <option value="PREMIUM">PREMIUM - locked projects</option>
+              </Select>
             </label>
 
             <label className="block text-sm">

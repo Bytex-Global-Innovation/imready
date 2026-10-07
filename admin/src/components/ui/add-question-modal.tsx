@@ -2,9 +2,17 @@
 
 import { useEffect, useId, useState } from "react";
 import { X } from "@/components/icons";
-import type { AnswerType, QuestionCategory } from "@/lib/api";
+import Select from "@/components/ui/select";
+import {
+  needsJumbled,
+  needsMcq,
+  type AnswerType,
+  type QuestionCategory,
+} from "@/lib/api";
 
 export type DraftOption = { label: string; correctOrder: number };
+
+export type DraftMcqOption = { label: string; isCorrect: boolean };
 
 export type DraftQuestion = {
   title: string;
@@ -13,10 +21,12 @@ export type DraftQuestion = {
   tipsText: string;
   answerType: AnswerType;
   options: DraftOption[];
+  mcqOptions: DraftMcqOption[];
   sourceId?: number;
   category: QuestionCategory;
   jumbledOptionsMarks?: number;
   personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
   /** Optional minutes for this question only. Empty = no per-question timer. */
   durationMinutes?: number | null;
 };
@@ -30,6 +40,15 @@ function emptyOptions(): DraftOption[] {
   ];
 }
 
+function emptyMcqOptions(): DraftMcqOption[] {
+  return [
+    { label: "", isCorrect: true },
+    { label: "", isCorrect: false },
+    { label: "", isCorrect: false },
+    { label: "", isCorrect: false },
+  ];
+}
+
 export function emptyQuestion(): DraftQuestion {
   return {
     title: "",
@@ -39,11 +58,8 @@ export function emptyQuestion(): DraftQuestion {
     answerType: "BOTH",
     category: "OBSERVATION",
     options: emptyOptions(),
+    mcqOptions: emptyMcqOptions(),
   };
-}
-
-function needsJumbled(answerType: AnswerType) {
-  return answerType === "JUMBLED" || answerType === "BOTH";
 }
 
 interface AddQuestionModalProps {
@@ -84,6 +100,25 @@ export default function AddQuestionModal({
     }));
   }
 
+  function updateMcqOption(index: number, label: string) {
+    setDraft((prev) => ({
+      ...prev,
+      mcqOptions: prev.mcqOptions.map((opt, i) =>
+        i === index ? { ...opt, label } : opt,
+      ),
+    }));
+  }
+
+  function setCorrectMcq(index: number) {
+    setDraft((prev) => ({
+      ...prev,
+      mcqOptions: prev.mcqOptions.map((opt, i) => ({
+        ...opt,
+        isCorrect: i === index,
+      })),
+    }));
+  }
+
   function setAnswerType(answerType: AnswerType) {
     setDraft((prev) => ({
       ...prev,
@@ -92,6 +127,11 @@ export default function AddQuestionModal({
         ? prev.options.length === 4
           ? prev.options
           : emptyOptions()
+        : [],
+      mcqOptions: needsMcq(answerType)
+        ? prev.mcqOptions.length === 4
+          ? prev.mcqOptions
+          : emptyMcqOptions()
         : [],
     }));
   }
@@ -103,7 +143,21 @@ export default function AddQuestionModal({
     }
     if (needsJumbled(draft.answerType)) {
       if (draft.options.length !== 4 || draft.options.some((o) => !o.label.trim())) {
-        setError("Exactly 4 options are required, each with a label.");
+        setError("Exactly 4 jumbled options are required, each with a label.");
+        return;
+      }
+    }
+    if (needsMcq(draft.answerType)) {
+      if (
+        draft.mcqOptions.length !== 4 ||
+        draft.mcqOptions.some((o) => !o.label.trim())
+      ) {
+        setError("Exactly 4 MCQ choices are required, each with a label.");
+        return;
+      }
+      const correctCount = draft.mcqOptions.filter((o) => o.isCorrect).length;
+      if (correctCount !== 1) {
+        setError("Select exactly one correct MCQ choice.");
         return;
       }
     }
@@ -132,11 +186,18 @@ export default function AddQuestionModal({
             correctOrder: index + 1,
           }))
         : [],
+      mcqOptions: needsMcq(draft.answerType)
+        ? draft.mcqOptions.map((opt) => ({
+            label: opt.label.trim(),
+            isCorrect: Boolean(opt.isCorrect),
+          }))
+        : [],
     });
     onClose();
   }
 
-  const showOptions = needsJumbled(draft.answerType);
+  const showJumbled = needsJumbled(draft.answerType);
+  const showMcq = needsMcq(draft.answerType);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -183,23 +244,31 @@ export default function AddQuestionModal({
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Answer format</span>
-            <select
-              className="admin-input w-full"
+            <Select
               value={draft.answerType}
               onChange={(e) => setAnswerType(e.target.value as AnswerType)}
             >
               <option value="JUMBLED">Jumbled order only</option>
               <option value="PERSONAL">Personal response only</option>
               <option value="BOTH">Jumbled order + personal response</option>
-            </select>
+              <option value="MCQ">MCQ only</option>
+              <option value="JUMBLED_MCQ">Jumbled + MCQ</option>
+              <option value="PERSONAL_MCQ">Personal response + MCQ</option>
+              <option value="ALL">Jumbled + personal response + MCQ</option>
+            </Select>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Evaluation category</span>
-            <select className="admin-input w-full" value={draft.category} onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value as QuestionCategory }))}>
+            <Select
+              value={draft.category}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, category: e.target.value as QuestionCategory }))
+              }
+            >
               <option value="OBSERVATION">Observation</option>
               <option value="THINKING">Thinking</option>
               <option value="BUILDING">Building</option>
-            </select>
+            </Select>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Question</span>
@@ -239,7 +308,7 @@ export default function AddQuestionModal({
             </span>
           </label>
 
-          {showOptions && (
+          {showJumbled && (
             <div>
               <p className="mb-2 text-sm font-medium text-gray-700">
                 Options in correct order (fixed 4)
@@ -255,6 +324,37 @@ export default function AddQuestionModal({
                       value={opt.label}
                       onChange={(e) => updateOption(oi, e.target.value)}
                       placeholder={`Correct step ${oi + 1}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {showMcq && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                MCQ choices (fixed 4 — pick the correct one)
+              </p>
+              <ul className="space-y-2">
+                {draft.mcqOptions.map((opt, oi) => (
+                  <li key={oi} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="mcq-correct"
+                      className="shrink-0"
+                      checked={opt.isCorrect}
+                      onChange={() => setCorrectMcq(oi)}
+                      aria-label={`Mark choice ${oi + 1} as correct`}
+                    />
+                    <span className="w-6 shrink-0 text-xs font-semibold text-gray-400">
+                      {String.fromCharCode(65 + oi)}.
+                    </span>
+                    <input
+                      className="admin-input w-full"
+                      value={opt.label}
+                      onChange={(e) => updateMcqOption(oi, e.target.value)}
+                      placeholder={`Choice ${String.fromCharCode(65 + oi)}`}
                     />
                   </li>
                 ))}
