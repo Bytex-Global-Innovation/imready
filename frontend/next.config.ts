@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
         port: "4000",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.imready.in",
+        pathname: "/uploads/**",
+      },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },

@@ -15,9 +15,11 @@ const projectStudentRoutes = require('@modules/project/project.student.routes');
 const dashboardAdminRoutes = require('@modules/dashboard/dashboard.admin.routes');
 const foundationStudentRoutes = require('@modules/foundation/foundation.student.routes');
 const foundationAdminRoutes = require('@modules/foundation/foundation.admin.routes');
+const healthRoutes = require('@modules/health/health.routes');
 
 const router = express.Router();
 
+router.use('/health', healthRoutes);
 router.use('/auth/admin', adminAuthRoutes);
 router.use('/auth/students', studentAuthRoutes);
 router.use('/admin/students', studentAdminRoutes);
