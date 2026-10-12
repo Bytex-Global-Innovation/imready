@@ -1,4 +1,15 @@
+import { clearStudentSessionCache } from "@/lib/student-session";
+
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+
+export class FoundationApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 export interface FoundationEvidence {
   fileName: string | null;
@@ -33,7 +44,35 @@ export interface FoundationProgressResponse {
   projectsUnlocked: boolean;
 }
 
-async function foundationRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** Same refresh call api.ts uses: renews the access cookie from the refresh cookie. */
+async function tryRefreshSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/students/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+async function foundationRequest<T>(
+  path: string,
+  options: RequestInit = {},
+  allowRefresh = true,
+): Promise<T> {
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -45,9 +84,21 @@ async function foundationRequest<T>(path: string, options: RequestInit = {}): Pr
     credentials: "include",
   });
 
+  if (res.status === 401 && allowRefresh) {
+    const refreshed = await tryRefreshSession();
+    if (refreshed) {
+      return foundationRequest<T>(path, options, false);
+    }
+    clearStudentSessionCache();
+  }
+
   if (!res.ok) {
     const errorBody = await res.json().catch(() => null);
-    throw new Error(errorBody?.message || "Something went wrong. Please try again.");
+    const message =
+      res.status === 401
+        ? "Your session has expired. Please log in again."
+        : errorBody?.message || "Something went wrong. Please try again.";
+    throw new FoundationApiError(message, res.status);
   }
 
   return res.json();

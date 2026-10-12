@@ -44,7 +44,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
     <div className="mx-auto max-w-6xl">
       <p className="text-xs font-semibold tracking-wider text-muted uppercase">
         Journey <span className="mx-1 text-brand-100">/</span> Stage 0: Foundation{" "}
-        <span className="mx-1 text-brand-100">/</span> <span className="text-emerald-600">Mission {missionId} Complete</span>
+        <span className="mx-1 text-brand-100">/</span> <span className="text-primary">Mission {missionId} Complete</span>
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
@@ -53,13 +53,13 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
             <span
               className={
                 stage.status === "active"
-                  ? "flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white"
+                  ? "flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white"
                   : stage.status === "next"
                     ? "flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary"
                     : "flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-muted"
               }
             >
-              {stage.status === "active" ? <Check className="h-3.5 w-3.5" /> : stage.status === "locked" ? <Lock className="h-3 w-3" /> : null}
+              {stage.status === "active" ? <Check className="h-3.5 w-3.5" /> : <Lock className="h-3 w-3" />}
             </span>
             <div>
               <p className="text-[10px] font-semibold tracking-wider text-muted uppercase">
@@ -73,8 +73,8 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="space-y-6 lg:col-span-2">
-          <div className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-emerald-50 to-white p-8 text-center shadow-sm">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <div className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-8 text-center shadow-sm">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white">
               <Check className="h-7 w-7" />
             </span>
             <h1 className="mt-5 font-display text-3xl font-bold text-foreground">Mission {missionId} Complete!</h1>
@@ -93,7 +93,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">AI</span>
                 READY Coach Reflection
               </p>
-              <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+              <span className="flex items-center gap-1 text-xs font-medium text-primary">
                 <Check className="h-3.5 w-3.5" /> Observation Validated
               </span>
             </div>
@@ -104,7 +104,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Submitted Evidence Recap
               </p>
               <span className="text-xs text-muted">
@@ -129,7 +129,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
                 <span className="text-muted">{completedCount} of 5 missions done</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-100">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 {MISSIONS.map((m) => (
@@ -137,7 +137,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
                     key={m.id}
                     className={
                       m.id <= completedCount
-                        ? "rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700"
+                        ? "rounded-full bg-surface px-2.5 py-1 font-medium text-primary"
                         : "rounded-full bg-surface px-2.5 py-1 text-muted"
                     }
                   >
@@ -185,17 +185,14 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
                 Unlock for Mission {nextMission.id}: <span className="font-semibold">+{nextMission.xpReward} READY Points</span>
               </div>
 
-              <Button onClick={goNext} className="mt-4 w-full">
-                Preview Mission {nextMission.id} Brief
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              
             </div>
           ) : null}
 
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">Foundation Status</p>
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">On Track</span>
+              <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-primary">On Track</span>
             </div>
             <dl className="mt-4 space-y-2.5 text-sm">
               <div className="flex items-center justify-between">

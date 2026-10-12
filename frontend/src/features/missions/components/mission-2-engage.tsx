@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageSquare, ShieldCheck } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
 import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
@@ -11,32 +10,16 @@ import {
   EvidenceCapture,
   isAllowedEvidenceFileName,
   MissionBreadcrumb,
-  MissionDetailsCard,
   MissionFooterNav,
   MissionLayout,
   QuestionField,
-  TaskChecklist,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
+import { ReadyQuestMap } from "./ready-quest-map";
 
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
-
-const SAMPLE_QUESTIONS = [
-  {
-    question: "How do you decide when to order?",
-    answer: "Usually when the queue looks short, but I've been wrong a few times and ended up waiting even longer.",
-  },
-  {
-    question: "What do you do while waiting for food?",
-    answer: "I just stand near the counter and keep glancing at the staff, hoping they'll call my number soon.",
-  },
-  {
-    question: "What is the most frustrating part of this?",
-    answer: "Not knowing how long it'll actually take — if I knew, I'd just go sit down instead of hovering.",
-  },
-];
 
 export function Mission2Engage() {
   const router = useRouter();
@@ -47,6 +30,7 @@ export function Mission2Engage() {
   const [patterns, setPatterns] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -74,23 +58,29 @@ export function Mission2Engage() {
     );
   }
 
+  // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
-    { label: "Talk to at least 2–3 people", caption: "Completed with campus peers", done: observation.trim().length > 0 },
-    { label: "Ask open questions", caption: 'Used "How", "Why", and "Tell me about..."', done: surprise.trim().length > 0 },
-    { label: "Listen without interrupting", caption: "Gave full space for pauses and stories", done: quotes.trim().length > 0 },
-    { label: "Capture what you heard", caption: "Evidence document with Drive links uploaded", done: Boolean(evidence.filePath) && patterns.trim().length > 0 },
+    { label: "Talk to at least 2–3 people", done: observation.trim().length > 0 },
+    { label: "Ask open questions", done: surprise.trim().length > 0 },
+    { label: "Listen without interrupting", done: quotes.trim().length > 0 },
+    { label: "Capture what you heard", done: Boolean(evidence.filePath) && patterns.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const answers = { observation, surprise, quotes, patterns };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       await completeMission(MISSION_ID, answers, evidenceMeta);
       router.push(ROUTES.missionComplete(MISSION_ID));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -162,6 +152,12 @@ export function Mission2Engage() {
               done={patterns.trim().length > 0}
             />
 
+            {submitError ? (
+              <p className="mt-4 text-sm text-red-600" role="alert">
+                {submitError}
+              </p>
+            ) : null}
+
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(1))}
               onSaveDraft={persist}
@@ -176,31 +172,7 @@ export function Mission2Engage() {
       sidebar={
         <>
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
-          <TaskChecklist items={checklist} />
-          <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
-  <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-    <MessageSquare className="h-4 w-4 text-primary" />
-    Need help? Sample questions
-  </p>
-  <ul className="space-y-3">
-    {SAMPLE_QUESTIONS.map((item) => (
-      <li key={item.question} className="rounded-[var(--radius-card)] bg-white p-3 shadow-sm">
-        <p className="text-sm font-medium text-foreground">&ldquo;{item.question}&rdquo;</p>
-        <p className="mt-1.5 text-xs leading-relaxed text-muted">
-          <span className="font-semibold text-primary">Sample answer: </span>
-          {item.answer}
-        </p>
-      </li>
-    ))}
-  </ul>
-</div>
-          <MissionDetailsCard estTime={mission.estTime} target={mission.target} location={mission.location} />
-          <div className="flex gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface p-4">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-xs leading-relaxed text-muted">
-              Always ask for consent before quoting campus members or recording audio. Never share full names without permission.
-            </p>
-          </div>
+          <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
     />

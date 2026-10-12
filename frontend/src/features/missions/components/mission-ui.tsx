@@ -33,8 +33,8 @@ export function MissionBreadcrumb({
 
 export function ActiveMissionBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-emerald-700">
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-semibold whitespace-nowrap text-primary">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
       {label.toUpperCase()}
     </span>
   );
@@ -152,7 +152,7 @@ export function TaskChecklist({
         <span
           className={cn(
             "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
-            doneCount === items.length ? "bg-emerald-50 text-emerald-700" : "bg-surface text-muted",
+            doneCount === items.length ? "bg-surface text-primary" : "bg-surface text-muted",
           )}
         >
           {doneCount} / {items.length} Complete
@@ -164,7 +164,7 @@ export function TaskChecklist({
             <span
               className={cn(
                 "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                item.done ? "bg-emerald-500 text-white" : "bg-brand-100 text-muted",
+                item.done ? "bg-primary text-white" : "bg-brand-100 text-muted",
               )}
             >
               {item.done ? <Check className="h-3 w-3" /> : null}
@@ -440,7 +440,7 @@ export function QuestionField({
         <p className="text-sm font-semibold text-foreground">
           Q{index} {question}
         </p>
-        {done ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" /> : null}
+        {done ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : null}
       </div>
       <textarea
         value={value}
