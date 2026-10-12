@@ -1,27 +1,70 @@
 'use strict';
 
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const nodemailer = require('nodemailer');
 
+let lastMailError = null;
+let sesClient = null;
 let transporterPromise = null;
-let lastSmtpError = null;
 
 function normalizeSecret(value) {
   return String(value || '')
     .trim()
-    // Gmail app passwords are often copied with spaces: "abcd efgh ijkl mnop"
     .replace(/\s+/g, '');
 }
 
-function getLastSmtpError() {
-  return lastSmtpError;
+function getLastMailError() {
+  return lastMailError;
 }
 
-function buildGmailTransport() {
+/** @deprecated Use getLastMailError */
+function getLastSmtpError() {
+  return getLastMailError();
+}
+
+function getMailProvider() {
+  const provider = (process.env.MAIL_PROVIDER || 'ses').trim().toLowerCase();
+  if (provider === 'smtp' || provider === 'gmail') return 'smtp';
+  return 'ses';
+}
+
+function getFromAddress() {
+  const from =
+    process.env.SES_FROM ||
+    process.env.MAIL_FROM ||
+    process.env.SMTP_FROM ||
+    process.env.SMTP_USER ||
+    '';
+  return from.trim() || null;
+}
+
+function getSesClient() {
+  if (sesClient) return sesClient;
+
+  const region = (process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '').trim();
+  if (!region) {
+    lastMailError = 'AWS_REGION (or AWS_DEFAULT_REGION) is missing in backend/.env';
+    return null;
+  }
+
+  const accessKeyId = normalizeSecret(process.env.AWS_ACCESS_KEY_ID);
+  const secretAccessKey = normalizeSecret(process.env.AWS_SECRET_ACCESS_KEY);
+
+  const config = { region };
+  if (accessKeyId && secretAccessKey) {
+    config.credentials = { accessKeyId, secretAccessKey };
+  }
+
+  sesClient = new SESClient(config);
+  return sesClient;
+}
+
+function buildSmtpTransport() {
   const user = normalizeSecret(process.env.SMTP_USER);
   const pass = normalizeSecret(process.env.SMTP_PASS);
 
   if (!user || !pass) {
-    lastSmtpError = 'SMTP_USER or SMTP_PASS is missing in backend/.env';
+    lastMailError = 'SMTP_USER or SMTP_PASS is missing in backend/.env';
     return null;
   }
 
@@ -32,59 +75,46 @@ function buildGmailTransport() {
     secureEnv === 'true' || (secureEnv === '' && port === 465);
 
   if (port === 587 && secure) {
-    lastSmtpError =
+    lastMailError =
       'Invalid SMTP config: port 587 requires SMTP_SECURE=false';
     return null;
   }
   if (port === 465 && !secure) {
-    lastSmtpError =
+    lastMailError =
       'Invalid SMTP config: port 465 requires SMTP_SECURE=true';
     return null;
   }
 
-  // Explicit Gmail SMTP only (no Ethereal).
   return nodemailer.createTransport({
     host,
     port,
     secure,
     requireTLS: !secure && port === 587,
-    auth: {
-      user,
-      pass,
-    },
-    tls: {
-      minVersion: 'TLSv1.2',
-    },
+    auth: { user, pass },
+    tls: { minVersion: 'TLSv1.2' },
   });
 }
 
-async function getTransporter() {
+async function getSmtpTransporter() {
   if (transporterPromise) return transporterPromise;
 
   transporterPromise = (async () => {
-    const transport = buildGmailTransport();
+    const transport = buildSmtpTransport();
     if (!transport) {
-      console.error(`[mail] ${lastSmtpError}`);
+      console.error(`[mail] ${lastMailError}`);
       return null;
     }
 
     try {
       await transport.verify();
-      lastSmtpError = null;
+      lastMailError = null;
       console.log(
-        `[mail] Gmail SMTP ready (${normalizeSecret(process.env.SMTP_USER)})`,
+        `[mail] SMTP ready (${normalizeSecret(process.env.SMTP_USER)})`,
       );
       return transport;
     } catch (err) {
-      lastSmtpError = err?.response || err?.message || String(err);
-      console.error('[mail] Gmail SMTP login failed:', lastSmtpError);
-      console.error(
-        '[mail] Google rejected SMTP_PASS. It must be an App Password for',
-        normalizeSecret(process.env.SMTP_USER),
-      );
-      console.error(
-        '[mail] Create one: https://myaccount.google.com/apppasswords',
-      );
+      lastMailError = err?.response || err?.message || String(err);
+      console.error('[mail] SMTP login failed:', lastMailError);
       return null;
     }
   })();
@@ -94,10 +124,10 @@ async function getTransporter() {
 
 function resetTransporter() {
   transporterPromise = null;
+  sesClient = null;
 }
 
 function frontendUrl(path = '/') {
-  // Student app (frontend), never admin — default matches Next.js student port.
   const base = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(
     /\/$/,
     '',
@@ -105,45 +135,91 @@ function frontendUrl(path = '/') {
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-/** Where the student app should land after email verification. */
-function postVerifyPath(careerDoor) {
+function postVerifyPath() {
   return '/dashboard';
 }
 
-async function sendMail({ to, subject, html, text }) {
-  const mailer = await getTransporter();
-  const from =
-    process.env.SMTP_FROM ||
-    process.env.SMTP_USER ||
-    'ImReady <noreply@imready.io>';
+async function sendViaSes({ to, subject, html, text, from }) {
+  const client = getSesClient();
+  if (!client) {
+    const err = new Error(lastMailError || 'AWS SES is not configured.');
+    err.statusCode = 503;
+    throw err;
+  }
 
+  const command = new SendEmailCommand({
+    Source: from,
+    Destination: { ToAddresses: [to] },
+    Message: {
+      Subject: { Data: subject, Charset: 'UTF-8' },
+      Body: {
+        Html: { Data: html, Charset: 'UTF-8' },
+        Text: { Data: text, Charset: 'UTF-8' },
+      },
+    },
+  });
+
+  const result = await client.send(command);
+  return {
+    sent: true,
+    messageId: result.MessageId,
+  };
+}
+
+async function sendViaSmtp({ to, subject, html, text, from }) {
+  const mailer = await getSmtpTransporter();
   if (!mailer) {
     const err = new Error(
-      'Gmail SMTP is not available. Check SMTP_USER and SMTP_PASS (Google App Password) in backend/.env, then restart the server.',
+      lastMailError ||
+        'SMTP is not available. Check MAIL_PROVIDER and SMTP_* in backend/.env.',
     );
     err.statusCode = 503;
     throw err;
   }
 
-  const info = await mailer.sendMail({
-    from,
-    to,
-    subject,
-    html,
-    text,
-  });
-
-  console.log(`[mail] Sent "${subject}" to ${to} via Gmail (id: ${info.messageId})`);
+  const info = await mailer.sendMail({ from, to, subject, html, text });
   return {
     sent: true,
     messageId: info.messageId,
   };
 }
 
+async function sendMail({ to, subject, html, text }) {
+  const from = getFromAddress();
+  if (!from) {
+    lastMailError =
+      'SES_FROM (or MAIL_FROM) is missing — use a verified sender in AWS SES.';
+    const err = new Error(lastMailError);
+    err.statusCode = 503;
+    throw err;
+  }
+
+  const provider = getMailProvider();
+
+  try {
+    const result =
+      provider === 'smtp'
+        ? await sendViaSmtp({ to, subject, html, text, from })
+        : await sendViaSes({ to, subject, html, text, from });
+
+    lastMailError = null;
+    console.log(
+      `[mail] Sent "${subject}" to ${to} via ${provider.toUpperCase()} (id: ${result.messageId})`,
+    );
+    return result;
+  } catch (err) {
+    lastMailError =
+      err?.message ||
+      err?.name ||
+      (err?.$metadata?.httpStatusCode
+        ? `AWS SES error (HTTP ${err.$metadata.httpStatusCode})`
+        : String(err));
+    throw err;
+  }
+}
+
 async function sendVerificationEmail({ email, fullName, token, careerDoor }) {
   const next = postVerifyPath(careerDoor);
-  // Embed `next` so the student app can route even before the API responds.
-  // FRONTEND_URL must point at the student app (port 3000), never admin (3001).
   const verifyUrl = frontendUrl(
     `/verify-email?token=${encodeURIComponent(token)}&next=${encodeURIComponent(next)}`,
   );
@@ -211,7 +287,7 @@ async function sendVerificationEmail({ email, fullName, token, careerDoor }) {
     return await sendMail({ to: email, subject, html, text });
   } catch (err) {
     console.error(
-      '[mail] Failed to send verification email via Gmail:',
+      '[mail] Failed to send verification email:',
       err?.message || err,
     );
     console.warn(`[mail] Manual verify link for ${email}: ${verifyUrl}`);
@@ -237,7 +313,7 @@ async function sendPasswordResetEmail({ email, fullName, token }) {
     return await sendMail({ to: email, subject, html, text });
   } catch (err) {
     console.error(
-      '[mail] Failed to send password reset email via Gmail:',
+      '[mail] Failed to send password reset email:',
       err?.message || err,
     );
     console.warn(`[mail] Manual reset link for ${email}: ${resetUrl}`);
@@ -249,10 +325,41 @@ async function sendPasswordResetEmail({ email, fullName, token }) {
   }
 }
 
+async function verifySesConfig() {
+  const region = (process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '').trim();
+  const from = getFromAddress();
+
+  if (!region) {
+    lastMailError = 'AWS_REGION is missing';
+    console.error(`[mail] ${lastMailError}`);
+    return false;
+  }
+  if (!from) {
+    lastMailError = 'SES_FROM (or MAIL_FROM) is missing';
+    console.error(`[mail] ${lastMailError}`);
+    return false;
+  }
+
+  if (!getSesClient()) {
+    console.error(`[mail] ${lastMailError}`);
+    return false;
+  }
+
+  lastMailError = null;
+  console.log(`[mail] AWS SES ready (region: ${region}, from: ${from})`);
+  return true;
+}
+
 async function verifyMailConfig() {
   resetTransporter();
-  const mailer = await getTransporter();
-  return Boolean(mailer);
+  const provider = getMailProvider();
+
+  if (provider === 'smtp') {
+    const mailer = await getSmtpTransporter();
+    return Boolean(mailer);
+  }
+
+  return verifySesConfig();
 }
 
 module.exports = {
@@ -262,5 +369,7 @@ module.exports = {
   frontendUrl,
   verifyMailConfig,
   resetTransporter,
+  getLastMailError,
   getLastSmtpError,
+  getMailProvider,
 };
