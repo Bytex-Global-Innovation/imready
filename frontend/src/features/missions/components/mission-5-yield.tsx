@@ -12,13 +12,12 @@ import {
   EvidenceCapture,
   isAllowedEvidenceFileName,
   MissionBreadcrumb,
-  MissionDetailsCard,
   MissionFooterNav,
   MissionLayout,
-  TaskChecklist,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
+import { ReadyQuestMap } from "./ready-quest-map";
 
 const MISSION_ID = 5;
 const mission = getMission(MISSION_ID);
@@ -31,6 +30,7 @@ export function Mission5Yield() {
   const [impact, setImpact] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -56,6 +56,7 @@ export function Mission5Yield() {
     );
   }
 
+  // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
     { label: "Upload final proof document", done: Boolean(evidence.filePath) },
     { label: "Describe how you validated it", done: validation.trim().length > 0 },
@@ -66,6 +67,7 @@ export function Mission5Yield() {
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const answers = { validation, impact };
       const evidenceMeta = toEvidenceMeta(evidence);
@@ -75,6 +77,10 @@ export function Mission5Yield() {
         await refresh();
       }
       router.push(ROUTES.foundationComplete);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -123,6 +129,12 @@ export function Mission5Yield() {
             className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
 
+          {submitError ? (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          ) : null}
+
           <MissionFooterNav
             onPrevious={() => router.push(ROUTES.mission(4))}
             onSaveDraft={persist}
@@ -136,8 +148,7 @@ export function Mission5Yield() {
       sidebar={
         <>
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
-          <TaskChecklist items={checklist} />
-          <MissionDetailsCard estTime={mission.estTime} target={mission.target} location={mission.location} />
+          <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
     />

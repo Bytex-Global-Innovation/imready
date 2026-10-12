@@ -14,10 +14,10 @@ import {
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
-  TaskChecklist,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
+import { ReadyQuestMap } from "./ready-quest-map";
 
 const MISSION_ID = 3;
 const mission = getMission(MISSION_ID);
@@ -43,6 +43,7 @@ export function Mission3Analyze() {
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -80,24 +81,23 @@ export function Mission3Analyze() {
   }
 
   const whysFilled = WHY_LAYERS.every((layer) => (whys[layer.key] ?? "").trim().length > 0);
-  const checklist = [
-    { label: "Review your observations", caption: "Reviewed interviews with 3 students & 2 staff.", done: whysFilled },
-    { label: "Find recurring patterns", caption: "Noticed constant verbal checks from waiting customers.", done: pattern.trim().length > 0 },
-    { label: "Upload synthesis document", caption: "Document with analysis notes and Drive links", done: Boolean(evidence.filePath) },
-    { label: "Identify the real root problem", caption: "Completed all 5 layers with confirmed root cause.", done: rootCause.trim().length > 0 },
-  ];
   const canComplete =
     whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const answers = { ...whys, rootCause, pattern, tags };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       await completeMission(MISSION_ID, answers, evidenceMeta);
       router.push(ROUTES.missionComplete(MISSION_ID));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -140,7 +140,7 @@ export function Mission3Analyze() {
                     <div className="flex flex-col items-center">
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          filled ? "bg-emerald-500 text-white" : "bg-brand-100 text-muted"
+                          filled ? "bg-primary text-white" : "bg-brand-100 text-muted"
                         }`}
                       >
                         {filled ? <Check className="h-3.5 w-3.5" /> : null}
@@ -166,22 +166,22 @@ export function Mission3Analyze() {
                     <Flag className="h-3.5 w-3.5" />
                   </span>
                 </div>
-                <div className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 p-4">
+                <div className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-primary bg-surface p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-emerald-700 uppercase">
+                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-primary uppercase">
                       Root Cause
                     </span>
-                    <span className="text-xs font-medium text-emerald-700">Validated 5th Depth</span>
-                    {rootCause.trim() ? <Check className="ml-auto h-4 w-4 shrink-0 text-emerald-600" /> : null}
+                    <span className="text-xs font-medium text-primary">Validated 5th Depth</span>
+                    {rootCause.trim() ? <Check className="ml-auto h-4 w-4 shrink-0 text-primary" /> : null}
                   </div>
                   <input
                     type="text"
                     value={rootCause}
                     onChange={(event) => setRootCause(event.target.value)}
                     placeholder="State the actionable root cause..."
-                    className="mt-2 w-full rounded-[var(--radius-card)] border border-emerald-300 bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-2 w-full rounded-[var(--radius-card)] border border-primary bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
-                  <p className="mt-2 text-xs text-emerald-700">Ready for prototyping in Mission 4 (Build, Test &amp; Improve)</p>
+                  <p className="mt-2 text-xs text-primary">Ready for prototyping in Mission 4 (Build, Test &amp; Improve)</p>
                 </div>
               </li>
             </ol>
@@ -224,6 +224,12 @@ export function Mission3Analyze() {
               ))}
             </div>
 
+            {submitError ? (
+              <p className="mt-4 text-sm text-red-600" role="alert">
+                {submitError}
+              </p>
+            ) : null}
+
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(2))}
               onSaveDraft={persist}
@@ -238,39 +244,7 @@ export function Mission3Analyze() {
       sidebar={
         <>
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
-          <TaskChecklist items={checklist} />
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-            <p className="mb-3 text-sm font-semibold text-foreground">5 Whys Reference Guide</p>
-            <p className="mb-3 text-xs text-muted">How to ensure your Whys are diagnostic rather than circular:</p>
-            <dl className="space-y-2.5 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <dt className="font-medium text-foreground">Test in reverse</dt>
-                <dd className="text-xs text-muted">&ldquo;Therefore...&rdquo;</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="font-medium text-foreground">Target systemic causes</dt>
-                <dd className="text-xs text-muted">Avoid personal blame</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="font-medium text-foreground">Keep it actionable</dt>
-                <dd className="text-xs text-muted">Can we prototype a fix?</dd>
-              </div>
-            </dl>
-          </div>
-          <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4 text-sm">
-            <div className="flex items-center justify-between gap-3 py-1">
-              <span className="text-muted">Framework</span>
-              <span className="text-right font-medium text-foreground">5 Whys (Toyota Origin)</span>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-1">
-              <span className="text-muted">Estimated Time</span>
-              <span className="text-right font-medium text-foreground">{mission.estTime}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-1">
-              <span className="text-muted">Output For Next Stage</span>
-              <span className="text-right font-medium text-foreground">1 Prototype Brief</span>
-            </div>
-          </div>
+          <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
     />

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
 import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
@@ -12,23 +11,16 @@ import {
   EvidenceCapture,
   isAllowedEvidenceFileName,
   MissionBreadcrumb,
-  MissionDetailsCard,
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
+import { ReadyQuestMap } from "./ready-quest-map";
 
 const MISSION_ID = 1;
 const mission = getMission(MISSION_ID);
-
-const FRICTION_EXAMPLES = [
-  { title: "Long queue at the canteen", detail: "People constantly checking watches or leaving in frustration." },
-  { title: "Students looking for a classroom", detail: "Wandering near stairwells, squinting at complex room numbers." },
-  { title: "Difficulty getting a document", detail: "Bouncing across three administrative counters for a single stamp." },
-  { title: "A busy library or lab", detail: "Unclear printer queuing resulting in wasted printouts." },
-];
 
 export function Mission1Reality() {
   const router = useRouter();
@@ -37,6 +29,7 @@ export function Mission1Reality() {
   const [reflection, setReflection] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -68,11 +61,16 @@ export function Mission1Reality() {
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, { caption, reflection }, evidenceMeta);
       await completeMission(MISSION_ID, { caption, reflection }, evidenceMeta);
       router.push(ROUTES.missionComplete(MISSION_ID));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -129,6 +127,12 @@ export function Mission1Reality() {
             <AutosaveStatus wordCount={reflectionWords} />
           </div>
 
+          {submitError ? (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          ) : null}
+
           <MissionFooterNav
             onPrevious={() => router.push(ROUTES.dashboard)}
             previousLabel="Back to Dashboard"
@@ -143,30 +147,7 @@ export function Mission1Reality() {
       sidebar={
         <>
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
-
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold text-foreground">Examples of Friction</p>
-              <span className="text-xs text-muted">Ideas to spot</span>
-            </div>
-            <ul className="space-y-3">
-              {FRICTION_EXAMPLES.map((example) => (
-                <li key={example.title} className="text-sm">
-                  <p className="font-medium text-foreground">{example.title}:</p>
-                  <p className="text-muted">{example.detail}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <MissionDetailsCard estTime={mission.estTime} target={mission.target} location={mission.location} />
-
-          <div className="flex gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface p-4">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-xs leading-relaxed text-muted">
-              Remember to respect student privacy. Focus on processes and interactions, not personal faces.
-            </p>
-          </div>
+          <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
     />

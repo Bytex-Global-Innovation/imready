@@ -7,9 +7,6 @@ import {
   BarChart2,
   CheckCircle2,
   ChevronRight,
-  Clock,
-  Download,
-  FileText,
   Tag,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -23,7 +20,7 @@ function BriefPill({
   icon: Icon,
   label,
 }: {
-  icon: typeof Clock;
+  icon: typeof BarChart2;
   label: string;
 }) {
   return (
@@ -167,9 +164,6 @@ export function ProjectBriefView({
           {project.title} – Project Brief
         </h1>
         <div className="mt-4 flex flex-wrap gap-2">
-          {project.estimatedTime ? (
-            <BriefPill icon={Clock} label={`Estimated time: ${project.estimatedTime}`} />
-          ) : null}
           {project.level ? (
             <BriefPill icon={BarChart2} label={project.level} />
           ) : null}
@@ -236,27 +230,6 @@ export function ProjectBriefView({
             </div>
           </SectionCard>
         ) : null}
-
-        {project.resources?.length ? (
-          <SectionCard number={5} title="Resources">
-            <ul className="space-y-2">
-              {project.resources.map((resource) => (
-                <li key={resource.label}>
-                  <a
-                    href={resource.href}
-                    className="flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-card)] bg-surface px-4 py-3 text-sm font-medium text-foreground hover:bg-brand-100"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <FileText className="h-4 w-4 text-primary" />
-                      {resource.label}
-                    </span>
-                    <Download className="h-4 w-4 text-muted" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        ) : null}
       </div>
 
       {applyError && (
@@ -265,7 +238,7 @@ export function ProjectBriefView({
 
       <div className="mt-6 text-center">
         <Button className="w-full" onClick={handleApply} disabled={isApplying}>
-          {isApplying ? "Applying…" : "Apply and Start Project"}
+          {isApplying ? "Enrolling…" : "Enroll & Submit Your Solution Next"}
           <ArrowRight className="h-4 w-4" />
         </Button>
         <p className="mt-3 text-xs text-muted">

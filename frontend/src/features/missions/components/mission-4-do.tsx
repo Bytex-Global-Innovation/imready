@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
 import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
@@ -11,19 +10,16 @@ import {
   EvidenceCapture,
   isAllowedEvidenceFileName,
   MissionBreadcrumb,
-  MissionDetailsCard,
   MissionFooterNav,
   MissionLayout,
   QuestionField,
-  TaskChecklist,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
+import { ReadyQuestMap } from "./ready-quest-map";
 
 const MISSION_ID = 4;
 const mission = getMission(MISSION_ID);
-
-const INSPIRATION_LINKS = ["Paper Tickets & Slips", "Numbered Desk Cards", "Whiteboard Status Queue"];
 
 export function Mission4Do() {
   const router = useRouter();
@@ -35,6 +31,7 @@ export function Mission4Do() {
   const [improve, setImprove] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -63,6 +60,7 @@ export function Mission4Do() {
     );
   }
 
+  // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
     { label: "Upload prototype evidence document", done: Boolean(evidence.filePath) },
     { label: "Test it with real users", done: respond.trim().length > 0 },
@@ -74,12 +72,17 @@ export function Mission4Do() {
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const answers = { description, respond, worked, didntWork, improve };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       await completeMission(MISSION_ID, answers, evidenceMeta);
       router.push(ROUTES.missionComplete(MISSION_ID));
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +142,12 @@ export function Mission4Do() {
             <QuestionField index={3} question="What didn't work?" value={didntWork} onChange={setDidntWork} done={didntWork.trim().length > 0} />
             <QuestionField index={4} question="What will you improve next?" value={improve} onChange={setImprove} done={improve.trim().length > 0} />
 
+            {submitError ? (
+              <p className="mt-4 text-sm text-red-600" role="alert">
+                {submitError}
+              </p>
+            ) : null}
+
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(3))}
               previousLabel="Mission 3: Analyze"
@@ -154,21 +163,7 @@ export function Mission4Do() {
       sidebar={
         <>
           <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
-          <TaskChecklist items={checklist} />
-          <div className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <Lightbulb className="h-4 w-4 text-primary" />
-              Need inspiration?
-            </p>
-            <ul className="space-y-2">
-              {INSPIRATION_LINKS.map((link) => (
-                <li key={link} className="rounded-[var(--radius-card)] bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm">
-                  {link}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <MissionDetailsCard title="Mission Logistics" estTime={mission.estTime} target="Physical / Low-fi prototype" location={mission.location} />
+          <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
     />
