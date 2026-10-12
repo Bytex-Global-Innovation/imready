@@ -1,0 +1,116 @@
+# Production-oriented Compose for IMReady (imready.in)
+#
+# - Compose project name: imready (isolated from other stacks)
+# - MySQL: NOT published to the host
+# - App services: bound to 127.0.0.1 only (Nginx on the host proxies in)
+# - Uploads + optional MySQL data: host paths under /srv/imready by default
+#
+# Usage (on VPS, from project directory):
+#   docker compose -f docker-compose.prod.yml config
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml --profile tools run --rm migrate
+#
+# NEVER run `docker compose down` without `-f docker-compose.prod.yml` and
+# without confirming you are in IMReady's directory, not ByteX's.
+
+name: imready
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${DB_NAME:?set DB_NAME in .env}
+      MYSQL_USER: ${DB_USER:?set DB_USER in .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - ${IMREADY_MYSQL_DATA_DIR:-/srv/imready/mysql}:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - imready
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      PORT: 4000
+      NODE_ENV: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ${IMREADY_UPLOADS_DIR:-/srv/imready/uploads}:/app/uploads
+    ports:
+      - "127.0.0.1:${IMREADY_BACKEND_PORT:-14000}:4000"
+    init: true
+    networks:
+      - imready
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: migrator
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - imready
+    profiles:
+      - tools
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_USE_MOCK: ${NEXT_PUBLIC_USE_MOCK:-false}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${IMREADY_ADMIN_PORT:-13001}:3000"
+    init: true
+    networks:
+      - imready
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${IMREADY_FRONTEND_PORT:-13000}:3000"
+    init: true
+    networks:
+      - imready
+
+networks:
+  imready:
+    name: imready_net
+    driver: bridge

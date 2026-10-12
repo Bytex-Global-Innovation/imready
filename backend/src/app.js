@@ -4,7 +4,6 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const config = require('@config');
-const sequelize = require('@connections/sequelize');
 const { notFoundHandler, errorHandler } = require('@middleware/error.middleware');
 const routes = require('@routes/v1');
 const { uploadsRoot } = require('@middleware/upload-project-file.middleware');
@@ -53,16 +52,8 @@ app.use('/uploads', express.static(uploadsRoot, {
   },
 }));
 
-app.get('/health', async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    return res.status(200).json({ success: true, status: 'ok', database: 'connected' });
-  } catch {
-    return res.status(503).json({ success: false, status: 'degraded', database: 'disconnected' });
-  }
-});
-
 // Versioned API surface — all business routes live under /api/v1
+// Health: GET /api/v1/health (API catalog + service probes)
 app.use('/api/v1', routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
