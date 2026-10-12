@@ -10,7 +10,7 @@ const {
   sendVerificationEmail,
   sendPasswordResetEmail,
   frontendUrl,
-  getLastSmtpError,
+  getLastMailError,
 } = require('@modules/shared/mail.service');
 const { STUDENT_ISSUER } = require('@modules/auth/student.guard');
 const {
@@ -248,13 +248,13 @@ async function signup(payload) {
   });
 
   const emailSent = Boolean(mailResult && mailResult.sent);
-  const smtpError = getLastSmtpError();
+  const mailError = getLastMailError();
   const response = {
     message: emailSent
       ? 'Account created. Please check your email and click Verify to continue.'
-      : `Account created, but Gmail could not send the verification email.${
-          smtpError ? ` Reason: ${smtpError}` : ''
-        } Update SMTP_PASS with a Google App Password for ${process.env.SMTP_USER}, restart backend, then use Resend verification.`,
+      : `Account created, but we could not send the verification email.${
+          mailError ? ` Reason: ${mailError}` : ''
+        } Check AWS SES (or MAIL_PROVIDER) settings in backend/.env, restart the server, then use Resend verification.`,
     email: student.email,
     requiresVerification: true,
     emailSent,
@@ -262,7 +262,8 @@ async function signup(payload) {
   };
 
   if (!emailSent) {
-    response.smtpError = smtpError || 'Gmail SMTP unavailable';
+    response.mailError = mailError || 'Email service unavailable';
+    response.smtpError = response.mailError;
   }
 
   if (!emailSent && process.env.NODE_ENV !== 'production') {
