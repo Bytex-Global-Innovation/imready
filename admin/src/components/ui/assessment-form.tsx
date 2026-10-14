@@ -1,0 +1,687 @@
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, X } from "@/components/icons";
+import Breadcrumb from "@/components/ui/breadcrumb";
+import Select from "@/components/ui/select";
+import AddQuestionModal, {
+  type DraftQuestion,
+} from "@/components/ui/add-question-modal";
+import {
+  assessmentsApi,
+  needsJumbled,
+  needsMcq,
+  needsPersonal,
+  type AnswerType,
+  type AssessmentQuestionBankItem,
+  type AssessmentQuestionInput,
+  type AssessmentStatus,
+  type CreateAssessmentPayload,
+  type QuestionOrderMode,
+  type WeightingMode,
+} from "@/lib/api";
+
+type AssessmentFormMode = "create" | "edit";
+
+interface AssessmentFormProps {
+  mode: AssessmentFormMode;
+  assessmentId?: string;
+}
+
+function answerTypeLabel(answerType: AnswerType) {
+  switch (answerType) {
+    case "JUMBLED":
+      return "Jumbled only";
+    case "PERSONAL":
+      return "Personal only";
+    case "BOTH":
+      return "Jumbled + personal";
+    case "MCQ":
+      return "MCQ only";
+    case "JUMBLED_MCQ":
+      return "Jumbled + MCQ";
+    case "PERSONAL_MCQ":
+      return "Personal + MCQ";
+    case "ALL":
+      return "Jumbled + personal + MCQ";
+    default:
+      return answerType;
+  }
+}
+
+function toQuestionPayload(draft: DraftQuestion): AssessmentQuestionInput {
+  const durationSeconds =
+    draft.durationMinutes == null || Number(draft.durationMinutes) <= 0
+      ? null
+      : Math.round(Number(draft.durationMinutes) * 60);
+
+  return {
+    title: draft.title.trim(),
+    prompt: "",
+    question: draft.question.trim(),
+    tips: [],
+    answerType: draft.answerType,
+    options: needsJumbled(draft.answerType)
+      ? draft.options.map((opt, index) => ({
+          label: opt.label.trim(),
+          correctOrder: index + 1,
+        }))
+      : [],
+    mcqOptions: needsMcq(draft.answerType)
+      ? (draft.mcqOptions || []).map((opt) => ({
+          label: opt.label.trim(),
+          isCorrect: Boolean(opt.isCorrect),
+        }))
+      : [],
+    category: draft.category,
+    jumbledOptionsMarks: needsJumbled(draft.answerType)
+      ? draft.jumbledOptionsMarks
+      : 0,
+    personalResponseMarks: needsPersonal(draft.answerType)
+      ? draft.personalResponseMarks
+      : 0,
+    mcqOptionsMarks: needsMcq(draft.answerType) ? draft.mcqOptionsMarks : 0,
+    durationSeconds,
+  };
+}
+
+function questionKey(title: string, question: string) {
+  return `${title.trim().toLowerCase()}::${question.trim().toLowerCase()}`;
+}
+
+function bankItemToDraft(item: AssessmentQuestionBankItem): DraftQuestion {
+  const answerType = item.answerType ?? "BOTH";
+  const sorted = [...(item.options || [])].sort((a, b) => a.correctOrder - b.correctOrder);
+  const options = needsJumbled(answerType)
+    ? [0, 1, 2, 3].map((index) => ({
+        label: sorted[index]?.label || "",
+        correctOrder: index + 1,
+      }))
+    : [];
+  const sourceMcq = item.mcqOptions || [];
+  const mcqOptions = needsMcq(answerType)
+    ? [0, 1, 2, 3].map((index) => ({
+        label: sourceMcq[index]?.label || "",
+        isCorrect: Boolean(sourceMcq[index]?.isCorrect),
+      }))
+    : [];
+  // Ensure exactly one correct when loading incomplete data
+  if (needsMcq(answerType) && mcqOptions.filter((o) => o.isCorrect).length !== 1) {
+    mcqOptions.forEach((o, i) => {
+      o.isCorrect = i === 0;
+    });
+  }
+  return {
+    title: item.title,
+    prompt: "",
+    question: item.question,
+    tipsText: "",
+    answerType,
+    options,
+    mcqOptions: needsMcq(answerType) ? mcqOptions : [],
+    sourceId: item.id,
+    category: item.category ?? "OBSERVATION",
+    jumbledOptionsMarks: item.jumbledOptionsMarks ?? undefined,
+    personalResponseMarks: item.personalResponseMarks ?? undefined,
+    mcqOptionsMarks: item.mcqOptionsMarks ?? undefined,
+    durationMinutes:
+      item.durationSeconds == null
+        ? null
+        : Math.max(
+            0.5,
+            Math.round((Number(item.durationSeconds) / 60) * 2) / 2,
+          ),
+  };
+}
+
+export default function AssessmentForm({ mode, assessmentId }: AssessmentFormProps) {
+  const router = useRouter();
+  const isEdit = mode === "edit";
+
+  const [name, setName] = useState("");
+  const [domain] = useState("General");
+  const [status, setStatus] = useState<AssessmentStatus>("DRAFT");
+  const [questionCount, setQuestionCount] = useState(1);
+  const [questionOrderMode, setQuestionOrderMode] =
+    useState<QuestionOrderMode>("sequential");
+  const [jumbledOptionsMarks, setJumbledOptionsMarks] = useState(60);
+  const [personalResponseMarks, setPersonalResponseMarks] = useState(40);
+  const [mcqOptionsMarks, setMcqOptionsMarks] = useState(20);
+  const [weightingMode, setWeightingMode] = useState<WeightingMode>("EQUAL");
+  const [passMarks, setPassMarks] = useState(70);
+  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [newQuestions, setNewQuestions] = useState<DraftQuestion[]>([]);
+  const [questionModalOpen, setQuestionModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEdit);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Assessments", href: "/assessments" },
+    { label: isEdit ? "Update Assessment" : "Create Assessment" },
+  ];
+
+  useEffect(() => {
+    if (!isEdit || !assessmentId) return;
+
+    let cancelled = false;
+    async function loadAssessment() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const detail = await assessmentsApi.getAssessment(assessmentId!);
+        if (cancelled) return;
+        setName(detail.name);
+        setStatus(detail.status);
+        setQuestionCount(detail.questionCount ?? 1);
+        setQuestionOrderMode(detail.questionOrderMode ?? "sequential");
+        setJumbledOptionsMarks(detail.jumbledOptionsMarks ?? 60);
+        setPersonalResponseMarks(detail.personalResponseMarks ?? 40);
+        setMcqOptionsMarks(detail.mcqOptionsMarks ?? 20);
+        setWeightingMode(detail.weightingMode ?? "EQUAL");
+        setPassMarks(detail.passMarksValue ?? 70);
+        setDurationMinutes(detail.durationMinutes ?? 60);
+        setNewQuestions((detail.questions || []).map(bankItemToDraft));
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load assessment.");
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadAssessment();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, assessmentId]);
+
+  const totalSelected = newQuestions.length;
+
+  // Keep ask-count aligned with the question pool so students see the same set as admin.
+  useEffect(() => {
+    if (totalSelected < 1) return;
+    setQuestionCount(totalSelected);
+  }, [totalSelected]);
+
+  const estimatedTotal =
+    weightingMode === "EQUAL"
+      ? newQuestions.reduce((sum, q) => {
+          const jumbled = needsJumbled(q.answerType) ? jumbledOptionsMarks : 0;
+          const personal = needsPersonal(q.answerType) ? personalResponseMarks : 0;
+          const mcq = needsMcq(q.answerType) ? mcqOptionsMarks : 0;
+          return sum + jumbled + personal + mcq;
+        }, 0)
+      : newQuestions.reduce((sum, q) => {
+          const jumbled = needsJumbled(q.answerType) ? (q.jumbledOptionsMarks ?? 0) : 0;
+          const personal = needsPersonal(q.answerType) ? (q.personalResponseMarks ?? 0) : 0;
+          const mcq = needsMcq(q.answerType) ? (q.mcqOptionsMarks ?? 0) : 0;
+          return sum + jumbled + personal + mcq;
+        }, 0);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    if (totalSelected < 1) {
+      setError("Add at least one question.");
+      return;
+    }
+
+    const uniqueDrafts: DraftQuestion[] = [];
+    const seenKeys = new Set<string>();
+    for (const draft of newQuestions) {
+      const key = questionKey(draft.title, draft.question);
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      uniqueDrafts.push(draft);
+    }
+
+    for (const draft of uniqueDrafts) {
+      if (!draft.title.trim() || !draft.question.trim()) {
+        setError("Fill in title and question text for every question.");
+        return;
+      }
+      if (needsJumbled(draft.answerType)) {
+        if (draft.options.length !== 4 || draft.options.some((o) => !o.label.trim())) {
+          setError("Every jumbled/combined question must have exactly 4 options.");
+          return;
+        }
+      }
+      if (needsMcq(draft.answerType)) {
+        const mcq = draft.mcqOptions || [];
+        if (mcq.length !== 4 || mcq.some((o) => !o.label.trim())) {
+          setError("Every MCQ/combined question must have exactly 4 choices.");
+          return;
+        }
+        if (mcq.filter((o) => o.isCorrect).length !== 1) {
+          setError("Every MCQ/combined question must mark exactly one correct choice.");
+          return;
+        }
+      }
+    }
+
+    if (durationMinutes < 1) {
+      setError("Overall assessment duration must be at least 1 minute.");
+      return;
+    }
+
+    for (const draft of uniqueDrafts) {
+      if (
+        draft.durationMinutes != null &&
+        Number(draft.durationMinutes) > 0 &&
+        Number(draft.durationMinutes) < 0.5
+      ) {
+        setError(
+          "Each question timer must be at least 0.5 minutes when set (or leave empty).",
+        );
+        return;
+      }
+    }
+
+    const payload: CreateAssessmentPayload = {
+      name: name.trim(),
+      domain,
+      status,
+      questionCount,
+      questionOrderMode,
+      jumbledOptionsMarks,
+      personalResponseMarks,
+      mcqOptionsMarks,
+      weightingMode,
+      passMarks,
+      durationMinutes,
+      questionIds: [],
+      questions: uniqueDrafts.map(toQuestionPayload),
+    };
+
+    setIsSubmitting(true);
+    try {
+      if (isEdit && assessmentId) {
+        await assessmentsApi.updateAssessment(assessmentId, payload);
+      } else {
+        await assessmentsApi.createAssessment(payload);
+      }
+      router.push("/assessments");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : isEdit
+            ? "Failed to update assessment."
+            : "Failed to create assessment.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-10 text-center text-sm text-gray-400 animate-pulse">
+        Loading assessment…
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Breadcrumb items={breadcrumbs} />
+
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="admin-page-title">
+            {isEdit ? "Update Assessment" : "Create Assessment"}
+          </h1>
+          <p className="admin-page-subtitle">
+            {isEdit
+              ? "Edit assessment details, questions, and evaluation criteria."
+              : "Add questions with ordered options, choose what to ask, and set evaluation criteria."}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="admin-btn-outline"
+          onClick={() => router.push("/assessments")}
+        >
+          Cancel
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <section className="admin-card space-y-4 p-5">
+          <p className="admin-section-label">Assessment details</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">Name</span>
+              <input
+                className="admin-input w-full"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                maxLength={255}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">Status</span>
+              <Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as AssessmentStatus)}
+              >
+                <option value="DRAFT">DRAFT</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="ARCHIVED">ARCHIVED</option>
+              </Select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Question order for students
+              </span>
+              <Select
+                value={questionOrderMode}
+                onChange={(e) =>
+                  setQuestionOrderMode(e.target.value as QuestionOrderMode)
+                }
+              >
+                <option value="sequential">Sequential</option>
+                <option value="random">Random</option>
+                <option value="jumbled">Jumbled</option>
+              </Select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Questions students will receive
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={Math.max(1, totalSelected || 50)}
+                className="admin-input w-full bg-gray-50"
+                value={questionCount}
+                readOnly
+                aria-readonly="true"
+              />
+              <span className="mt-1 block text-xs text-admin-text-muted">
+                Always matches the questions added below so the student app stays in sync.
+              </span>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Overall assessment duration (minutes)
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={480}
+                step={1}
+                className="admin-input w-full"
+                value={durationMinutes}
+                onChange={(e) =>
+                  setDurationMinutes(Math.max(1, Number(e.target.value) || 1))
+                }
+                required
+              />
+              <span className="mt-1 block text-xs text-admin-text-muted">
+                When this timer ends, the assessment auto-submits for the student.
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section className="admin-card space-y-4 p-5">
+          <p className="admin-section-label">Evaluation criteria</p>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">Weighting method</span>
+            <Select
+              value={weightingMode}
+              onChange={(e) => setWeightingMode(e.target.value as WeightingMode)}
+            >
+              <option value="EQUAL">Same weight for every question</option>
+              <option value="INDIVIDUAL">Individual weight per question</option>
+            </Select>
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Marks for jumbled options
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="admin-input w-full"
+                value={jumbledOptionsMarks}
+                onChange={(e) => setJumbledOptionsMarks(Number(e.target.value) || 0)}
+                required
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Marks for personal response
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="admin-input w-full"
+                value={personalResponseMarks}
+                onChange={(e) =>
+                  setPersonalResponseMarks(Number(e.target.value) || 0)
+                }
+                required
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Marks for MCQ
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="admin-input w-full"
+                value={mcqOptionsMarks}
+                onChange={(e) => setMcqOptionsMarks(Number(e.target.value) || 0)}
+                required
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Pass marks (absolute)
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="admin-input w-full"
+                value={passMarks}
+                onChange={(e) => setPassMarks(Number(e.target.value) || 0)}
+                required
+              />
+            </label>
+          </div>
+          <p className="text-xs text-gray-500">
+            Estimated max score: {estimatedTotal} across {questionCount}{" "}
+            {questionCount === 1 ? "question" : "questions"} (varies by answer format).
+            Students pass when total score ≥ {passMarks}.
+          </p>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="admin-section-label">Questions for this assessment</p>
+            <button
+              type="button"
+              className="admin-btn-outline gap-2"
+              onClick={() => setQuestionModalOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add new question
+            </button>
+          </div>
+
+          {newQuestions.length === 0 ? (
+            <div className="admin-card p-5 text-sm text-gray-400">
+              No questions added yet. Click “Add new question” to open the modal.
+            </div>
+          ) : (
+            newQuestions.map((draft, index) => (
+              <div
+                key={`${questionKey(draft.title, draft.question)}-${index}`}
+                className="admin-card space-y-3 p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">
+                      Question {index + 1}: {draft.title}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-600">{draft.question}</p>
+                    <p className="mt-1 text-xs font-semibold tracking-wide text-primary">
+                      {draft.category} · {answerTypeLabel(draft.answerType)}
+                      {draft.durationMinutes
+                        ? ` · ${draft.durationMinutes} min timer`
+                        : " · no question timer"}
+                    </p>
+                    <label className="mt-2 block text-xs text-gray-600">
+                      Time to solve (minutes, optional)
+                      <input
+                        type="number"
+                        min={0.5}
+                        max={60}
+                        step={0.5}
+                        className="admin-input mt-1 w-full max-w-[12rem]"
+                        value={draft.durationMinutes ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setNewQuestions((prev) =>
+                            prev.map((q, i) =>
+                              i === index
+                                ? {
+                                    ...q,
+                                    durationMinutes:
+                                      raw === "" ? null : Number(raw),
+                                  }
+                                : q,
+                            ),
+                          );
+                        }}
+                        placeholder="No timer"
+                      />
+                    </label>
+                    {weightingMode === "INDIVIDUAL" && (
+                      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                        {needsJumbled(draft.answerType) && (
+                          <label className="text-xs text-gray-600">Jumbled marks
+                            <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.jumbledOptionsMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, jumbledOptionsMarks: Number(e.target.value) || 0 } : q))} />
+                          </label>
+                        )}
+                        {needsPersonal(draft.answerType) && (
+                          <label className="text-xs text-gray-600">Personal-response marks
+                            <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.personalResponseMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, personalResponseMarks: Number(e.target.value) || 0 } : q))} />
+                          </label>
+                        )}
+                        {needsMcq(draft.answerType) && (
+                          <label className="text-xs text-gray-600">MCQ marks
+                            <input type="number" min={0} step={0.5} className="admin-input mt-1 w-full" value={draft.mcqOptionsMarks ?? 0} onChange={(e) => setNewQuestions((prev) => prev.map((q, i) => i === index ? { ...q, mcqOptionsMarks: Number(e.target.value) || 0 } : q))} />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                    {needsJumbled(draft.answerType) && (
+                      <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-gray-500">
+                        {draft.options.map((opt, oi) => (
+                          <li key={oi}>{opt.label}</li>
+                        ))}
+                      </ol>
+                    )}
+                    {needsMcq(draft.answerType) && (
+                      <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                        {(draft.mcqOptions || []).map((opt, oi) => (
+                          <li key={oi}>
+                            <span className="font-semibold text-gray-400">
+                              {String.fromCharCode(65 + oi)}.
+                            </span>{" "}
+                            {opt.label}
+                            {opt.isCorrect ? (
+                              <span className="ml-1 font-semibold text-emerald-600">
+                                (correct)
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {draft.answerType === "PERSONAL" && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Students will only write a personal response for this question.
+                      </p>
+                    )}
+                    {draft.answerType === "MCQ" && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Students will only select one MCQ choice for this question.
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-icon-btn"
+                    aria-label="Remove question"
+                    onClick={() =>
+                      setNewQuestions((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </section>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className="admin-btn-outline"
+            onClick={() => router.push("/assessments")}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="admin-btn-primary" disabled={isSubmitting}>
+            {isSubmitting
+              ? isEdit
+                ? "Updating…"
+                : "Creating…"
+              : isEdit
+                ? "Update Assessment"
+                : "Create Assessment"}
+          </button>
+        </div>
+      </form>
+
+      <AddQuestionModal
+        open={questionModalOpen}
+        onClose={() => setQuestionModalOpen(false)}
+        onSave={(question) => {
+          const key = questionKey(question.title, question.question);
+          setNewQuestions((prev) => {
+            if (prev.some((q) => questionKey(q.title, q.question) === key)) {
+              setError("This question is already added to the assessment.");
+              return prev;
+            }
+            setError(null);
+            return [...prev, question];
+          });
+        }}
+      />
+    </>
+  );
+}

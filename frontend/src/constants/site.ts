@@ -1,9 +1,8 @@
 export const NAV_LINKS = [
-  { label: "Why IMReady", href: "#why-imready" },
-  { label: "5-Stage Journey", href: "#journey" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "For Colleges", href: "/for-colleges" },
-  { label: "Contact", href: "#contact" },
+  { label: "The Gap", href: "#gap" },
+  { label: "Journey", href: "#journey" },
+  { label: "Projects", href: "#projects" },
+  { label: "FAQ", href: "#faq" },
 ] as const;
 
 export const FOOTER_LINKS = {
@@ -21,9 +20,9 @@ export const FOOTER_LINKS = {
 } as const;
 
 export const SITE_CONFIG = {
-  name: "IMReady",
+  name: "ImReady",
   tagline:
     "Bridging the gap between academic learning and industry expectations through hands-on experience.",
   email: "hello@imready.com",
-  copyright: "© 2024 IMReady. All rights reserved.",
+  copyright: "© 2024 ImReady. All rights reserved.",
 } as const;

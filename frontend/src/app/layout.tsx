@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
+import { Navbar } from "@/components/layout/navbar";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,9 +16,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "IMReady — Before others even settle into college",
+  title: "ImReady — Before others even settle into college",
   description:
-    "IMReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.",
+    "ImReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.",
 };
 
 export default function RootLayout({
@@ -29,8 +30,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${outfit.variable} h-full scroll-smooth antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }

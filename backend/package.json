@@ -1,13 +1,50 @@
 {
-  "name": "backend",
+  "name": "imready-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "IMReady API — Express + MySQL",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migration:run": "npx sequelize-cli db:migrate",
+    "migration:undo": "npx sequelize-cli db:migrate:undo"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "_moduleAliases": {
+    "@src": "src",
+    "@config": "src/config",
+    "@connections": "src/connections",
+    "@modules": "src/modules",
+    "@middleware": "src/middleware",
+    "@routes": "src/routes"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.1149.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.1.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
+    "multer": "^2.2.0",
+    "mysql2": "^3.14.1",
+    "nodemailer": "^9.0.3",
+    "sequelize": "^6.37.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/multer": "^2.2.0",
+    "@types/nodemailer": "^8.0.1",
+    "sequelize-cli": "^6.6.5"
+  }
 }

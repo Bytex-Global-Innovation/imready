@@ -1,0 +1,383 @@
+"use client";
+
+import { useEffect, useId, useState } from "react";
+import { X } from "@/components/icons";
+import Select from "@/components/ui/select";
+import {
+  needsJumbled,
+  needsMcq,
+  type AnswerType,
+  type QuestionCategory,
+} from "@/lib/api";
+
+export type DraftOption = { label: string; correctOrder: number };
+
+export type DraftMcqOption = { label: string; isCorrect: boolean };
+
+export type DraftQuestion = {
+  title: string;
+  prompt: string;
+  question: string;
+  tipsText: string;
+  answerType: AnswerType;
+  options: DraftOption[];
+  mcqOptions: DraftMcqOption[];
+  sourceId?: number;
+  category: QuestionCategory;
+  jumbledOptionsMarks?: number;
+  personalResponseMarks?: number;
+  mcqOptionsMarks?: number;
+  /** Optional minutes for this question only. Empty = no per-question timer. */
+  durationMinutes?: number | null;
+};
+
+function emptyOptions(): DraftOption[] {
+  return [
+    { label: "", correctOrder: 1 },
+    { label: "", correctOrder: 2 },
+    { label: "", correctOrder: 3 },
+    { label: "", correctOrder: 4 },
+  ];
+}
+
+function emptyMcqOptions(): DraftMcqOption[] {
+  return [
+    { label: "", isCorrect: true },
+    { label: "", isCorrect: false },
+    { label: "", isCorrect: false },
+    { label: "", isCorrect: false },
+  ];
+}
+
+export function emptyQuestion(): DraftQuestion {
+  return {
+    title: "",
+    prompt: "",
+    question: "",
+    tipsText: "",
+    answerType: "BOTH",
+    category: "OBSERVATION",
+    options: emptyOptions(),
+    mcqOptions: emptyMcqOptions(),
+  };
+}
+
+interface AddQuestionModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (question: DraftQuestion) => void;
+}
+
+export default function AddQuestionModal({
+  open,
+  onClose,
+  onSave,
+}: AddQuestionModalProps) {
+  const titleId = useId();
+  const [draft, setDraft] = useState<DraftQuestion>(emptyQuestion());
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft(emptyQuestion());
+    setError(null);
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  function updateOption(index: number, label: string) {
+    setDraft((prev) => ({
+      ...prev,
+      options: prev.options.map((opt, i) =>
+        i === index ? { ...opt, label } : opt,
+      ),
+    }));
+  }
+
+  function updateMcqOption(index: number, label: string) {
+    setDraft((prev) => ({
+      ...prev,
+      mcqOptions: prev.mcqOptions.map((opt, i) =>
+        i === index ? { ...opt, label } : opt,
+      ),
+    }));
+  }
+
+  function setCorrectMcq(index: number) {
+    setDraft((prev) => ({
+      ...prev,
+      mcqOptions: prev.mcqOptions.map((opt, i) => ({
+        ...opt,
+        isCorrect: i === index,
+      })),
+    }));
+  }
+
+  function setAnswerType(answerType: AnswerType) {
+    setDraft((prev) => ({
+      ...prev,
+      answerType,
+      options: needsJumbled(answerType)
+        ? prev.options.length === 4
+          ? prev.options
+          : emptyOptions()
+        : [],
+      mcqOptions: needsMcq(answerType)
+        ? prev.mcqOptions.length === 4
+          ? prev.mcqOptions
+          : emptyMcqOptions()
+        : [],
+    }));
+  }
+
+  function handleSave() {
+    if (!draft.title.trim() || !draft.question.trim()) {
+      setError("Title and question are required.");
+      return;
+    }
+    if (needsJumbled(draft.answerType)) {
+      if (draft.options.length !== 4 || draft.options.some((o) => !o.label.trim())) {
+        setError("Exactly 4 jumbled options are required, each with a label.");
+        return;
+      }
+    }
+    if (needsMcq(draft.answerType)) {
+      if (
+        draft.mcqOptions.length !== 4 ||
+        draft.mcqOptions.some((o) => !o.label.trim())
+      ) {
+        setError("Exactly 4 MCQ choices are required, each with a label.");
+        return;
+      }
+      const correctCount = draft.mcqOptions.filter((o) => o.isCorrect).length;
+      if (correctCount !== 1) {
+        setError("Select exactly one correct MCQ choice.");
+        return;
+      }
+    }
+    if (
+      draft.durationMinutes != null &&
+      Number(draft.durationMinutes) > 0 &&
+      Number(draft.durationMinutes) < 0.5
+    ) {
+      setError("Question timer must be at least 0.5 minutes when set.");
+      return;
+    }
+    const durationMinutes =
+      draft.durationMinutes == null || Number(draft.durationMinutes) <= 0
+        ? null
+        : Number(draft.durationMinutes);
+
+    onSave({
+      ...draft,
+      title: draft.title.trim(),
+      prompt: "",
+      question: draft.question.trim(),
+      durationMinutes,
+      options: needsJumbled(draft.answerType)
+        ? draft.options.map((opt, index) => ({
+            label: opt.label.trim(),
+            correctOrder: index + 1,
+          }))
+        : [],
+      mcqOptions: needsMcq(draft.answerType)
+        ? draft.mcqOptions.map((opt) => ({
+            label: opt.label.trim(),
+            isCorrect: Boolean(opt.isCorrect),
+          }))
+        : [],
+    });
+    onClose();
+  }
+
+  const showJumbled = needsJumbled(draft.answerType);
+  const showMcq = needsMcq(draft.answerType);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-pointer bg-black/40"
+        aria-label="Close add question modal"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-xl sm:p-6"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+              Add new question
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Choose the answer format students will complete for this question.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="admin-icon-btn"
+            aria-label="Close"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">Title</span>
+            <input
+              className="admin-input w-full"
+              value={draft.title}
+              onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="Core Competency: Community Impact"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">Answer format</span>
+            <Select
+              value={draft.answerType}
+              onChange={(e) => setAnswerType(e.target.value as AnswerType)}
+            >
+              <option value="JUMBLED">Jumbled order only</option>
+              <option value="PERSONAL">Personal response only</option>
+              <option value="BOTH">Jumbled order + personal response</option>
+              <option value="MCQ">MCQ only</option>
+              <option value="JUMBLED_MCQ">Jumbled + MCQ</option>
+              <option value="PERSONAL_MCQ">Personal response + MCQ</option>
+              <option value="ALL">Jumbled + personal response + MCQ</option>
+            </Select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">Evaluation category</span>
+            <Select
+              value={draft.category}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, category: e.target.value as QuestionCategory }))
+              }
+            >
+              <option value="OBSERVATION">Observation</option>
+              <option value="THINKING">Thinking</option>
+              <option value="BUILDING">Building</option>
+            </Select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">Question</span>
+            <textarea
+              className="admin-input w-full"
+              rows={3}
+              value={draft.question}
+              onChange={(e) =>
+                setDraft((prev) => ({ ...prev, question: e.target.value }))
+              }
+            />
+          </label>
+
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">
+              Time to solve (minutes){" "}
+              <span className="font-normal text-gray-400">(optional)</span>
+            </span>
+            <input
+              type="number"
+              min={0.5}
+              max={60}
+              step={0.5}
+              className="admin-input w-full"
+              value={draft.durationMinutes ?? ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setDraft((prev) => ({
+                  ...prev,
+                  durationMinutes: raw === "" ? null : Number(raw),
+                }));
+              }}
+              placeholder="Leave empty for no question timer"
+            />
+            <span className="mt-1 block text-xs text-gray-500">
+              If set, this question locks when the timer ends and the student moves on.
+            </span>
+          </label>
+
+          {showJumbled && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                Options in correct order (fixed 4)
+              </p>
+              <ul className="space-y-2">
+                {draft.options.map((opt, oi) => (
+                  <li key={oi} className="flex items-center gap-2">
+                    <span className="w-6 shrink-0 text-xs font-semibold text-gray-400">
+                      {oi + 1}.
+                    </span>
+                    <input
+                      className="admin-input w-full"
+                      value={opt.label}
+                      onChange={(e) => updateOption(oi, e.target.value)}
+                      placeholder={`Correct step ${oi + 1}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {showMcq && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                MCQ choices (fixed 4 — pick the correct one)
+              </p>
+              <ul className="space-y-2">
+                {draft.mcqOptions.map((opt, oi) => (
+                  <li key={oi} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="mcq-correct"
+                      className="shrink-0"
+                      checked={opt.isCorrect}
+                      onChange={() => setCorrectMcq(oi)}
+                      aria-label={`Mark choice ${oi + 1} as correct`}
+                    />
+                    <span className="w-6 shrink-0 text-xs font-semibold text-gray-400">
+                      {String.fromCharCode(65 + oi)}.
+                    </span>
+                    <input
+                      className="admin-input w-full"
+                      value={opt.label}
+                      onChange={(e) => updateMcqOption(oi, e.target.value)}
+                      placeholder={`Choice ${String.fromCharCode(65 + oi)}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" className="admin-btn-outline" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="admin-btn-primary" onClick={handleSave}>
+            Add question
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

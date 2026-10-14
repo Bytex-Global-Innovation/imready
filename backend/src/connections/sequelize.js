@@ -1,0 +1,27 @@
+'use strict';
+
+const { Sequelize } = require('sequelize');
+
+const sequelize = new Sequelize(
+  String(process.env.DB_NAME || '').trim(),
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 3306,
+    dialect: 'mysql',
+    pool: {
+      max: Number(process.env.DB_CONNECTION_LIMIT) || 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+    logging: false,
+    define: {
+      underscored: true,
+      timestamps: true,
+    },
+  },
+);
+
+module.exports = sequelize;
