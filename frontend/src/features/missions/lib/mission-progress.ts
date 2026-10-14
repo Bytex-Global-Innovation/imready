@@ -1,4 +1,8 @@
-import { foundationApi } from "@/lib/foundation-api";
+import {
+  foundationApi,
+  type FoundationEvidence,
+  type FoundationProgressResponse,
+} from "@/lib/foundation-api";
 import { getCachedStudentSession } from "@/lib/student-session";
 
 export const TOTAL_MISSIONS = 5;
@@ -64,17 +68,20 @@ function emptyProgress(): FoundationProgress {
   return { missions: {}, totalXp: 0, completedCount: 0, foundationComplete: false };
 }
 
-function mapApiMission(record: {
-  answers?: MissionAnswers;
-  evidence?: MissionEvidenceMeta | null;
-  completed?: boolean;
-  completedAt?: number | null;
-  xpEarned?: number;
-  updatedAt?: number;
-}): MissionRecord {
+function mapApiEvidence(evidence: FoundationEvidence | null | undefined): MissionEvidenceMeta | null {
+  if (!evidence) return null;
+  return {
+    fileName: evidence.fileName,
+    fileType: evidence.fileType,
+    filePath: evidence.filePath,
+    previewDataUrl: evidence.previewDataUrl ?? null,
+  };
+}
+
+function mapApiMission(record: FoundationProgressResponse["missions"][string]): MissionRecord {
   return {
     answers: record.answers ?? {},
-    evidence: record.evidence ?? null,
+    evidence: mapApiEvidence(record.evidence),
     completed: Boolean(record.completed),
     completedAt: record.completedAt ?? null,
     xpEarned: Number(record.xpEarned) || 0,
@@ -82,14 +89,7 @@ function mapApiMission(record: {
   };
 }
 
-function mapApiProgress(data: {
-  missions: Record<string, MissionRecord>;
-  totalXp: number;
-  completedCount?: number;
-  foundationComplete?: boolean;
-  foundationCompletedAt?: string | null;
-  projectsUnlocked?: boolean;
-}): FoundationProgress {
+function mapApiProgress(data: FoundationProgressResponse): FoundationProgress {
   const missions: Record<number, MissionRecord> = {};
   Object.entries(data.missions || {}).forEach(([id, record]) => {
     missions[Number(id)] = mapApiMission(record);
