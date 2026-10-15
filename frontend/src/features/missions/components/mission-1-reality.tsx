@@ -92,9 +92,7 @@ export function Mission1Reality() {
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your observation</h2>
-          <p className="mt-1 text-sm text-muted">
-            Upload a document describing what you saw. Include Google Drive links to any photos or recordings.
-          </p>
+          
           <span className="mt-3 inline-block rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary">
             Step 1 of 2: Observation &amp; Evidence
           </span>
@@ -120,7 +118,7 @@ export function Mission1Reality() {
             value={reflection}
             onChange={(event) => setReflection(event.target.value)}
             rows={4}
-            placeholder="Type your observation here..."
+            placeholder="Example: Long queue at the canteen during lunch hour. Many students did not know how long they had to wait. Some kept asking others when their order will be ready."
             className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <div className="mt-2">

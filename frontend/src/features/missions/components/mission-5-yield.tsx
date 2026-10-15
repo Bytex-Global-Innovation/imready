@@ -99,9 +99,11 @@ export function Mission5Yield() {
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">Show your final proof</h2>
-          <p className="mt-1 text-sm text-muted">
-            Upload a document with your final proof and Google Drive links to photos, videos, or recordings.
-          </p>
+          <p className="mt-3 text-sm text-muted">
+  Reflect on your journey using the R-E-A-D framework. Share what you
+  learned, explain the impact of your work, and submit your final reflection.
+</p>
+          
           <div className="mt-4">
             <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
           </div>

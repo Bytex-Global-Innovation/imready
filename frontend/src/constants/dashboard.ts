@@ -12,21 +12,21 @@ export const JOURNEY_PATH_STEPS = [
     status: "active" as const,
   },
   {
-    id: "projects",
-    label: "Projects",
+    id: "skill-building-projects",
+    label: "Skill-Building Projects",
     subtitle: "Hands-on",
     status: "locked" as const,
   },
   {
-    id: "mentorship",
-    label: "Mentorship",
-    subtitle: "Guidance",
+    id: "paid-industry-projects",
+    label: "Paid Industry Projects",
+    subtitle: "Professional",
     status: "locked" as const,
   },
   {
-    id: "industry",
-    label: "Industry",
-    subtitle: "Professional",
+    id: "internship-opportunities",
+    label: "Internship Opportunities",
+    subtitle: "Career",
     status: "locked" as const,
   },
 ] as const;
@@ -43,8 +43,8 @@ export const FOUNDATION_STEPS = [
   {
     id: "lessons",
     step: 1,
-    label: "Explore short lessons",
-    note: "(10–15 min each)",
+    label: "Watch the introduction video",
+    note: null,
     icon: "calendar" as FoundationStepIcon,
   },
   {
@@ -65,7 +65,7 @@ export const FOUNDATION_STEPS = [
     id: "feedback",
     step: 4,
     label: "Get feedback",
-    note: "(AI powered)",
+    note: null,
     icon: "chart" as FoundationStepIcon,
   },
   {
@@ -87,32 +87,70 @@ export const FOUNDATION_CARD = {
 
 /** Instructions modal — 5 micro-missions. */
 export const FOUNDATION_PARTS = [
-  { part: "Part 1: Reality", title: "Friction Observation", duration: "15 mins" },
-  { part: "Part 2: Engage", title: "Conversations", duration: "20 mins" },
-  { part: "Part 3: Analyze", title: "The 5 Whys", duration: "20 mins" },
-  { part: "Part 4: Do", title: "Build & Test", duration: "30 mins" },
-  { part: "Part 5: Your Proof", title: "Show Your Impact", duration: "15 mins" },
+  {
+    part: "Part 1",
+    letter: "R",
+    title: "Reality",
+    subtitle: "Friction Observation",
+    description: "Understand real user needs",
+  },
+  {
+    part: "Part 2",
+    letter: "E",
+    title: "Engage",
+    subtitle: "Conversations",
+    description: "Test communication & stakeholder skills",
+  },
+  {
+    part: "Part 3",
+    letter: "A",
+    title: "Analyze",
+    subtitle: "The 5 Whys",
+    description: "Analytical thinking & root cause solving",
+  },
+  {
+    part: "Part 4",
+    letter: "D",
+    title: "Do",
+    subtitle: "Build & Test",
+    description: "Execution & practical experiment",
+  },
+  {
+    part: "Part 5",
+    letter: "Y",
+    title: "Proof",
+    subtitle: "Show Your Impact",
+    description: "Verified evidence & outcome report",
+  },
 ] as const;
 
+export const FOUNDATION_PROBLEM_STATEMENTS = [
+  {
+    id: "canteen-queue",
+    text: "Long queues at the canteen during lunch breaks, causing students to waste time waiting for food.",
+  },
+  {
+    id: "printing-shop",
+    text: "Crowding at the printing shop during exams, leading to delays in printing assignments and notes.",
+  },
+  {
+    id: "gymnasium",
+    text: "Low student participation in the college gymnasium despite its availability.",
+  },
+  {
+    id: "empty-classrooms",
+    text: "Students struggling to find empty classrooms for group discussions and project work.",
+  },
+] as const;
 export const FOUNDATION_INSTRUCTIONS = {
   title: "Stage 0: Foundation Stage Instructions",
   intro:
     "This foundational stage guides you through 5 real-world micro-missions to build and verify your problem-solving capabilities.",
 } as const;
 
-export type FoundationNoticeIcon = "clock" | "wifi" | "star";
+export type FoundationNoticeIcon = "wifi" | "star";
 
 export const FOUNDATION_NOTICES = [
-  {
-    id: "duration",
-    icon: "clock" as FoundationNoticeIcon,
-    segments: [
-      {
-        text: "Total duration: ~100 minutes. You can complete each mission at your own pace.",
-        bold: false,
-      },
-    ],
-  },
   {
     id: "autosave",
     icon: "wifi" as FoundationNoticeIcon,
