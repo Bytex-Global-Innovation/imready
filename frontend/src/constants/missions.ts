@@ -67,7 +67,7 @@ export const MISSIONS: MissionMeta[] = [
     id: 3,
     letter: "A",
     letterWord: "Analyze",
-    title: "Mission 3: Make Sense of What You Found",
+   title: "Mission 3: Analyze What You Found",
     subtitle: "Look for patterns. Drill down to the root problem using structured analytical tools.",
     activeBadgeLabel: "Active Mission: A • Analyze",
     frameworkPhaseLabel: null,
@@ -101,7 +101,7 @@ export const MISSIONS: MissionMeta[] = [
     tip: {
       advisorLabel: "Prototyping Coach",
       quote:
-        "Don't build a full app. Test a small idea quickly. Good prototypes answer one specific question without premature polish.",
+        "Don't build a full app. Test a small idea quickly using a simple prototype, even a Google Form or WhatsApp group can work. Good prototypes answer one specific question without premature polish.",
     },
     whatYoullDo: [
       "Build a small, fast, testable prototype.",

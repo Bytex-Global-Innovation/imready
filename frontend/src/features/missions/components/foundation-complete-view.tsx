@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -10,19 +11,28 @@ const PROJECT_PREVIEWS = [
     tag: "EdTech / AI",
     title: "1. AI Box for Schools",
     problem:
-      "How might schools give students and teachers practical access to AI tools without unpredictable per user AI credits, recurring usage costs, or complex technical administration?",
+      "How might schools give students and teachers practical access to AI tools without unpredictable per-user AI credits, recurring usage costs, or complex technical administration?",
+    imageSrc: "/ai-box-for-schools.jpg",
+    imageAlt: "Glowing digital brain over a network of connected nodes",
+    imagePosition: "50% 40%",
   },
   {
     tag: "GenAI / Vision",
     title: "2. Old Photo Alive — Bring Photographs to Life",
     problem:
       "How might we transform a still photograph into a living memory, where people subtly move while preserving the authenticity of the original photograph?",
+    imageSrc: "/old-photo-alive.jpg",
+    imageAlt: "Snow-capped mountain peaks under a clear blue sky",
+    imagePosition: "50% 70%",
   },
   {
     tag: "Mobility / IoT",
     title: "3. Traffic Management (No Fixed Signals)",
     problem:
       "How might traffic be managed safely and predictably at locations where permanent traffic signals are unavailable, temporarily disabled, or impractical?",
+    imageSrc: "/traffic-management.jpg",
+    imageAlt: "Dense lanes of traffic beneath overhead speed signs",
+    imagePosition: "50% 50%",
   },
 ] as const;
 
@@ -75,22 +85,39 @@ export function FoundationCompleteView() {
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+      <h2 className="mt-10 font-display text-xl font-bold text-foreground">
+        Get to work on these industry projects in the next stage
+      </h2>
+
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
         {PROJECT_PREVIEWS.map((project) => (
           <article
             key={project.title}
-            className="flex flex-col rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-sm"
+            className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface shadow-sm"
           >
-            <span className="w-fit rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold tracking-wide text-muted">
-              {project.tag}
-            </span>
-            <h2 className="mt-4 font-display text-base font-bold text-foreground">
-              {project.title}
-            </h2>
-            <p className="mt-3 text-[10px] font-bold tracking-wider text-foreground uppercase">
-              Problem:
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">{project.problem}</p>
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-brand-100">
+              <Image
+                src={project.imageSrc}
+                alt={project.imageAlt}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover"
+                style={{ objectPosition: project.imagePosition }}
+              />
+            </div>
+
+            <div className="flex flex-1 flex-col p-5">
+              <span className="w-fit rounded-full border border-border bg-white px-2.5 py-1 text-[10px] font-semibold tracking-wide text-muted">
+                {project.tag}
+              </span>
+              <h3 className="mt-4 font-display text-base font-bold text-foreground">
+                {project.title}
+              </h3>
+              <p className="mt-3 text-[10px] font-bold tracking-wider text-foreground uppercase">
+                Problem:
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">{project.problem}</p>
+            </div>
           </article>
         ))}
       </div>

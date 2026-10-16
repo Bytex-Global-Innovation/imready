@@ -45,12 +45,13 @@ export function JourneyPath() {
             status: foundationComplete ? ("locked" as const) : ("active" as const),
           };
         }
-        if (step.id === "projects") {
-          return {
-            ...step,
-            status: projectsUnlocked ? ("active" as const) : ("locked" as const),
-          };
-        }
+       
+        if (step.id === "skill-building-projects") {
+  return {
+    ...step,
+    status: projectsUnlocked ? ("active" as const) : ("locked" as const),
+  };
+}
         return step;
       }),
     [foundationComplete, projectsUnlocked],
