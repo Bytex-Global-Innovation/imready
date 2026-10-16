@@ -112,9 +112,7 @@ export function Mission4Do() {
               <h2 className="font-display text-lg font-bold text-foreground">Show What You Built: Prototype Evidence</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              Upload a document describing your prototype. Include Google Drive links to photos or demo videos.
-            </p>
+            
             <div className="mt-4">
               <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
             </div>
