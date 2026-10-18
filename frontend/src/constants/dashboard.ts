@@ -12,8 +12,8 @@ export const JOURNEY_PATH_STEPS = [
     status: "active" as const,
   },
   {
-    id: "skill-building-projects",
-    label: "Skill-Building Projects",
+    id: "industry projects",
+    label: "Industry Projects",
     subtitle: "Hands-on",
     status: "locked" as const,
   },
@@ -23,12 +23,7 @@ export const JOURNEY_PATH_STEPS = [
     subtitle: "Professional",
     status: "locked" as const,
   },
-  {
-    id: "internship-opportunities",
-    label: "Internship Opportunities",
-    subtitle: "Career",
-    status: "locked" as const,
-  },
+  
 ] as const;
 
 /** The 5-step "how it works" list on the Stage 0 dashboard card. */
@@ -50,7 +45,7 @@ export const FOUNDATION_STEPS = [
   {
     id: "mission",
     step: 2,
-    label: "Do a small mission",
+    label: "Know the industry readiness framework",
     note: null,
     icon: "check" as FoundationStepIcon,
   },
@@ -71,7 +66,7 @@ export const FOUNDATION_STEPS = [
   {
     id: "profile",
     step: 5,
-    label: "Complete all 5 missions and unlock your Foundation Profile",
+    label: "Complete all 5 missions and unlock industry projects",
     note: null,
     icon: "star" as FoundationStepIcon,
   },
@@ -118,7 +113,7 @@ export const FOUNDATION_PARTS = [
   {
     part: "Part 5",
     letter: "Y",
-    title: "Proof",
+    title: "Yield",
     subtitle: "Show Your Impact",
     description: "Verified evidence & outcome report",
   },

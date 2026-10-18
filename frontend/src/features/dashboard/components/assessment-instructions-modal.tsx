@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Info, Star, TableProperties, Wifi, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { IndustryFrameworkModal } from "./industry-framework-modal";
 import {
   FOUNDATION_INSTRUCTIONS,
   FOUNDATION_NOTICES,
@@ -43,14 +44,19 @@ export function AssessmentInstructionsModal({
 }: AssessmentInstructionsModalProps) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [step, setStep] = useState<"framework" | "instructions">("framework");
 
   // Restore a previously saved choice whenever the modal opens.
   useEffect(() => {
     if (!isOpen) return;
+    setStep("framework");
     setSelectedId(getSelectedProblemStatement()?.id ?? null);
   }, [isOpen]);
 
   if (!isOpen) return null;
+  if (step === "framework") {
+  return <IndustryFrameworkModal onClose={onClose} onNext={() => setStep("instructions")} />;
+}
 
   function handleStart() {
     if (!selectedId) return;
@@ -95,7 +101,7 @@ export function AssessmentInstructionsModal({
           <div className="mb-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
               <TableProperties className="h-4 w-4 text-primary" />
-              Key Instructions
+              Know the industry readiness framework
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {FOUNDATION_PARTS.map((part, index) => {
@@ -109,13 +115,13 @@ export function AssessmentInstructionsModal({
                     )}
                   >
                     <span
-                      className={cn(
-                        "inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                        style.pill,
-                      )}
-                    >
-                      {part.part} • {part.letter}
-                    </span>
+  className={cn(
+    "inline-block rounded-full px-2.5 py-0.5 text-xs font-extrabold",
+    style.pill,
+  )}
+>
+  {part.letter}
+</span>
                     <p className="mt-2.5 text-sm font-bold text-foreground">{part.title}</p>
                     <p className={cn("mt-1 text-xs font-medium", style.subtitle)}>
                       {part.subtitle}
@@ -199,9 +205,9 @@ export function AssessmentInstructionsModal({
             {selectedId ? "" : "Select a problem statement to continue."}
           </p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row">
-            <Button variant="secondary" onClick={onClose} className="sm:min-w-[110px]">
-              Go Back
-            </Button>
+           <Button variant="secondary" onClick={() => setStep("framework")} className="sm:min-w-[110px]">
+  Go Back
+</Button>
             <Button onClick={handleStart} disabled={!selectedId} className="sm:min-w-[190px]">
              
               I&apos;m Ready, Let&apos;s Start
