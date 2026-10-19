@@ -1182,7 +1182,18 @@ export const projectsApi = {
   },
 };
 
-export type FoundationStatusFilter = "ALL" | "IN_PROGRESS" | "COMPLETE";
+export type FoundationStatusFilter =
+  | "ALL"
+  | "IN_PROGRESS"
+  | "COMPLETE"
+  | "AT_LEAST_3"
+  | "NOT_STARTED";
+
+export interface FoundationProgressSummary {
+  totalStudents: number;
+  completedAll: number;
+  completedAtLeast3: number;
+}
 
 export interface FoundationProgressListItem {
   studentId: string;
@@ -1197,10 +1208,13 @@ export interface FoundationProgressListItem {
   foundationComplete: boolean;
   foundationCompletedAt: string | null;
   lastUpdatedAt: string | null;
+  problemStatementText: string | null;
+  foundationProblemStatementId: string | null;
 }
 
 export interface FoundationProgressListResponse {
   results: FoundationProgressListItem[];
+  summary: FoundationProgressSummary;
   page: number;
   totalPages: number;
   total: number;
@@ -1240,6 +1254,11 @@ export interface FoundationStudentProgressDetail {
     totalMissions: number;
     foundationComplete: boolean;
     foundationCompletedAt: string | null;
+    selectedProblemStatement?: {
+      id: string;
+      statementText: string;
+    } | null;
+    foundationProblemStatementId?: string | null;
   };
   missions: FoundationMissionDetail[];
 }
@@ -1328,7 +1347,13 @@ export const foundationApi = {
   ): Promise<FoundationProgressListResponse> => {
     if (USE_MOCK) {
       await delay(400);
-      return { results: [], page: 1, totalPages: 1, total: 0 };
+      return {
+        results: [],
+        summary: { totalStudents: 0, completedAll: 0, completedAtLeast3: 0 },
+        page: 1,
+        totalPages: 1,
+        total: 0,
+      };
     }
     const params = new URLSearchParams({ page: String(page) });
     if (opts?.search) params.set("search", opts.search);

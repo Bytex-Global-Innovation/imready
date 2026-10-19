@@ -1,16 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Clock,
-  Info,
-  Star,
-  TableProperties,
-  Wifi,
-  X,
-  Zap,
-} from "@/components/icons";
+import { Info, Star, TableProperties, Wifi, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { IndustryFrameworkModal } from "./industry-framework-modal";
 import {
   FOUNDATION_INSTRUCTIONS,
   FOUNDATION_NOTICES,
@@ -18,29 +12,135 @@ import {
   type FoundationNoticeIcon,
 } from "@/constants/dashboard";
 import { ROUTES } from "@/constants/routes";
+import {
+  clearFoundationJourneyCache,
+  setFoundationJourneyCache,
+} from "@/features/missions/lib/foundation-journey";
+import {
+  ensureFoundationProgress,
+  invalidateFoundationProgressCache,
+} from "@/features/missions/lib/mission-progress";
+import {
+  FoundationApiError,
+  foundationApi,
+  type FoundationProblemStatement,
+  type FoundationStageFrameworkPart,
+} from "@/lib/foundation-api";
+import { cn } from "@/lib/utils";
 
 interface AssessmentInstructionsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const NOTICE_ICONS: Record<FoundationNoticeIcon, typeof Clock> = {
-  clock: Clock,
+const NOTICE_ICONS: Record<FoundationNoticeIcon, typeof Wifi> = {
   wifi: Wifi,
   star: Star,
 };
+
+/** One entry per part, same order as FOUNDATION_PARTS. Full class names so Tailwind picks them up. */
+const PART_STYLES = [
+  { card: "border-amber-100 border-t-amber-400 bg-amber-50/60", pill: "bg-amber-100 text-amber-800", subtitle: "text-amber-800" },
+  { card: "border-sky-100 border-t-sky-400 bg-sky-50/60", pill: "bg-sky-100 text-sky-800", subtitle: "text-sky-700" },
+  { card: "border-indigo-100 border-t-indigo-400 bg-indigo-50/60", pill: "bg-indigo-100 text-indigo-800", subtitle: "text-indigo-700" },
+  { card: "border-emerald-100 border-t-emerald-400 bg-emerald-50/60", pill: "bg-emerald-100 text-emerald-800", subtitle: "text-emerald-700" },
+  { card: "border-rose-100 border-t-rose-400 bg-rose-50/60", pill: "bg-rose-100 text-rose-800", subtitle: "text-rose-700" },
+] as const;
 
 export function AssessmentInstructionsModal({
   isOpen,
   onClose,
 }: AssessmentInstructionsModalProps) {
   const router = useRouter();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [step, setStep] = useState<"framework" | "instructions">("framework");
+  const [problemOptions, setProblemOptions] = useState<FoundationProblemStatement[]>([]);
+  const [problemsLoading, setProblemsLoading] = useState(false);
+  const [problemsError, setProblemsError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [frameworkParts, setFrameworkParts] = useState<FoundationStageFrameworkPart[]>(
+    () => [...FOUNDATION_PARTS],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setStep("framework");
+    setProblemsError(null);
+    setSelectedId(null);
+    setFrameworkParts([...FOUNDATION_PARTS]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || step !== "instructions") return;
+
+    let cancelled = false;
+    setProblemsLoading(true);
+    setProblemsError(null);
+
+    (async () => {
+      try {
+        const [progress, { problemStatements }, framework] = await Promise.all([
+          ensureFoundationProgress(),
+          foundationApi.listProblemStatements(),
+          foundationApi.getStageFramework(),
+        ]);
+        if (!cancelled && framework.parts.length > 0) {
+          setFrameworkParts(framework.parts);
+        }
+        if (cancelled) return;
+        setProblemOptions(problemStatements);
+        const existing =
+          progress.selectedProblemStatement?.id ??
+          progress.foundationProblemStatementId ??
+          null;
+        if (existing) {
+          setSelectedId(existing);
+        } else if (problemStatements[0]) {
+          setSelectedId(problemStatements[0].id);
+        }
+      } catch {
+        if (!cancelled) {
+          setProblemsError("Could not load problem statements. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setProblemsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, step]);
 
   if (!isOpen) return null;
+  if (step === "framework") {
+    return (
+      <IndustryFrameworkModal onClose={onClose} onNext={() => setStep("instructions")} />
+    );
+  }
 
-  function handleStart() {
-    onClose();
-    router.push(ROUTES.assessment);
+  async function handleStart() {
+    if (!selectedId || isSaving) return;
+    setIsSaving(true);
+    setProblemsError(null);
+    try {
+      clearFoundationJourneyCache();
+      invalidateFoundationProgressCache();
+      const journey = await foundationApi.selectProblemStatement(selectedId);
+      setFoundationJourneyCache(journey);
+      invalidateFoundationProgressCache();
+      await ensureFoundationProgress();
+      onClose();
+      router.push(ROUTES.assessment);
+    } catch (err) {
+      const message =
+        err instanceof FoundationApiError
+          ? err.message
+          : "Could not save your selection. Please try again.";
+      setProblemsError(message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -49,9 +149,9 @@ export function AssessmentInstructionsModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="foundation-instructions-title"
-        className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-xl sm:p-7"
+        className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-xl"
       >
-        <div className="mb-4 flex items-start justify-between gap-4 sm:mb-5">
+        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-7">
           <h2
             id="foundation-instructions-title"
             className="font-display text-xl font-bold text-foreground sm:text-2xl"
@@ -68,80 +168,139 @@ export function AssessmentInstructionsModal({
           </button>
         </div>
 
-        <div className="mb-4 flex gap-3 rounded-[var(--radius-card)] border border-brand-100 border-l-4 border-l-primary bg-surface px-4 py-3 sm:mb-6">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm text-foreground">
-            {FOUNDATION_INSTRUCTIONS.intro}
-          </p>
-        </div>
-
-        <div className="mb-4 sm:mb-6">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground sm:mb-3">
-            <TableProperties className="h-4 w-4 text-primary" />
-            Key Instructions
+        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+          <div className="mb-6 flex gap-3 rounded-[var(--radius-card)] border border-brand-100 border-l-4 border-l-primary bg-surface px-4 py-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-sm font-medium text-foreground">
+              {FOUNDATION_INSTRUCTIONS.intro}
+            </p>
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
-            {FOUNDATION_PARTS.map((part) => (
+
+          <div className="mb-5">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <TableProperties className="h-4 w-4 text-primary" />
+              Know the industry readiness framework
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {frameworkParts.map((part, index) => {
+                const style = PART_STYLES[index];
+                return (
+                  <div
+                    key={part.part}
+                    className={cn(
+                      "rounded-[var(--radius-card)] border border-t-4 p-3.5",
+                      style.card,
+                    )}
+                  >
+                    <span
+  className={cn(
+    "inline-block rounded-full px-2.5 py-0.5 text-xs font-extrabold",
+    style.pill,
+  )}
+>
+  {part.letter}
+</span>
+                    <p className="mt-2.5 text-sm font-bold text-foreground">{part.title}</p>
+                    <p className={cn("mt-1 text-xs font-medium", style.subtitle)}>
+                      {part.subtitle}
+                    </p>
+                    <p className="mt-1.5 text-[11px] leading-snug text-muted">
+                      {part.description}
+                    </p>
+                    <div className="mt-3 border-t border-black/5" aria-hidden />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <ul className="mb-6 space-y-2">
+            {FOUNDATION_NOTICES.map((notice) => {
+              const Icon = NOTICE_ICONS[notice.icon];
+              return (
+                <li key={notice.id} className="flex items-center gap-2.5 text-xs text-foreground">
+                  <Icon
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0",
+                      notice.icon === "star" ? "text-amber-500" : "text-muted",
+                    )}
+                  />
+                  <p>
+                    {notice.segments.map((segment, index) =>
+                      segment.bold ? (
+                        <span key={index} className="font-semibold">
+                          {segment.text}
+                        </span>
+                      ) : (
+                        <span key={index}>{segment.text}</span>
+                      ),
+                    )}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="border-t border-border pt-5">
+            <h3 className="font-display text-base font-bold text-foreground">
+              Choose Your Foundation Problem Statement
+            </h3>
+            <p className="mt-1 text-xs text-primary">
+              Select one campus challenge to investigate across all 5 stages:
+            </p>
+
+            {problemsError ? (
+              <p className="mt-4 text-sm text-red-600" role="alert">{problemsError}</p>
+            ) : null}
+            {problemsLoading ? (
+              <p className="mt-4 text-sm text-muted">Loading problem statements…</p>
+            ) : (
               <div
-                key={part.part}
-                className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2.5 sm:block sm:px-4 sm:py-4"
+                role="radiogroup"
+                aria-label="Foundation problem statement"
+                className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
               >
-                <div className="flex items-center gap-1.5 sm:hidden">
-                  <p className="text-sm font-bold text-foreground">{part.part}</p>
-                  <span className="text-xs text-muted" aria-hidden>
-                    ·
-                  </span>
-                  <p className="text-sm text-muted">{part.title}</p>
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-bold text-foreground">{part.part}</p>
-                  <p className="mt-1 text-sm text-muted">{part.title}</p>
-                </div>
-                <p className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary sm:mt-3">
-                  <Clock className="h-3.5 w-3.5" />
-                  {part.duration}
-                </p>
+                {problemOptions.map((problem) => {
+                  const selected = selectedId === problem.id;
+                  return (
+                    <button
+                      key={problem.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setSelectedId(problem.id)}
+                      className={cn(
+                        "cursor-pointer rounded-xl border-2 px-4 py-3.5 text-left text-xs leading-relaxed font-medium text-foreground transition-colors",
+                        selected
+                          ? "border-primary bg-white shadow-sm"
+                          : "border-transparent bg-surface hover:border-brand-100",
+                      )}
+                    >
+                      {problem.statementText}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        <ul className="mb-5 space-y-2.5 sm:mb-7 sm:space-y-3">
-          {FOUNDATION_NOTICES.map((notice) => {
-            const Icon = NOTICE_ICONS[notice.icon];
-            return (
-              <li key={notice.id} className="flex gap-3 text-sm text-foreground">
-                <Icon
-                  className={
-                    notice.icon === "star"
-                      ? "mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-                      : "mt-0.5 h-4 w-4 shrink-0 text-primary"
-                  }
-                />
-                <p>
-                  {notice.segments.map((segment, index) =>
-                    segment.bold ? (
-                      <span key={index} className="font-semibold">
-                        {segment.text}
-                      </span>
-                    ) : (
-                      <span key={index}>{segment.text}</span>
-                    ),
-                  )}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button variant="secondary" onClick={onClose} className="sm:min-w-[120px]">
-            Go Back
-          </Button>
-          <Button onClick={handleStart} className="sm:min-w-[200px]">
-            <Zap className="h-4 w-4" />
-            I&apos;m Ready, Let&apos;s Start
-          </Button>
+        <div className="flex flex-col-reverse gap-3 border-t border-border bg-surface/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <p className="text-xs text-muted">
+            {selectedId ? "" : "Select a problem statement to continue."}
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row">
+           <Button variant="secondary" onClick={() => setStep("framework")} className="sm:min-w-[110px]">
+  Go Back
+</Button>
+            <Button
+              onClick={handleStart}
+              disabled={!selectedId || isSaving || problemsLoading || problemOptions.length === 0}
+              className="sm:min-w-[190px]"
+            >
+              {isSaving ? "Saving…" : "I'm Ready, Let's Start"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ import {
   MissionLayout,
   PresentationVideoLinkField,
   QuestionField,
+  SelectedProblemBanner,
   TipFromReady,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
@@ -25,6 +26,7 @@ import {
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
+  useSelectedProblemText,
 } from "../lib/foundation-journey";
 import {
   isAllowedPresentationVideoUrl,
@@ -36,6 +38,7 @@ const mission = getMission(MISSION_ID);
 
 export function Mission4Do() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [presentationVideoUrl, setPresentationVideoUrl] = useState("");
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -251,6 +254,7 @@ export function Mission4Do() {
       }
       sidebar={
         <>
+          <SelectedProblemBanner statementText={selectedProblemText} />
           <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>

@@ -114,6 +114,20 @@ export function MissionProgressPanel({
   );
 }
 
+export function SelectedProblemBanner({ statementText }: { statementText: string | null }) {
+  if (!statementText?.trim()) return null;
+  return (
+    <div className="rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 p-4 shadow-sm">
+      <p className="text-[10px] font-semibold tracking-wider text-amber-800 uppercase">
+        Problem statement
+      </p>
+      <p className="mt-1.5 text-sm leading-relaxed font-medium text-amber-950">
+        &ldquo;{statementText}&rdquo;
+      </p>
+    </div>
+  );
+}
+
 export function TipFromReady({ advisorLabel, quote }: { advisorLabel: string; quote: string }) {
   return (
     <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
@@ -295,7 +309,7 @@ export function EvidenceCapture({
   captionLabel = "Short title / caption",
   captionHelper,
   onCaptionChange,
-  uploadHelper = "Upload a PDF or Word document (.pdf, .doc, .docx) that describes your evidence. Include Google Drive links to any photos, videos, or recordings.",
+  uploadHelper = "Upload a PDF describing your evidence, along with Google Drive links to photos, videos, or recordings. Ensure all links have viewing access enabled.",
 }: {
   missionId: number;
   value: EvidenceValue;

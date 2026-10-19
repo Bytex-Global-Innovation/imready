@@ -337,7 +337,7 @@ export default function FoundationStepPage() {
       <ConfirmModal
         open={Boolean(deleteId)}
         title="Delete problem statement?"
-        description={
+        message={
           deleteTarget
             ? `Remove "${deleteTarget.statementText.slice(0, 80)}…" and all mission configs?`
             : ""
@@ -345,7 +345,7 @@ export default function FoundationStepPage() {
         confirmLabel="Delete"
         isLoading={isSaving}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteId(null)}
+        onClose={() => setDeleteId(null)}
       />
     </>
   );

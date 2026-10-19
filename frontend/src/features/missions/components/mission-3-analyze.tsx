@@ -14,6 +14,7 @@ import {
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
+  SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
@@ -22,6 +23,7 @@ import {
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
+  useSelectedProblemText,
 } from "../lib/foundation-journey";
 
 const MISSION_ID = 3;
@@ -38,6 +40,7 @@ const FALLBACK_PATTERN_TAGS = ["Information Gap", "Counter Congestion", "Communi
 
 export function Mission3Analyze() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [whys, setWhys] = useState<Record<string, string>>({});
@@ -265,6 +268,7 @@ export function Mission3Analyze() {
       }
       sidebar={
         <>
+          <SelectedProblemBanner statementText={selectedProblemText} />
           <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>

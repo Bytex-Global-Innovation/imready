@@ -350,10 +350,37 @@ async function completeMission(studentId, missionId, payload) {
   return upsertMissionRecord(studentId, missionId, payload, { complete: true });
 }
 
+async function getAdminProgressSummary() {
+  const sequelize = StudentAccount.sequelize;
+  const [[row]] = await sequelize.query(
+    `SELECT
+      COUNT(*) AS totalStudents,
+      COALESCE(SUM(CASE WHEN completed_missions >= :totalMissions THEN 1 ELSE 0 END), 0) AS completedAll,
+      COALESCE(SUM(CASE WHEN completed_missions >= 3 THEN 1 ELSE 0 END), 0) AS completedAtLeast3
+    FROM (
+      SELECT s.id,
+        COALESCE(SUM(CASE WHEN fmr.completed = 1 THEN 1 ELSE 0 END), 0) AS completed_missions
+      FROM student_accounts s
+      LEFT JOIN foundation_mission_records fmr ON fmr.student_id = s.id
+      GROUP BY s.id
+    ) mission_stats`,
+    {
+      replacements: { totalMissions: TOTAL_MISSIONS },
+    },
+  );
+
+  return {
+    totalStudents: Number(row?.totalStudents) || 0,
+    completedAll: Number(row?.completedAll) || 0,
+    completedAtLeast3: Number(row?.completedAtLeast3) || 0,
+  };
+}
+
 async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {}) {
   const limit = 20;
   const offset = (Math.max(1, page) - 1) * limit;
   const where = {};
+  const andClauses = [];
 
   if (search) {
     where[Op.or] = [
@@ -363,16 +390,27 @@ async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {})
     ];
   }
 
+  const completedCountSql = `(
+    SELECT COUNT(*) FROM foundation_mission_records AS fmr
+    WHERE fmr.student_id = \`StudentAccount\`.\`id\` AND fmr.completed = 1
+  )`;
+
   if (status === 'COMPLETE') {
-    where.foundationCompletedAt = { [Op.ne]: null };
+    andClauses.push(StudentAccount.sequelize.literal(`${completedCountSql} >= ${TOTAL_MISSIONS}`));
+  } else if (status === 'AT_LEAST_3') {
+    andClauses.push(StudentAccount.sequelize.literal(`${completedCountSql} >= 3`));
+  } else if (status === 'NOT_STARTED') {
+    andClauses.push(StudentAccount.sequelize.literal(`${completedCountSql} = 0`));
   } else if (status === 'IN_PROGRESS') {
-    where.foundationCompletedAt = null;
-    where[Op.and] = [
-      StudentAccount.sequelize.literal(
-        'EXISTS (SELECT 1 FROM foundation_mission_records AS fmr WHERE fmr.student_id = `StudentAccount`.`id`)',
-      ),
-    ];
+    andClauses.push(StudentAccount.sequelize.literal(`${completedCountSql} > 0`));
+    andClauses.push(StudentAccount.sequelize.literal(`${completedCountSql} < ${TOTAL_MISSIONS}`));
   }
+
+  if (andClauses.length) {
+    where[Op.and] = andClauses;
+  }
+
+  const summary = await getAdminProgressSummary();
 
   const { rows, count } = await StudentAccount.findAndCountAll({
     where,
@@ -383,6 +421,7 @@ async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {})
       'email',
       'collegeName',
       'foundationCompletedAt',
+      'foundationProblemStatementId',
       'createdAt',
     ],
     order: [['createdAt', 'DESC']],
@@ -397,6 +436,23 @@ async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {})
         attributes: ['studentId', 'missionId', 'completed', 'updatedAt', 'xpEarned'],
       })
     : [];
+
+  const problemIds = [
+    ...new Set(
+      rows
+        .map((row) => row.foundationProblemStatementId)
+        .filter((id) => id != null),
+    ),
+  ];
+  const problemRows = problemIds.length
+    ? await FoundationProblemStatement.findAll({
+        where: { id: { [Op.in]: problemIds } },
+        attributes: ['id', 'statementText'],
+      })
+    : [];
+  const problemTextById = new Map(
+    problemRows.map((p) => [String(p.id), p.statementText]),
+  );
 
   const results = rows.map((student) => {
     const studentMissions = missionRows.filter((m) => m.studentId === student.id);
@@ -419,6 +475,10 @@ async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {})
       if (id === TOTAL_MISSIONS) currentMission = TOTAL_MISSIONS;
     }
 
+    const problemStatementText = student.foundationProblemStatementId
+      ? problemTextById.get(String(student.foundationProblemStatementId)) || null
+      : null;
+
     return {
       studentId: String(student.id),
       studentUuid: student.uuid,
@@ -432,11 +492,16 @@ async function listAdminProgress({ page = 1, search = '', status = 'ALL' } = {})
       foundationComplete: Boolean(student.foundationCompletedAt) || completedCount >= TOTAL_MISSIONS,
       foundationCompletedAt: student.foundationCompletedAt,
       lastUpdatedAt: lastUpdated ? new Date(lastUpdated).toISOString() : null,
+      problemStatementText,
+      foundationProblemStatementId: student.foundationProblemStatementId
+        ? String(student.foundationProblemStatementId)
+        : null,
     };
   });
 
   return {
     results,
+    summary,
     page: Math.max(1, page),
     totalPages: Math.max(1, Math.ceil(count / limit)),
     total: count,
@@ -493,6 +558,8 @@ async function getAdminStudentProgress(studentId) {
       totalMissions: progress.totalMissions,
       foundationComplete: progress.foundationComplete,
       foundationCompletedAt: progress.foundationCompletedAt,
+      selectedProblemStatement: progress.selectedProblemStatement,
+      foundationProblemStatementId: progress.foundationProblemStatementId,
     },
     missions,
   };

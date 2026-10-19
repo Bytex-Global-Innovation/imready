@@ -152,6 +152,15 @@ async function getJourneyContent(req, res, next) {
   }
 }
 
+async function getStageFramework(req, res, next) {
+  try {
+    const result = await foundationStepService.getStageFrameworkPreview(req.studentRecord.id);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function selectProblemStatement(req, res, next) {
   try {
     const rawId = req.body.problemStatementId;
@@ -181,5 +190,6 @@ module.exports = {
   deleteAdminProblemStatement,
   updateAdminMissionConfig,
   getJourneyContent,
+  getStageFramework,
   selectProblemStatement,
 };

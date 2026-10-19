@@ -76,6 +76,7 @@ export {
   Tag,
   Target,
   Trophy,
+  TrendingUp,
   Truck,
   Tv,
   UserRound,

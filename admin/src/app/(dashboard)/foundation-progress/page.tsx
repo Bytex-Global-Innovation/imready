@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import Pagination from "@/components/ui/pagination";
+import StatCard from "@/components/ui/stat-card";
 import {
   foundationApi,
   type FoundationProgressListItem,
@@ -22,6 +23,14 @@ const STATUS_STYLES = {
   IN_PROGRESS: "bg-amber-50 text-amber-700",
   NOT_STARTED: "bg-surface text-muted",
 } as const;
+
+const FILTER_OPTIONS: { value: FoundationStatusFilter; label: string }[] = [
+  { value: "ALL", label: "All students" },
+  { value: "COMPLETE", label: "Completed all 5" },
+  { value: "AT_LEAST_3", label: "Completed ≥ 3" },
+  { value: "NOT_STARTED", label: "Not started" },
+  { value: "IN_PROGRESS", label: "In progress (1–4)" },
+];
 
 export default function FoundationProgressPage() {
   const [data, setData] = useState<FoundationProgressListResponse | null>(null);
@@ -62,6 +71,8 @@ export default function FoundationProgressPage() {
     return "NOT_STARTED";
   }
 
+  const summary = data?.summary;
+
   return (
     <div>
       <Breadcrumb items={BREADCRUMBS} />
@@ -72,6 +83,21 @@ export default function FoundationProgressPage() {
             Track student mission submissions across the Stage 0 foundation flow.
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Completed all 5 missions"
+          value={String(summary?.completedAll ?? "—")}
+        />
+        <StatCard
+          label="Completed at least 3 missions"
+          value={String(summary?.completedAtLeast3 ?? "—")}
+        />
+        <StatCard
+          label="Total students"
+          value={String(summary?.totalStudents ?? "—")}
+        />
       </div>
 
       <div className="admin-card mt-6 space-y-4 p-4 sm:p-5">
@@ -87,7 +113,7 @@ export default function FoundationProgressPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            {(["ALL", "IN_PROGRESS", "COMPLETE"] as FoundationStatusFilter[]).map((value) => (
+            {FILTER_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
@@ -96,7 +122,7 @@ export default function FoundationProgressPage() {
                   status === value ? "bg-primary text-white" : "bg-surface text-muted"
                 }`}
               >
-                {value.replace("_", " ")}
+                {label}
               </button>
             ))}
           </div>
@@ -110,6 +136,7 @@ export default function FoundationProgressPage() {
               <tr className="admin-table-header">
                 <th className="px-3 py-3">Student</th>
                 <th className="px-3 py-3">College</th>
+                <th className="px-3 py-3">Problem statement</th>
                 <th className="px-3 py-3">Progress</th>
                 <th className="px-3 py-3">XP</th>
                 <th className="px-3 py-3">Status</th>
@@ -127,13 +154,20 @@ export default function FoundationProgressPage() {
                       <p className="text-xs text-muted">{item.email}</p>
                     </td>
                     <td className="px-3 py-3 text-muted">{item.collegeName || "—"}</td>
+                    <td className="max-w-xs px-3 py-3 text-muted">
+                      <p className="line-clamp-3 text-xs leading-relaxed">
+                        {item.problemStatementText || "—"}
+                      </p>
+                    </td>
                     <td className="px-3 py-3">
                       {item.completedCount}/{item.totalMissions} missions
                       <p className="text-xs text-muted">Current: Mission {item.currentMission}</p>
                     </td>
                     <td className="px-3 py-3">{item.totalXp}</td>
                     <td className="px-3 py-3">
-                      <span className={`admin-badge ${STATUS_STYLES[label]}`}>{label.replace("_", " ")}</span>
+                      <span className={`admin-badge ${STATUS_STYLES[label]}`}>
+                        {label.replace("_", " ")}
+                      </span>
                     </td>
                     <td className="px-3 py-3 text-muted">
                       {item.lastUpdatedAt

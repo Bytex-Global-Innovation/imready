@@ -4,10 +4,12 @@ const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "")
 
 export class FoundationApiError extends Error {
   status: number;
+  code?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -53,6 +55,14 @@ export interface FoundationMissionJourneyConfig {
 export interface FoundationJourneyContent {
   selectedProblemStatement: FoundationProblemStatement | null;
   missions: Record<string, FoundationMissionJourneyConfig>;
+}
+
+export interface FoundationStageFrameworkPart {
+  part: string;
+  letter: string;
+  title: string;
+  subtitle: string;
+  description: string;
 }
 
 export interface FoundationProgressResponse {
@@ -131,7 +141,7 @@ async function foundationRequest<T>(
       res.status === 401
         ? "Your session has expired. Please log in again."
         : errorBody?.message || "Something went wrong. Please try again.";
-    throw new FoundationApiError(message, res.status);
+    throw new FoundationApiError(message, res.status, errorBody?.code);
   }
 
   return res.json();
@@ -149,11 +159,21 @@ export const foundationApi = {
   getJourneyContent: (): Promise<FoundationJourneyContent> =>
     foundationRequest<FoundationJourneyContent>("/foundation/journey-content"),
 
-  selectProblemStatement: (problemStatementId: string): Promise<FoundationJourneyContent> =>
-    foundationRequest<FoundationJourneyContent>("/foundation/problem-statement", {
+  getStageFramework: (): Promise<{ parts: FoundationStageFrameworkPart[] }> =>
+    foundationRequest<{ parts: FoundationStageFrameworkPart[] }>("/foundation/stage-framework"),
+
+  selectProblemStatement: (problemStatementId: string): Promise<FoundationJourneyContent> => {
+    const id = Number(problemStatementId);
+    if (!Number.isInteger(id) || id <= 0) {
+      return Promise.reject(
+        new FoundationApiError("Invalid problem statement selection.", 400, "INVALID_PROBLEM_ID"),
+      );
+    }
+    return foundationRequest<FoundationJourneyContent>("/foundation/problem-statement", {
       method: "POST",
-      body: JSON.stringify({ problemStatementId }),
-    }),
+      body: JSON.stringify({ problemStatementId: id }),
+    });
+  },
 
   uploadEvidence: (missionId: number, file: File) => {
     const formData = new FormData();

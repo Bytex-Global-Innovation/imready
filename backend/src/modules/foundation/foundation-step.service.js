@@ -5,7 +5,9 @@ const FoundationProblemStatement = require('@modules/foundation/foundation-probl
 const FoundationMissionConfig = require('@modules/foundation/foundation-mission-config.model');
 const StudentAccount = require('@modules/student/student.model');
 const FoundationMissionRecord = require('@modules/foundation/foundation-mission-record.model');
-const { TOTAL_MISSIONS } = require('@modules/foundation/foundation.constants');
+const { TOTAL_MISSIONS, MISSION_LABELS } = require('@modules/foundation/foundation.constants');
+
+const MISSION_FRAMEWORK_LETTERS = ['R', 'E', 'A', 'D', 'Y'];
 const { buildDefaultMissionConfig } = require('@modules/foundation/foundation-step.defaults');
 
 function badRequest(message, code) {
@@ -241,14 +243,26 @@ async function selectProblemStatementForStudent(studentId, problemStatementId) {
   const student = await StudentAccount.findByPk(studentId);
   if (!student) throw notFound('Student not found');
 
-  const problem = await FoundationProblemStatement.findByPk(problemStatementId);
+  const normalizedId = Number(problemStatementId);
+  if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+    throw badRequest('Invalid problem statement id');
+  }
+
+  const problem = await FoundationProblemStatement.findByPk(normalizedId);
   if (!problem || !problem.isActive) {
     throw badRequest('Invalid or inactive problem statement');
   }
 
   if (
     student.foundationProblemStatementId
-    && Number(student.foundationProblemStatementId) !== Number(problemStatementId)
+    && Number(student.foundationProblemStatementId) === normalizedId
+  ) {
+    return getStudentJourneyContent(studentId);
+  }
+
+  if (
+    student.foundationProblemStatementId
+    && Number(student.foundationProblemStatementId) !== normalizedId
   ) {
     const started = await FoundationMissionRecord.count({ where: { studentId } });
     if (started > 0) {
@@ -265,6 +279,66 @@ async function selectProblemStatementForStudent(studentId, problemStatementId) {
   return getStudentJourneyContent(studentId);
 }
 
+async function resolveFrameworkProblemId(studentId) {
+  const student = await StudentAccount.findByPk(studentId, {
+    attributes: ['foundationProblemStatementId'],
+  });
+  if (student?.foundationProblemStatementId) {
+    const selected = await FoundationProblemStatement.findByPk(student.foundationProblemStatementId);
+    if (selected?.isActive) return selected.id;
+  }
+  const firstActive = await FoundationProblemStatement.findOne({
+    where: { isActive: true },
+    order: [['sortOrder', 'ASC'], ['id', 'ASC']],
+  });
+  return firstActive?.id ?? null;
+}
+
+function frameworkPartFromConfig(missionId, config) {
+  const letter = MISSION_FRAMEWORK_LETTERS[missionId - 1] || '?';
+  const title = MISSION_LABELS[missionId] || `Mission ${missionId}`;
+  const questions = Array.isArray(config.questions) ? config.questions : [];
+  const primary = questions[0];
+  const subtitle =
+    (primary && (primary.label || primary.question)) || title;
+  const description =
+    (config.tipQuote && String(config.tipQuote).trim())
+    || (primary && primary.helper)
+    || '';
+  return {
+    part: `Part ${missionId}`,
+    letter,
+    title,
+    subtitle,
+    description,
+  };
+}
+
+async function getStageFrameworkPreview(studentId) {
+  const problemId = await resolveFrameworkProblemId(studentId);
+  if (!problemId) {
+    return { parts: [] };
+  }
+
+  const problem = await FoundationProblemStatement.findByPk(problemId);
+  if (!problem) return { parts: [] };
+
+  await ensureMissionConfigsForProblem(problem);
+  const configs = await FoundationMissionConfig.findAll({
+    where: { problemStatementId: problem.id },
+    order: [['missionId', 'ASC']],
+  });
+
+  const parts = [];
+  for (let missionId = 1; missionId <= TOTAL_MISSIONS; missionId += 1) {
+    const row = configs.find((c) => c.missionId === missionId);
+    if (!row) continue;
+    parts.push(frameworkPartFromConfig(missionId, serializeMissionConfig(row)));
+  }
+
+  return { parts };
+}
+
 module.exports = {
   listProblemStatements,
   getProblemWithMissions,
@@ -274,4 +348,5 @@ module.exports = {
   updateMissionConfig,
   getStudentJourneyContent,
   selectProblemStatementForStudent,
+  getStageFrameworkPreview,
 };
