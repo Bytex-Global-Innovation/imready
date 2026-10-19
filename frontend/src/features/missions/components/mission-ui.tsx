@@ -295,7 +295,7 @@ export function EvidenceCapture({
   captionLabel = "Short title / caption",
   captionHelper,
   onCaptionChange,
-  uploadHelper = "Upload a PDF or Word document (.pdf, .doc, .docx) that describes your evidence. Include Google Drive links to any photos, videos, or recordings.",
+  uploadHelper = "Upload a PDF describing your evidence, along with Google Drive links to photos, videos, or recordings. Ensure all links have viewing access enabled.",
 }: {
   missionId: number;
   value: EvidenceValue;

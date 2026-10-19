@@ -7,7 +7,7 @@ import { JOURNEY_PATH_STEPS } from "@/constants/dashboard";
 import { ensureFoundationProgress, isFoundationComplete } from "@/features/missions/lib/mission-progress";
 import { cn } from "@/lib/utils";
 
-const MOBILE_GRID_COLUMNS = 2;
+const MOBILE_GRID_COLUMNS = 3;
 
 function StepBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -45,12 +45,13 @@ export function JourneyPath() {
             status: foundationComplete ? ("locked" as const) : ("active" as const),
           };
         }
-        if (step.id === "projects") {
-          return {
-            ...step,
-            status: projectsUnlocked ? ("active" as const) : ("locked" as const),
-          };
-        }
+       
+        if (step.id === "industry projects") {
+  return {
+    ...step,
+    status: projectsUnlocked ? ("active" as const) : ("locked" as const),
+  };
+}
         return step;
       }),
     [foundationComplete, projectsUnlocked],
@@ -62,7 +63,7 @@ export function JourneyPath() {
         Your Journey Path
       </p>
 
-      <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:hidden">
+      <div className="grid grid-cols-3 gap-x-2 gap-y-6 sm:hidden">
         {steps.map((step, index) => {
           const isActive = step.status === "active";
           const isLastInRow = (index + 1) % MOBILE_GRID_COLUMNS === 0;

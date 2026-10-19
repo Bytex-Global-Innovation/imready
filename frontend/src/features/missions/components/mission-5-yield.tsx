@@ -37,10 +37,12 @@ export function Mission5Yield() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [improvements, setImprovements] = useState("");
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
+      setImprovements((record.answers.improvements as string) ?? "");
       setValidation((record.answers.validation as string) ?? "");
       setImpact((record.answers.impact as string) ?? "");
       if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
@@ -57,17 +59,18 @@ export function Mission5Yield() {
   async function persist() {
     await saveMissionDraft(
       MISSION_ID,
-      { validation, impact },
+      { improvements, validation, impact },
       toEvidenceMeta(evidence),
     );
   }
 
   // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
-    { label: "Upload final proof document", done: Boolean(evidence.filePath) },
-    { label: "Describe how you validated it", done: validation.trim().length > 0 },
-    { label: "Reflect on the impact", done: impact.trim().length > 0 },
-  ];
+  { label: "Upload final proof document", done: Boolean(evidence.filePath) },
+  { label: "Describe improvements to your prototype", done: improvements.trim().length > 0 },
+  { label: "Describe how you validated it", done: validation.trim().length > 0 },
+  { label: "Reflect on the impact", done: impact.trim().length > 0 },
+];
   const canComplete = checklist.every((item) => item.done);
 
   async function handleComplete() {
@@ -75,7 +78,7 @@ export function Mission5Yield() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const answers = { validation, impact };
+      const answers = { improvements, validation, impact };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       const result = await completeMission(MISSION_ID, answers, evidenceMeta);
@@ -108,17 +111,29 @@ export function Mission5Yield() {
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">Show your final proof</h2>
-          <p className="mt-1 text-sm text-muted">
-            Upload a document with your final proof and Google Drive links to photos, videos, or recordings.
-          </p>
+          <p className="mt-3 text-sm text-muted">
+  Reflect on your journey using the R-E-A-D framework. Share what you
+  learned, explain the impact of your work, and submit your final reflection.
+</p>
+          
           <div className="mt-4">
             <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
           </div>
 
-          <label className="mt-6 mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
-            <ExternalLink className="h-3.5 w-3.5" />
-            {questionText(journeyConfig, "validation", "How did you validate it?")}
-          </label>
+          <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+  Did you make any improvements to your prototype from the previous mission (Do)? If yes, what did you change?
+</label>
+<textarea
+  value={improvements}
+  onChange={(event) => setImprovements(event.target.value)}
+  rows={3}
+  placeholder="e.g. Made the numbers larger after students struggled to read them from a distance. If you made no changes, briefly explain why."
+  className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+/>
+
+         <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+  How did you validate it?
+</label>
           <textarea
             value={validation}
             onChange={(event) => setValidation(event.target.value)}

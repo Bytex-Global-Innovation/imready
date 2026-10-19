@@ -157,7 +157,7 @@ export function Mission4Do() {
               <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">{sectionDescription}</p>
+            
             <div className="mt-4">
               <PresentationVideoLinkField
                 value={presentationVideoUrl}
