@@ -60,14 +60,6 @@ export function Mission2Engage() {
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { observation, surprise, quotes, patterns },
-      toEvidenceMeta(evidence),
-    );
-  }
-
   // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
     { label: "Talk to at least 2–3 people", done: observation.trim().length > 0 },
@@ -201,7 +193,6 @@ export function Mission2Engage() {
 
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(1))}
-              onSaveDraft={persist}
               onNext={handleComplete}
               nextLabel="Next: Complete Mission 2"
               nextDisabled={!canComplete}

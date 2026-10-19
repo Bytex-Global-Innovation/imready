@@ -57,14 +57,6 @@ export function Mission5Yield() {
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { validation, impact },
-      toEvidenceMeta(evidence),
-    );
-  }
-
   // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
     { label: "Upload final proof document", done: Boolean(evidence.filePath) },
@@ -157,7 +149,6 @@ export function Mission5Yield() {
 
           <MissionFooterNav
             onPrevious={() => router.push(ROUTES.mission(4))}
-            onSaveDraft={persist}
             onNext={handleComplete}
             nextLabel="Complete Foundation Stage"
             nextDisabled={!canComplete}

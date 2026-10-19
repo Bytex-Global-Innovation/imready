@@ -1037,6 +1037,7 @@ export interface Project {
   category?: ProjectCategory;
   badge?: string;
   isFree?: boolean;
+  projectPriceAmount?: number | null;
   description?: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -1059,6 +1060,7 @@ export interface ProjectInput {
   category: ProjectCategory;
   badge?: string;
   isFree: boolean;
+  projectPriceAmount?: number | null;
   description: string;
   imageSrc?: string;
   imageAlt?: string;

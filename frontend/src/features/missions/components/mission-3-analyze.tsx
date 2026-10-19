@@ -74,14 +74,6 @@ export function Mission3Analyze() {
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { ...whys, rootCause, pattern, tags },
-      toEvidenceMeta(evidence),
-    );
-  }
-
   function toggleTag(tag: string) {
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }
@@ -257,7 +249,6 @@ export function Mission3Analyze() {
 
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(2))}
-              onSaveDraft={persist}
               onNext={handleComplete}
               nextLabel="Next: Complete Mission 3"
               nextDisabled={!canComplete}

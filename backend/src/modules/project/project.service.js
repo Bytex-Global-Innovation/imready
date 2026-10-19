@@ -34,6 +34,28 @@ function slugify(value) {
     .slice(0, 140);
 }
 
+function parseMoneyAmount(value, fieldLabel) {
+  if (value == null || value === '') return null;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) {
+    throw badRequest(`${fieldLabel} must be a non-negative number`);
+  }
+  if (num === 0) return null;
+  return Math.round(num * 100) / 100;
+}
+
+function serializeMoneyColumn(raw) {
+  if (raw == null || raw === '') return null;
+  const num = Number(raw);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return num;
+}
+
+function serializeProjectPrice(project) {
+  if (project.isFree) return null;
+  return serializeMoneyColumn(project.projectPriceAmount);
+}
+
 function serializeAdminProject(project) {
   return {
     id: String(project.id),
@@ -45,6 +67,7 @@ function serializeAdminProject(project) {
     category: project.category,
     badge: project.badge,
     isFree: Boolean(project.isFree),
+    projectPriceAmount: serializeProjectPrice(project),
     description: project.description,
     imageSrc: project.imageSrc,
     imageAlt: project.imageAlt,
@@ -69,6 +92,7 @@ function serializeStudentProject(project) {
     category: project.category,
     badge: project.badge,
     isFree: Boolean(project.isFree),
+    projectPriceAmount: serializeProjectPrice(project),
     title: project.title,
     description: project.description,
     imageSrc: project.imageSrc,
@@ -134,6 +158,10 @@ async function createProject(payload) {
     category: category.slug,
     badge: payload.badge || category.name.toUpperCase().slice(0, 32),
     isFree: Boolean(payload.isFree),
+    completionPayoutAmount: null,
+    projectPriceAmount: payload.isFree
+      ? null
+      : parseMoneyAmount(payload.projectPriceAmount, 'Project price'),
     description: payload.description,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || payload.title,
@@ -173,6 +201,10 @@ async function updateProject(id, payload) {
     category: category.slug,
     badge: payload.badge || category.name.toUpperCase().slice(0, 32),
     isFree: Boolean(payload.isFree),
+    completionPayoutAmount: null,
+    projectPriceAmount: payload.isFree
+      ? null
+      : parseMoneyAmount(payload.projectPriceAmount, 'Project price'),
     description: payload.description,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || payload.title,

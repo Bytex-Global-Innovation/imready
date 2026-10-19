@@ -75,19 +75,6 @@ export function Mission4Do() {
     };
   }
 
-  async function persist() {
-    const trimmed = presentationVideoUrl.trim();
-    if (trimmed) {
-      const check = validatePresentationVideoUrl(trimmed);
-      if (!check.ok) {
-        setVideoError(check.message);
-        return;
-      }
-      setVideoError(null);
-    }
-    await saveMissionDraft(MISSION_ID, buildAnswers(), null);
-  }
-
   const videoValid = isAllowedPresentationVideoUrl(presentationVideoUrl);
   const checklist = [
     { label: "Add presentation video link (YouTube or Google Drive)", done: videoValid },
@@ -243,7 +230,6 @@ export function Mission4Do() {
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(3))}
               previousLabel="Mission 3: Analyze"
-              onSaveDraft={persist}
               onNext={handleComplete}
               nextLabel="Complete Mission 4"
               nextDisabled={!canComplete}

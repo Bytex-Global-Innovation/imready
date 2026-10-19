@@ -180,6 +180,8 @@ export interface ApiProjectItem {
   category: ProjectCategory;
   badge: string;
   isFree?: boolean;
+  /** Premium (paid) project value in INR when set by admin. */
+  projectPriceAmount?: number | null;
   title: string;
   description: string;
   imageSrc: string;

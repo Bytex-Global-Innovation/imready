@@ -57,14 +57,6 @@ export function Mission1Reality() {
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { caption, reflection },
-      toEvidenceMeta(evidence),
-    );
-  }
-
   const reflectionWords = reflection.trim() ? reflection.trim().split(/\s+/).length : 0;
   const canComplete = caption.trim().length > 0 && reflection.trim().length > 0;
 
@@ -169,7 +161,6 @@ export function Mission1Reality() {
           <MissionFooterNav
             onPrevious={() => router.push(ROUTES.dashboard)}
             previousLabel="Back to Dashboard"
-            onSaveDraft={persist}
             onNext={handleComplete}
             nextLabel="Next: Reflection & Submit"
             nextDisabled={!canComplete}

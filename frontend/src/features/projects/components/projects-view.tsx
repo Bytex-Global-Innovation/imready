@@ -29,6 +29,7 @@ import {
   resolveMediaUrl,
   type ApiProjectItem,
 } from "@/lib/api";
+import { formatInrAmount } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
 const TECH_ICONS: Record<string, LucideIcon> = {
@@ -76,6 +77,7 @@ function mapApiProject(project: ApiProjectItem): ProjectItem {
       ...resource,
       href: resolveMediaUrl(resource.href) || resource.href,
     })),
+    projectPriceAmount: project.projectPriceAmount ?? null,
   };
 }
 
@@ -88,6 +90,8 @@ function ProjectCard({
 }) {
   const isRemote =
     project.imageSrc.startsWith("http") || project.imageSrc.startsWith("blob:");
+  const priceLabel =
+    access === "premium" ? formatInrAmount(project.projectPriceAmount) : null;
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-sm">
@@ -114,6 +118,12 @@ function ProjectCard({
         <p className="mt-1.5 text-xs leading-relaxed text-muted sm:text-sm">
           {project.description}
         </p>
+
+        {priceLabel ? (
+          <p className="mt-2 rounded-md border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-foreground">
+            Project value: {priceLabel}
+          </p>
+        ) : null}
 
         <div className="mt-3.5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-primary uppercase">
@@ -234,11 +244,11 @@ export function ProjectsView({ access = "premium" }: { access?: "free" | "premiu
     <div className="mx-auto max-w-5xl">
       <header className="mb-6 sm:mb-8">
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          {access === "free" ? "Free Projects" : "Available Projects – Stage 1"}
+          {access === "free" ? "Unpaid Projects" : "Available Projects – Stage 1"}
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-muted sm:text-base">
           {access === "free"
-            ? "Explore projects available to every verified student."
+            ? "Explore unpaid projects available to verified students."
             : "Select a premium project that aligns with your career goals."}
         </p>
       </header>

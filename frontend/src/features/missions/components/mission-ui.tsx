@@ -510,7 +510,6 @@ export function QuestionField({
 export function MissionFooterNav({
   onPrevious,
   previousLabel = "Previous Mission",
-  onSaveDraft,
   onNext,
   nextLabel,
   nextDisabled,
@@ -518,7 +517,6 @@ export function MissionFooterNav({
 }: {
   onPrevious: () => void;
   previousLabel?: string;
-  onSaveDraft: () => void;
   onNext: () => void;
   nextLabel: string;
   nextDisabled?: boolean;
@@ -529,15 +527,10 @@ export function MissionFooterNav({
       <button type="button" onClick={onPrevious} className="cursor-pointer text-sm font-medium text-muted hover:text-foreground">
         ← {previousLabel}
       </button>
-      <div className="flex gap-3">
-        <Button variant="secondary" size="sm" onClick={onSaveDraft}>
-          Save Draft
-        </Button>
-        <Button size="sm" onClick={onNext} disabled={nextDisabled || isSubmitting} className="min-w-[180px]">
-          {isSubmitting ? "Saving..." : nextLabel}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button size="sm" onClick={onNext} disabled={nextDisabled || isSubmitting} className="min-w-[180px]">
+        {isSubmitting ? "Saving..." : nextLabel}
+        <ChevronRight className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

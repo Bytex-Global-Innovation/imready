@@ -51,6 +51,8 @@ export interface ProjectItem {
   deliverables?: ProjectDeliverable[];
   evaluationCriteria?: ProjectEvaluationCriterion[];
   resources?: ProjectResource[];
+  /** Paid premium project value (INR), when set by admin. */
+  projectPriceAmount?: number | null;
 }
 
 export const PROJECT_CATEGORIES: ProjectCategoryTab[] = [

@@ -24,6 +24,7 @@ const createProjectSchema = Joi.object({
   category: Joi.string().trim().min(1).max(160).required(),
   badge: Joi.string().trim().max(64).allow('').default(''),
   isFree: Joi.boolean().default(false),
+  projectPriceAmount: Joi.number().min(0).max(99999999).allow(null).optional(),
   description: Joi.string().trim().min(1).max(5000).required(),
   imageSrc: Joi.string().trim().allow('').max(1000).default(''),
   imageAlt: Joi.string().trim().allow('').max(255).default(''),
