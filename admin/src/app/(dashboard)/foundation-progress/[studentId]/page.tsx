@@ -95,6 +95,28 @@ export default function FoundationStudentProgressPage() {
               </span>
             </div>
 
+            {mission.missionId === 4 &&
+            typeof mission.answers.presentationVideoUrl === "string" &&
+            mission.answers.presentationVideoUrl.trim() ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3">
+                <p className="text-sm text-muted">
+                  Presentation video:{" "}
+                  <span className="font-medium text-foreground break-all">
+                    {mission.answers.presentationVideoUrl}
+                  </span>
+                </p>
+                <a
+                  href={String(mission.answers.presentationVideoUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-button)] border border-border bg-white px-3 py-1.5 text-sm font-medium text-[#153a75] hover:bg-surface"
+                >
+                  <Eye className="h-4 w-4" />
+                  Open video
+                </a>
+              </div>
+            ) : null}
+
             {mission.evidence?.fileName ? (
               <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3">
                 <p className="text-sm text-muted">
@@ -137,7 +159,9 @@ export default function FoundationStudentProgressPage() {
             ) : null}
 
             <div className="space-y-3">
-              {Object.entries(mission.answers).map(([key, value]) => (
+              {Object.entries(mission.answers)
+                .filter(([key]) => !(mission.missionId === 4 && key === "presentationVideoUrl"))
+                .map(([key, value]) => (
                 <div key={key} className="rounded-[var(--radius-card)] border border-border bg-surface p-3">
                   <p className="text-xs font-semibold tracking-wider text-muted uppercase">{key}</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">

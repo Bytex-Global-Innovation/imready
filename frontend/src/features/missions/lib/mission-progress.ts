@@ -1,4 +1,5 @@
-import { foundationApi } from "@/lib/foundation-api";
+import { foundationApi, type FoundationProblemStatement } from "@/lib/foundation-api";
+import { clearFoundationJourneyCache } from "./foundation-journey";
 import { getCachedStudentSession } from "@/lib/student-session";
 
 export const TOTAL_MISSIONS = 5;
@@ -28,6 +29,8 @@ export interface FoundationProgress {
   foundationComplete?: boolean;
   foundationCompletedAt?: string | null;
   projectsUnlocked?: boolean;
+  selectedProblemStatement?: FoundationProblemStatement | null;
+  foundationProblemStatementId?: string | null;
 }
 
 export interface CompleteMissionResult extends FoundationProgress {
@@ -89,6 +92,8 @@ function mapApiProgress(data: {
   foundationComplete?: boolean;
   foundationCompletedAt?: string | null;
   projectsUnlocked?: boolean;
+  selectedProblemStatement?: FoundationProblemStatement | null;
+  foundationProblemStatementId?: string | null;
 }): FoundationProgress {
   const missions: Record<number, MissionRecord> = {};
   Object.entries(data.missions || {}).forEach(([id, record]) => {
@@ -101,6 +106,8 @@ function mapApiProgress(data: {
     foundationComplete: data.foundationComplete,
     foundationCompletedAt: data.foundationCompletedAt,
     projectsUnlocked: data.projectsUnlocked,
+    selectedProblemStatement: data.selectedProblemStatement ?? null,
+    foundationProblemStatementId: data.foundationProblemStatementId ?? null,
   };
 }
 
@@ -130,6 +137,8 @@ export function loadProgress(): FoundationProgress {
       foundationComplete: parsed.foundationComplete,
       foundationCompletedAt: parsed.foundationCompletedAt,
       projectsUnlocked: parsed.projectsUnlocked,
+      selectedProblemStatement: parsed.selectedProblemStatement ?? null,
+      foundationProblemStatementId: parsed.foundationProblemStatementId ?? null,
     };
   } catch {
     return emptyProgress();
@@ -167,6 +176,14 @@ export async function ensureFoundationProgress(): Promise<FoundationProgress> {
 export function invalidateFoundationProgressCache(): void {
   cachedProgress = null;
   loadPromise = null;
+  clearFoundationJourneyCache();
+}
+
+export function hasFoundationProblemSelected(): boolean {
+  const progress = loadProgress();
+  return Boolean(
+    progress.foundationProblemStatementId || progress.selectedProblemStatement?.id,
+  );
 }
 
 export function getMissionRecord(missionId: number): MissionRecord {

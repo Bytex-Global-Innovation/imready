@@ -250,6 +250,43 @@ export interface EvidenceValue {
   previewUrl: string | null;
 }
 
+export function PresentationVideoLinkField({
+  value,
+  onChange,
+  label = "Presentation video link",
+  helper = "Paste a YouTube or Google Drive link to your prototype or demo video.",
+  placeholder = "https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view",
+  error,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label?: string;
+  helper?: string;
+  placeholder?: string;
+  error?: string | null;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+        {label}
+      </label>
+      <input
+        type="url"
+        inputMode="url"
+        autoComplete="url"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+      />
+      {helper ? <p className="mt-2 text-xs text-muted">{helper}</p> : null}
+      {error ? (
+        <p className="mt-2 text-xs text-red-600" role="alert">{error}</p>
+      ) : null}
+    </div>
+  );
+}
+
 export function EvidenceCapture({
   missionId,
   value,
@@ -423,6 +460,7 @@ export function QuestionField({
   index,
   question,
   helper,
+  placeholder,
   value,
   onChange,
   done,
@@ -430,6 +468,7 @@ export function QuestionField({
   index: number;
   question: string;
   helper?: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
   done: boolean;
@@ -446,7 +485,8 @@ export function QuestionField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={2}
-        className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        placeholder={placeholder}
+        className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
       {helper ? <p className="mt-1.5 text-xs text-muted">{helper}</p> : null}
     </div>

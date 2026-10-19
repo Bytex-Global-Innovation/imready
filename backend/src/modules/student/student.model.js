@@ -171,6 +171,12 @@ const StudentAccount = sequelize.define(
       defaultValue: null,
       field: 'foundation_completed_at',
     },
+    foundationProblemStatementId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_problem_statement_id',
+    },
   },
   {
     tableName: 'student_accounts',

@@ -4,26 +4,41 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
+import {
+  completeMission,
+  ensureFoundationProgress,
+  getMissionRecord,
+  saveMissionDraft,
+} from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
-  EvidenceCapture,
-  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
+  PresentationVideoLinkField,
   QuestionField,
   TipFromReady,
-  type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionHelper,
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+} from "../lib/foundation-journey";
+import {
+  isAllowedPresentationVideoUrl,
+  validatePresentationVideoUrl,
+} from "../lib/presentation-video-url";
 
 const MISSION_ID = 4;
 const mission = getMission(MISSION_ID);
 
 export function Mission4Do() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
+  const [presentationVideoUrl, setPresentationVideoUrl] = useState("");
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [respond, setRespond] = useState("");
   const [worked, setWorked] = useState("");
@@ -36,33 +51,43 @@ export function Mission4Do() {
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
+      setPresentationVideoUrl((record.answers.presentationVideoUrl as string) ?? "");
       setDescription((record.answers.description as string) ?? "");
       setRespond((record.answers.respond as string) ?? "");
       setWorked((record.answers.worked as string) ?? "");
       setDidntWork((record.answers.didntWork as string) ?? "");
       setImprove((record.answers.improve as string) ?? "");
-      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
-        setEvidence({
-          fileName: record.evidence!.fileName,
-          filePath: record.evidence?.filePath ?? null,
-          previewUrl: null,
-        });
-      }
       setHydrated(true);
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { description, respond, worked, didntWork, improve },
-      toEvidenceMeta(evidence),
-    );
+  function buildAnswers() {
+    return {
+      presentationVideoUrl: presentationVideoUrl.trim(),
+      description,
+      respond,
+      worked,
+      didntWork,
+      improve,
+    };
   }
 
-  // Still drives the submit button even though the checklist card is no longer shown.
+  async function persist() {
+    const trimmed = presentationVideoUrl.trim();
+    if (trimmed) {
+      const check = validatePresentationVideoUrl(trimmed);
+      if (!check.ok) {
+        setVideoError(check.message);
+        return;
+      }
+      setVideoError(null);
+    }
+    await saveMissionDraft(MISSION_ID, buildAnswers(), null);
+  }
+
+  const videoValid = isAllowedPresentationVideoUrl(presentationVideoUrl);
   const checklist = [
-    { label: "Upload prototype evidence document", done: Boolean(evidence.filePath) },
+    { label: "Add presentation video link (YouTube or Google Drive)", done: videoValid },
     { label: "Test it with real users", done: respond.trim().length > 0 },
     { label: "Observe what happens", done: worked.trim().length > 0 && didntWork.trim().length > 0 },
     { label: "Make one improvement", done: improve.trim().length > 0 },
@@ -71,13 +96,18 @@ export function Mission4Do() {
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
+    const check = validatePresentationVideoUrl(presentationVideoUrl);
+    if (!check.ok) {
+      setVideoError(check.message);
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
+    setVideoError(null);
     try {
-      const answers = { description, respond, worked, didntWork, improve };
-      const evidenceMeta = toEvidenceMeta(evidence);
-      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
-      await completeMission(MISSION_ID, answers, evidenceMeta);
+      const answers = buildAnswers();
+      await saveMissionDraft(MISSION_ID, answers, null);
+      await completeMission(MISSION_ID, answers, null);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
@@ -88,9 +118,24 @@ export function Mission4Do() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
+  const sectionTitle =
+    journeyConfig?.evidenceConfig?.sectionTitle ?? "Share your prototype presentation video";
+  const sectionDescription =
+    journeyConfig?.evidenceConfig?.sectionDescription ??
+    "Add a YouTube or Google Drive link to a short video showcasing what you built and tested.";
+  const videoHelper =
+    journeyConfig?.evidenceConfig?.videoLinkHelper ??
+    questionHelper(
+      journeyConfig,
+      "presentationVideoUrl",
+      "Paste a YouTube or Google Drive link to your prototype or demo video.",
+    );
 
   return (
     <MissionLayout
@@ -109,24 +154,40 @@ export function Mission4Do() {
         <>
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Show What You Built: Prototype Evidence</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              Upload a document describing your prototype. Include Google Drive links to photos or demo videos.
-            </p>
+            <p className="mt-1 text-sm text-muted">{sectionDescription}</p>
             <div className="mt-4">
-              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+              <PresentationVideoLinkField
+                value={presentationVideoUrl}
+                onChange={(value) => {
+                  setPresentationVideoUrl(value);
+                  if (videoError) setVideoError(null);
+                }}
+                label={questionText(journeyConfig, "presentationVideoUrl", "Presentation video link")}
+                helper={videoHelper}
+                placeholder={questionPlaceholder(
+                  journeyConfig,
+                  "presentationVideoUrl",
+                  "https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view",
+                )}
+                error={videoError}
+              />
             </div>
-            <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
-              Artifact Description
+            <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+              {questionText(journeyConfig, "description", "Artifact Description")}
             </label>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={2}
-              placeholder="Describe what you built and how it works..."
-              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={questionPlaceholder(
+                journeyConfig,
+                "description",
+                "Describe what you built and how it works...",
+              )}
+              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -137,10 +198,38 @@ export function Mission4Do() {
             </div>
             <p className="mt-1 mb-4 text-sm text-muted">Document your real-world test results</p>
 
-            <QuestionField index={1} question="How did people respond?" value={respond} onChange={setRespond} done={respond.trim().length > 0} />
-            <QuestionField index={2} question="What worked?" value={worked} onChange={setWorked} done={worked.trim().length > 0} />
-            <QuestionField index={3} question="What didn't work?" value={didntWork} onChange={setDidntWork} done={didntWork.trim().length > 0} />
-            <QuestionField index={4} question="What will you improve next?" value={improve} onChange={setImprove} done={improve.trim().length > 0} />
+            <QuestionField
+              index={1}
+              question={questionText(journeyConfig, "respond", "How did people respond?")}
+              placeholder={questionPlaceholder(journeyConfig, "respond")}
+              value={respond}
+              onChange={setRespond}
+              done={respond.trim().length > 0}
+            />
+            <QuestionField
+              index={2}
+              question={questionText(journeyConfig, "worked", "What worked?")}
+              placeholder={questionPlaceholder(journeyConfig, "worked")}
+              value={worked}
+              onChange={setWorked}
+              done={worked.trim().length > 0}
+            />
+            <QuestionField
+              index={3}
+              question={questionText(journeyConfig, "didntWork", "What didn't work?")}
+              placeholder={questionPlaceholder(journeyConfig, "didntWork")}
+              value={didntWork}
+              onChange={setDidntWork}
+              done={didntWork.trim().length > 0}
+            />
+            <QuestionField
+              index={4}
+              question={questionText(journeyConfig, "improve", "What will you improve next?")}
+              placeholder={questionPlaceholder(journeyConfig, "improve")}
+              value={improve}
+              onChange={setImprove}
+              done={improve.trim().length > 0}
+            />
 
             {submitError ? (
               <p className="mt-4 text-sm text-red-600" role="alert">
@@ -162,7 +251,7 @@ export function Mission4Do() {
       }
       sidebar={
         <>
-          <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

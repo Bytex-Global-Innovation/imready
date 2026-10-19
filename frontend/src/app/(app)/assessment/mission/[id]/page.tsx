@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { ensureFoundationProgress, isMissionUnlocked } from "@/features/missions/lib/mission-progress";
+import {
+  ensureFoundationProgress,
+  hasFoundationProblemSelected,
+  isMissionUnlocked,
+} from "@/features/missions/lib/mission-progress";
 import { Mission1Reality } from "@/features/missions/components/mission-1-reality";
 import { Mission2Engage } from "@/features/missions/components/mission-2-engage";
 import { Mission3Analyze } from "@/features/missions/components/mission-3-analyze";
@@ -21,6 +25,10 @@ export default function MissionPage() {
     if (!valid) return;
     ensureFoundationProgress()
       .then(() => {
+        if (!hasFoundationProblemSelected()) {
+          router.replace(ROUTES.assessment);
+          return;
+        }
         if (!isMissionUnlocked(id)) {
           router.replace(ROUTES.assessment);
           return;

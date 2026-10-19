@@ -24,6 +24,37 @@ export interface FoundationMissionPayload {
   evidence: FoundationEvidence | null;
 }
 
+export interface FoundationProblemStatement {
+  id: string;
+  uuid?: string;
+  statementText: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface FoundationMissionJourneyConfig {
+  id: string;
+  missionId: number;
+  tipAdvisorLabel: string;
+  tipQuote: string;
+  analyzeContextText: string | null;
+  patternTagOptions: string[] | null;
+  whyLayerLabels: { key: string; label: string }[] | null;
+  questions: Array<{
+    answerKey: string;
+    question?: string;
+    label?: string;
+    helper?: string;
+    placeholder?: string;
+  }>;
+  evidenceConfig: Record<string, string> | null;
+}
+
+export interface FoundationJourneyContent {
+  selectedProblemStatement: FoundationProblemStatement | null;
+  missions: Record<string, FoundationMissionJourneyConfig>;
+}
+
 export interface FoundationProgressResponse {
   missions: Record<
     string,
@@ -42,6 +73,8 @@ export interface FoundationProgressResponse {
   foundationComplete: boolean;
   foundationCompletedAt: string | null;
   projectsUnlocked: boolean;
+  selectedProblemStatement?: FoundationProblemStatement | null;
+  foundationProblemStatementId?: string | null;
 }
 
 let refreshInFlight: Promise<boolean> | null = null;
@@ -107,6 +140,20 @@ async function foundationRequest<T>(
 export const foundationApi = {
   getProgress: (): Promise<FoundationProgressResponse> =>
     foundationRequest<FoundationProgressResponse>("/foundation/progress"),
+
+  listProblemStatements: (): Promise<{ problemStatements: FoundationProblemStatement[] }> =>
+    foundationRequest<{ problemStatements: FoundationProblemStatement[] }>(
+      "/foundation/problem-statements",
+    ),
+
+  getJourneyContent: (): Promise<FoundationJourneyContent> =>
+    foundationRequest<FoundationJourneyContent>("/foundation/journey-content"),
+
+  selectProblemStatement: (problemStatementId: string): Promise<FoundationJourneyContent> =>
+    foundationRequest<FoundationJourneyContent>("/foundation/problem-statement", {
+      method: "POST",
+      body: JSON.stringify({ problemStatementId }),
+    }),
 
   uploadEvidence: (missionId: number, file: File) => {
     const formData = new FormData();

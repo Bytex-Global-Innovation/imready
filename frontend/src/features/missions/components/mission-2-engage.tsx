@@ -17,11 +17,18 @@ import {
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionHelper,
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+} from "../lib/foundation-journey";
 
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
 
 export function Mission2Engage() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const router = useRouter();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [observation, setObservation] = useState("");
@@ -86,9 +93,12 @@ export function Mission2Engage() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
     <MissionLayout
@@ -110,13 +120,14 @@ export function Mission2Engage() {
               <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
             </div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
-              Field observation
+              {questionText(journeyConfig, "observation", "Field observation")}
             </label>
             <textarea
               value={observation}
               onChange={(event) => setObservation(event.target.value)}
               rows={3}
-              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={questionPlaceholder(journeyConfig, "observation")}
+              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -129,24 +140,51 @@ export function Mission2Engage() {
 
             <QuestionField
               index={1}
-              question="What surprised you the most during this interaction?"
-              helper="Identifies behavior that contradicts assumptions."
+              question={questionText(
+                journeyConfig,
+                "surprise",
+                "What surprised you the most during this interaction?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "surprise",
+                "Identifies behavior that contradicts assumptions.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "surprise")}
               value={surprise}
               onChange={setSurprise}
               done={surprise.trim().length > 0}
             />
             <QuestionField
               index={2}
-              question="Any direct quotes that capture their frustration or mindset?"
-              helper="Capture verbatim language instead of translating into your own words."
+              question={questionText(
+                journeyConfig,
+                "quotes",
+                "Any direct quotes that capture their frustration or mindset?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "quotes",
+                "Capture verbatim language instead of translating into your own words.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "quotes")}
               value={quotes}
               onChange={setQuotes}
               done={quotes.trim().length > 0}
             />
             <QuestionField
               index={3}
-              question="What repeating patterns do you see across multiple conversations?"
-              helper="Highlight recurring feelings, wait loops, or workarounds."
+              question={questionText(
+                journeyConfig,
+                "patterns",
+                "What repeating patterns do you see across multiple conversations?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "patterns",
+                "Highlight recurring feelings, wait loops, or workarounds.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "patterns")}
               value={patterns}
               onChange={setPatterns}
               done={patterns.trim().length > 0}
@@ -171,7 +209,7 @@ export function Mission2Engage() {
       }
       sidebar={
         <>
-          <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

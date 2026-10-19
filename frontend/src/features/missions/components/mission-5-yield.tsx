@@ -18,11 +18,17 @@ import {
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+} from "../lib/foundation-journey";
 
 const MISSION_ID = 5;
 const mission = getMission(MISSION_ID);
 
 export function Mission5Yield() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const router = useRouter();
   const { refresh } = useStudentProfile();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
@@ -86,9 +92,12 @@ export function Mission5Yield() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
     <MissionLayout
@@ -108,24 +117,32 @@ export function Mission5Yield() {
 
           <label className="mt-6 mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
             <ExternalLink className="h-3.5 w-3.5" />
-            How did you validate it?
+            {questionText(journeyConfig, "validation", "How did you validate it?")}
           </label>
           <textarea
             value={validation}
             onChange={(event) => setValidation(event.target.value)}
             rows={3}
-            placeholder="e.g. Checked back with 3 students who used the canteen token board..."
+            placeholder={questionPlaceholder(
+              journeyConfig,
+              "validation",
+              "e.g. Checked back with 3 students who used your solution...",
+            )}
             className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
 
           <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
-            What impact did it have?
+            {questionText(journeyConfig, "impact", "What impact did it have?")}
           </label>
           <textarea
             value={impact}
             onChange={(event) => setImpact(event.target.value)}
             rows={3}
-            placeholder="What changed for them because of your fix?"
+            placeholder={questionPlaceholder(
+              journeyConfig,
+              "impact",
+              "What changed for them because of your fix?",
+            )}
             className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
 
@@ -147,7 +164,7 @@ export function Mission5Yield() {
       }
       sidebar={
         <>
-          <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

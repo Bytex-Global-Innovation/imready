@@ -105,6 +105,7 @@ export const MISSIONS: MissionMeta[] = [
     },
     whatYoullDo: [
       "Build a small, fast, testable prototype.",
+      "Share a short presentation video (YouTube or Google Drive).",
       "Test it with 2–3 real users on location.",
       "Document what worked, what didn't, and one improvement.",
     ],
@@ -194,10 +195,10 @@ export const MISSION_COMPLETE_CONTENT: Record<number, MissionCompleteContent> = 
     celebrationLine: "You turned an idea into something people could touch.",
     coachQuote:
       "Real prototype, real users, real feedback. That's the loop that separates builders from dreamers.",
-    evidenceLabel: "Prototype",
+    evidenceLabel: "Presentation video",
     insightLabel: "Test Takeaway",
     getRecap: (a) => ({
-      evidence: (a.description as string) || "—",
+      evidence: (a.presentationVideoUrl as string) || (a.description as string) || "—",
       insight: (a.improve as string) || "—",
     }),
   },

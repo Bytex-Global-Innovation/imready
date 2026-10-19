@@ -5,11 +5,13 @@ const path = require('path');
 const { Op } = require('sequelize');
 const StudentAccount = require('@modules/student/student.model');
 const FoundationMissionRecord = require('@modules/foundation/foundation-mission-record.model');
+const FoundationProblemStatement = require('@modules/foundation/foundation-problem-statement.model');
 const {
   TOTAL_MISSIONS,
   MISSION_XP_REWARDS,
   MISSION_LABELS,
 } = require('@modules/foundation/foundation.constants');
+const { validatePresentationVideoUrl } = require('@modules/foundation/presentation-video-url');
 
 function badRequest(message, code) {
   const err = new Error(message);
@@ -89,7 +91,16 @@ function serializeMissionRecord(record) {
   };
 }
 
-function buildProgressPayload(records, student) {
+function serializeSelectedProblem(problem) {
+  if (!problem) return null;
+  return {
+    id: String(problem.id),
+    uuid: problem.uuid,
+    statementText: problem.statementText,
+  };
+}
+
+function buildProgressPayload(records, student, selectedProblem = null) {
   const missions = {};
   let totalXp = 0;
   let completedCount = 0;
@@ -122,6 +133,10 @@ function buildProgressPayload(records, student) {
     foundationComplete,
     foundationCompletedAt: student?.foundationCompletedAt || null,
     projectsUnlocked: foundationComplete,
+    selectedProblemStatement: serializeSelectedProblem(selectedProblem),
+    foundationProblemStatementId: student?.foundationProblemStatementId
+      ? String(student.foundationProblemStatementId)
+      : null,
   };
 }
 
@@ -138,14 +153,22 @@ function isMissionUnlocked(records, missionId) {
   return Boolean(previous?.completed);
 }
 
+async function loadSelectedProblem(student) {
+  if (!student?.foundationProblemStatementId) return null;
+  const problem = await FoundationProblemStatement.findByPk(student.foundationProblemStatementId);
+  if (!problem || !problem.isActive) return null;
+  return problem;
+}
+
 async function getStudentProgress(studentId) {
   const student = await StudentAccount.findByPk(studentId, {
-    attributes: ['id', 'foundationCompletedAt'],
+    attributes: ['id', 'foundationCompletedAt', 'foundationProblemStatementId'],
   });
   if (!student) throw notFound('Student not found');
 
+  const selectedProblem = await loadSelectedProblem(student);
   const records = await loadStudentRecords(studentId);
-  return buildProgressPayload(records, student);
+  return buildProgressPayload(records, student, selectedProblem);
 }
 
 async function upsertMissionRecord(studentId, missionId, payload, { complete = false } = {}) {
@@ -155,19 +178,40 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
 
   const student = await StudentAccount.findByPk(studentId);
   if (!student) throw notFound('Student not found');
+  if (!student.foundationProblemStatementId) {
+    throw badRequest(
+      'Select a foundation problem statement before working on missions',
+      'PROBLEM_REQUIRED',
+    );
+  }
 
   const records = await loadStudentRecords(studentId);
   if (!isMissionUnlocked(records, missionId)) {
     throw badRequest('Complete the previous mission first', 'MISSION_LOCKED');
   }
 
-  const evidence = normalizeEvidence(payload.evidence);
-  const answers = payload.answers && typeof payload.answers === 'object' ? payload.answers : {};
+  let evidence = normalizeEvidence(payload.evidence);
+  const answers = payload.answers && typeof payload.answers === 'object' ? { ...payload.answers } : {};
   const existing = records.find((r) => r.missionId === missionId);
   const wasAlreadyComplete = Boolean(existing?.completed);
   const xpEarned = MISSION_XP_REWARDS[missionId] || 0;
 
-  if (existing?.evidenceFilePath && existing.evidenceFilePath !== evidence.filePath) {
+  if (missionId === 4) {
+    const videoRaw = answers.presentationVideoUrl;
+    if (complete || (videoRaw && String(videoRaw).trim())) {
+      const check = validatePresentationVideoUrl(videoRaw);
+      if (!check.ok) {
+        throw badRequest(check.message, 'INVALID_VIDEO_URL');
+      }
+      answers.presentationVideoUrl = check.normalized;
+    } else if (complete) {
+      throw badRequest('Presentation video link is required', 'INVALID_VIDEO_URL');
+    }
+    if (existing?.evidenceFilePath) {
+      deleteEvidenceFile(existing.evidenceFilePath);
+    }
+    evidence = { fileName: null, fileType: null, filePath: null };
+  } else if (existing?.evidenceFilePath && existing.evidenceFilePath !== evidence.filePath) {
     deleteEvidenceFile(existing.evidenceFilePath);
   }
 
@@ -205,10 +249,11 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
 
   const updatedRecords = await loadStudentRecords(studentId);
   const refreshedStudent = await StudentAccount.findByPk(studentId, {
-    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus'],
+    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus', 'foundationProblemStatementId'],
   });
+  const selectedProblem = await loadSelectedProblem(refreshedStudent);
 
-  const progress = buildProgressPayload(updatedRecords, refreshedStudent);
+  const progress = buildProgressPayload(updatedRecords, refreshedStudent, selectedProblem);
   const projectsUnlocked =
     progress.foundationComplete
     || refreshedStudent.subscriptionStatus === 'PREMIUM';
@@ -225,6 +270,27 @@ async function uploadMissionEvidence(studentId, missionId, file) {
   if (!file) throw badRequest('Please upload an evidence document');
   if (!Number.isInteger(missionId) || missionId < 1 || missionId > TOTAL_MISSIONS) {
     throw badRequest('Invalid mission id');
+  }
+  if (missionId === 4) {
+    if (file?.filename) {
+      deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
+    }
+    throw badRequest(
+      'Mission 4 requires a YouTube or Google Drive video link instead of a file upload',
+      'VIDEO_LINK_REQUIRED',
+    );
+  }
+
+  const student = await StudentAccount.findByPk(studentId, {
+    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus', 'foundationProblemStatementId'],
+  });
+  if (!student) throw notFound('Student not found');
+  if (!student.foundationProblemStatementId) {
+    deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
+    throw badRequest(
+      'Select a foundation problem statement before working on missions',
+      'PROBLEM_REQUIRED',
+    );
   }
 
   const records = await loadStudentRecords(studentId);
@@ -266,11 +332,9 @@ async function uploadMissionEvidence(studentId, missionId, file) {
     });
   }
 
-  const student = await StudentAccount.findByPk(studentId, {
-    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus'],
-  });
+  const selectedProblem = await loadSelectedProblem(student);
   const updatedRecords = await loadStudentRecords(studentId);
-  const progress = buildProgressPayload(updatedRecords, student);
+  const progress = buildProgressPayload(updatedRecords, student, selectedProblem);
 
   return {
     evidence: serializeEvidence(record),
@@ -390,13 +454,15 @@ async function getAdminStudentProgress(studentId) {
       'streamMajor',
       'graduationYear',
       'foundationCompletedAt',
+      'foundationProblemStatementId',
       'createdAt',
     ],
   });
   if (!student) throw notFound('Student not found');
 
   const records = await loadStudentRecords(studentId);
-  const progress = buildProgressPayload(records, student);
+  const selectedProblem = await loadSelectedProblem(student);
+  const progress = buildProgressPayload(records, student, selectedProblem);
 
   const missions = Object.entries(progress.missions).map(([id, record]) => ({
     missionId: Number(id),
