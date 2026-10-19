@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
-import { foundationApi, type FoundationProblemStatement } from "@/lib/foundation-api";
+import { FoundationApiError, foundationApi, type FoundationProblemStatement } from "@/lib/foundation-api";
 import { cn } from "@/lib/utils";
 import {
   clearFoundationJourneyCache,
   ensureFoundationJourneyContent,
+  setFoundationJourneyCache,
 } from "../lib/foundation-journey";
 import {
   ensureFoundationProgress,
@@ -59,12 +60,20 @@ export function FoundationProblemSelect() {
     try {
       clearFoundationJourneyCache();
       invalidateFoundationProgressCache();
-      await foundationApi.selectProblemStatement(selectedId);
+      const journey = await foundationApi.selectProblemStatement(selectedId);
+      setFoundationJourneyCache(journey);
+      invalidateFoundationProgressCache();
       await ensureFoundationProgress();
       await ensureFoundationJourneyContent();
       router.replace(ROUTES.mission(1));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save your selection.");
+      setError(
+        err instanceof FoundationApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not save your selection.",
+      );
     } finally {
       setIsSaving(false);
     }

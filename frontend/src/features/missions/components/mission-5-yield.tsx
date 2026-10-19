@@ -14,6 +14,7 @@ import {
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
+  SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
@@ -22,6 +23,7 @@ import {
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
+  useSelectedProblemText,
 } from "../lib/foundation-journey";
 
 const MISSION_ID = 5;
@@ -29,6 +31,7 @@ const mission = getMission(MISSION_ID);
 
 export function Mission5Yield() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const { refresh } = useStudentProfile();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
@@ -164,6 +167,7 @@ export function Mission5Yield() {
       }
       sidebar={
         <>
+          <SelectedProblemBanner statementText={selectedProblemText} />
           <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>

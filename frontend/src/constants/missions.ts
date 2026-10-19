@@ -67,7 +67,7 @@ export const MISSIONS: MissionMeta[] = [
     id: 3,
     letter: "A",
     letterWord: "Analyze",
-    title: "Mission 3: Make Sense of What You Found",
+   title: "Mission 3: Analyze What You Found",
     subtitle: "Look for patterns. Drill down to the root problem using structured analytical tools.",
     activeBadgeLabel: "Active Mission: A • Analyze",
     frameworkPhaseLabel: null,
@@ -101,11 +101,10 @@ export const MISSIONS: MissionMeta[] = [
     tip: {
       advisorLabel: "Prototyping Coach",
       quote:
-        "Don't build a full app. Test a small idea quickly. Good prototypes answer one specific question without premature polish.",
+        "Don't build a full app. Test a small idea quickly using a simple prototype, even a Google Form or WhatsApp group can work. Good prototypes answer one specific question without premature polish.",
     },
     whatYoullDo: [
       "Build a small, fast, testable prototype.",
-      "Share a short presentation video (YouTube or Google Drive).",
       "Test it with 2–3 real users on location.",
       "Document what worked, what didn't, and one improvement.",
     ],
@@ -195,10 +194,10 @@ export const MISSION_COMPLETE_CONTENT: Record<number, MissionCompleteContent> = 
     celebrationLine: "You turned an idea into something people could touch.",
     coachQuote:
       "Real prototype, real users, real feedback. That's the loop that separates builders from dreamers.",
-    evidenceLabel: "Presentation video",
+    evidenceLabel: "Prototype",
     insightLabel: "Test Takeaway",
     getRecap: (a) => ({
-      evidence: (a.presentationVideoUrl as string) || (a.description as string) || "—",
+      evidence: (a.description as string) || "—",
       insight: (a.improve as string) || "—",
     }),
   },

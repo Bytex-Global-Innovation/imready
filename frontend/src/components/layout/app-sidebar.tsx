@@ -61,7 +61,7 @@ function getNavItems(projectsUnlocked: boolean) {
         pathname === ROUTES.dashboard,
     },
     {
-      label: "Free Projects",
+      label: "Unpaid Projects",
       href: ROUTES.freeProjects,
       icon: Gift,
       locked: false,
@@ -69,7 +69,7 @@ function getNavItems(projectsUnlocked: boolean) {
         pathname === ROUTES.freeProjects || pathname.startsWith(`${ROUTES.freeProjects}/`),
     },
     {
-      label: "Projects",
+      label: " Paid Industry Projects",
       href: ROUTES.projects,
       icon: FolderKanban,
       locked: !projectsUnlocked,

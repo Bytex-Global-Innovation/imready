@@ -18,6 +18,7 @@ router.use(requireVerifiedStudent);
 router.get('/progress', foundationController.getProgress);
 router.get('/problem-statements', foundationController.listProblemStatements);
 router.get('/journey-content', foundationController.getJourneyContent);
+router.get('/stage-framework', foundationController.getStageFramework);
 router.post(
   '/problem-statement',
   validateBody(selectProblemSchema),

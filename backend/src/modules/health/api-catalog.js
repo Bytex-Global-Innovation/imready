@@ -73,6 +73,7 @@ const API_CATALOG = [
   { method: 'POST', path: '/foundation/missions/:missionId/complete', auth: 'student', module: 'foundation' },
   { method: 'GET', path: '/foundation/problem-statements', auth: 'student', module: 'foundation' },
   { method: 'GET', path: '/foundation/journey-content', auth: 'student', module: 'foundation' },
+  { method: 'GET', path: '/foundation/stage-framework', auth: 'student', module: 'foundation' },
   { method: 'POST', path: '/foundation/problem-statement', auth: 'student', module: 'foundation' },
   // Foundation (admin)
   { method: 'GET', path: '/admin/foundation/progress', auth: 'admin', module: 'admin-foundation' },

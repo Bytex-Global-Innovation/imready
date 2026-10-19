@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSelectedProblemStatementDisplay } from "./mission-progress";
 import { foundationApi, type FoundationJourneyContent } from "@/lib/foundation-api";
 
 export type MissionQuestionConfig = {
@@ -26,6 +27,10 @@ let journeyPromise: Promise<FoundationJourneyContent> | null = null;
 export function clearFoundationJourneyCache() {
   cachedJourney = null;
   journeyPromise = null;
+}
+
+export function setFoundationJourneyCache(content: FoundationJourneyContent) {
+  cachedJourney = content;
 }
 
 export async function ensureFoundationJourneyContent(): Promise<FoundationJourneyContent> {
@@ -97,6 +102,60 @@ export function questionPlaceholder(
 ): string | undefined {
   const q = questionByKey(config, answerKey);
   return q?.placeholder || fallback;
+}
+
+export function evidenceConfigText(
+  config: MissionJourneyConfig | null,
+  key: string,
+  fallback?: string,
+): string | undefined {
+  const value = config?.evidenceConfig?.[key];
+  return value != null && String(value).trim() ? String(value) : fallback;
+}
+
+export function whyLayersFromConfig(
+  config: MissionJourneyConfig | null,
+  fallback: { key: string; label: string }[],
+): { key: string; label: string }[] {
+  if (config?.whyLayerLabels?.length) return config.whyLayerLabels;
+  return fallback;
+}
+
+export function patternTagsFromConfig(
+  config: MissionJourneyConfig | null,
+  fallback: string[],
+): string[] {
+  if (config?.patternTagOptions?.length) return config.patternTagOptions;
+  return fallback;
+}
+
+/** Selected foundation problem text for mission sidebars (from journey API / progress cache). */
+export function useSelectedProblemText(): string | null {
+  const [text, setText] = useState<string | null>(() => {
+    const cached = getCachedFoundationJourney()?.selectedProblemStatement?.statementText;
+    if (cached) return cached;
+    return getSelectedProblemStatementDisplay()?.text ?? null;
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    ensureFoundationJourneyContent()
+      .then((content) => {
+        if (!cancelled) {
+          setText(content.selectedProblemStatement?.statementText ?? null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setText(getSelectedProblemStatementDisplay()?.text ?? null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return text;
 }
 
 export function useFoundationMissionConfig(missionId: number) {

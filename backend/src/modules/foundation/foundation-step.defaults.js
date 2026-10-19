@@ -152,6 +152,14 @@ function missionQuestions(missionId) {
     case 5:
       return [
         {
+          answerKey: 'improvements',
+          question:
+            'Did you make any improvements to your prototype from the previous mission (Do)? If yes, what did you change?',
+          helper: 'If you made no changes, briefly explain why.',
+          placeholder:
+            'e.g. Made the numbers larger after students struggled to read them from a distance.',
+        },
+        {
           answerKey: 'validation',
           question: 'How did you validate it?',
           helper: 'Who did you check back with and how?',

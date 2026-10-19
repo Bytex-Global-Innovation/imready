@@ -1,4 +1,9 @@
-import { foundationApi, type FoundationProblemStatement } from "@/lib/foundation-api";
+import {
+  foundationApi,
+  type FoundationEvidence,
+  type FoundationProblemStatement,
+  type FoundationProgressResponse,
+} from "@/lib/foundation-api";
 import { clearFoundationJourneyCache } from "./foundation-journey";
 import { getCachedStudentSession } from "@/lib/student-session";
 
@@ -67,17 +72,20 @@ function emptyProgress(): FoundationProgress {
   return { missions: {}, totalXp: 0, completedCount: 0, foundationComplete: false };
 }
 
-function mapApiMission(record: {
-  answers?: MissionAnswers;
-  evidence?: MissionEvidenceMeta | null;
-  completed?: boolean;
-  completedAt?: number | null;
-  xpEarned?: number;
-  updatedAt?: number;
-}): MissionRecord {
+function mapApiEvidence(evidence: FoundationEvidence | null | undefined): MissionEvidenceMeta | null {
+  if (!evidence) return null;
+  return {
+    fileName: evidence.fileName,
+    fileType: evidence.fileType,
+    filePath: evidence.filePath,
+    previewDataUrl: evidence.previewDataUrl ?? null,
+  };
+}
+
+function mapApiMission(record: FoundationProgressResponse["missions"][string]): MissionRecord {
   return {
     answers: record.answers ?? {},
-    evidence: record.evidence ?? null,
+    evidence: mapApiEvidence(record.evidence),
     completed: Boolean(record.completed),
     completedAt: record.completedAt ?? null,
     xpEarned: Number(record.xpEarned) || 0,
@@ -85,16 +93,7 @@ function mapApiMission(record: {
   };
 }
 
-function mapApiProgress(data: {
-  missions: Record<string, MissionRecord>;
-  totalXp: number;
-  completedCount?: number;
-  foundationComplete?: boolean;
-  foundationCompletedAt?: string | null;
-  projectsUnlocked?: boolean;
-  selectedProblemStatement?: FoundationProblemStatement | null;
-  foundationProblemStatementId?: string | null;
-}): FoundationProgress {
+function mapApiProgress(data: FoundationProgressResponse): FoundationProgress {
   const missions: Record<number, MissionRecord> = {};
   Object.entries(data.missions || {}).forEach(([id, record]) => {
     missions[Number(id)] = mapApiMission(record);
@@ -130,8 +129,12 @@ export function loadProgress(): FoundationProgress {
     if (!parsed || typeof parsed !== "object" || !parsed.missions) {
       return emptyProgress();
     }
+    const missions: Record<number, MissionRecord> = {};
+    Object.entries(parsed.missions).forEach(([key, record]) => {
+      missions[Number(key)] = record as MissionRecord;
+    });
     return {
-      missions: parsed.missions,
+      missions,
       totalXp: Number(parsed.totalXp) || 0,
       completedCount: parsed.completedCount,
       foundationComplete: parsed.foundationComplete,
@@ -184,6 +187,16 @@ export function hasFoundationProblemSelected(): boolean {
   return Boolean(
     progress.foundationProblemStatementId || progress.selectedProblemStatement?.id,
   );
+}
+
+/** Selected problem for mission UI (sync, from cache / localStorage). */
+export function getSelectedProblemStatementDisplay(): {
+  id: string;
+  text: string;
+} | null {
+  const ps = loadProgress().selectedProblemStatement;
+  if (!ps) return null;
+  return { id: ps.id, text: ps.statementText };
 }
 
 export function getMissionRecord(missionId: number): MissionRecord {
@@ -271,6 +284,22 @@ export function isMissionUnlocked(missionId: number): boolean {
   return Boolean(progress.missions[missionId - 1]?.completed);
 }
 
+/** First mission the student is allowed to play (sequential unlock). */
+export function firstIncompleteMissionId(): number {
+  const progress = loadProgress();
+  for (let id = 1; id <= TOTAL_MISSIONS; id += 1) {
+    if (!progress.missions[id]?.completed) return id;
+  }
+  return TOTAL_MISSIONS;
+}
+
+export function isMissionAccessible(missionId: number): boolean {
+  if (!Number.isInteger(missionId) || missionId < 1 || missionId > TOTAL_MISSIONS) {
+    return false;
+  }
+  return isMissionUnlocked(missionId);
+}
+
 export function completedMissionCount(): number {
   const progress = loadProgress();
   return Object.values(progress.missions).filter((m) => m.completed).length;
@@ -280,14 +309,6 @@ export function isFoundationComplete(): boolean {
   const progress = loadProgress();
   if (progress.foundationComplete) return true;
   return completedMissionCount() >= TOTAL_MISSIONS;
-}
-
-export function firstIncompleteMissionId(): number {
-  const progress = loadProgress();
-  for (let id = 1; id <= TOTAL_MISSIONS; id += 1) {
-    if (!progress.missions[id]?.completed) return id;
-  }
-  return TOTAL_MISSIONS;
 }
 
 export function getTotalXp(): number {
