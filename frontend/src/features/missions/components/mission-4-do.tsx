@@ -47,6 +47,7 @@ export function Mission4Do() {
   const [worked, setWorked] = useState("");
   const [didntWork, setDidntWork] = useState("");
   const [improve, setImprove] = useState("");
+  const [implementation, setImplementation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export function Mission4Do() {
       setWorked((record.answers.worked as string) ?? "");
       setDidntWork((record.answers.didntWork as string) ?? "");
       setImprove((record.answers.improve as string) ?? "");
+      setImplementation((record.answers.implementation as string) ?? "");
       setHydrated(true);
     });
   }, []);
@@ -72,6 +74,7 @@ export function Mission4Do() {
       worked,
       didntWork,
       improve,
+      implementation,
     };
   }
 
@@ -81,6 +84,7 @@ export function Mission4Do() {
     { label: "Test it with real users", done: respond.trim().length > 0 },
     { label: "Observe what happens", done: worked.trim().length > 0 && didntWork.trim().length > 0 },
     { label: "Make one improvement", done: improve.trim().length > 0 },
+    { label: "Plan how to implement the improvements", done: implementation.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done) && description.trim().length > 0;
 
@@ -145,7 +149,7 @@ export function Mission4Do() {
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
-              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
+              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 3</span>
             </div>
             <p className="mt-1 text-sm text-muted">{sectionDescription}</p>
             <div className="mt-4">
@@ -184,7 +188,7 @@ export function Mission4Do() {
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold text-foreground">Tell Us What Happened: Test Reflection</h2>
-              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 2 of 2</span>
+              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 2 of 3</span>
             </div>
             <p className="mt-1 mb-4 text-sm text-muted">Document your real-world test results</p>
 
@@ -212,13 +216,44 @@ export function Mission4Do() {
               onChange={setDidntWork}
               done={didntWork.trim().length > 0}
             />
+          </div>
+
+          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-foreground">Improvement Phase</h2>
+              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 3 of 3</span>
+            </div>
+            <p className="mt-1 mb-4 text-sm text-muted">
+              Decide what to change and how you will make it happen
+            </p>
+
             <QuestionField
-              index={4}
-              question={questionText(journeyConfig, "improve", "What will you improve next?")}
+              index={1}
+              question={questionText(
+                journeyConfig,
+                "improve",
+                "What is one improvement you would make next?",
+              )}
               placeholder={questionPlaceholder(journeyConfig, "improve")}
               value={improve}
               onChange={setImprove}
               done={improve.trim().length > 0}
+            />
+            <QuestionField
+              index={2}
+              question={questionText(
+                journeyConfig,
+                "implementation",
+                "How will you implement these improvements?",
+              )}
+              placeholder={questionPlaceholder(
+                journeyConfig,
+                "implementation",
+                "Describe the steps, tools, or changes you will use to put your improvement into action...",
+              )}
+              value={implementation}
+              onChange={setImplementation}
+              done={implementation.trim().length > 0}
             />
 
             {submitError ? (

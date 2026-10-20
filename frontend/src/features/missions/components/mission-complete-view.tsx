@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Flame, Lock, Zap } from "@/components/icons";
+import { ArrowRight, Check, Flame, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { MISSIONS, MISSION_COMPLETE_CONTENT, getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
@@ -13,12 +13,7 @@ import {
 } from "../lib/mission-progress";
 import { ReadyQuestMap } from "./ready-quest-map";
 
-const STAGE_TRACKER = [
-  { label: "Stage 0: Foundation", status: "active" as const },
-  { label: "Stage 1: Projects", status: "next" as const },
-  { label: "Stage 2: Mentorship", status: "locked" as const },
-  { label: "Stage 3: Industry", status: "locked" as const },
-];
+
 
 export function MissionCompleteView({ missionId }: { missionId: number }) {
   const router = useRouter();
@@ -50,27 +45,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
         <span className="text-primary">Mission {missionId} Complete</span>
       </p>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-        {STAGE_TRACKER.map((stage) => (
-          <div key={stage.label} className="flex items-center gap-2">
-            <span
-              className={
-                stage.status === "active"
-                  ? "flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white"
-                  : "flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-muted"
-              }
-            >
-              {stage.status === "active" ? <Check className="h-3.5 w-3.5" /> : <Lock className="h-3 w-3" />}
-            </span>
-            <div>
-              <p className="text-[10px] font-semibold tracking-wider text-muted uppercase">
-                {stage.status === "active" ? "Active" : stage.status === "next" ? "Next Stage" : "Locked"}
-              </p>
-              <p className="text-sm font-medium text-foreground">{stage.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+     
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="space-y-6 lg:col-span-2">

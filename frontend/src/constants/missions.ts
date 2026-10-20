@@ -99,10 +99,10 @@ export const MISSIONS: MissionMeta[] = [
     location: "Campus Canteen",
     xpReward: 75,
     tip: {
-      advisorLabel: "Prototyping Coach",
-      quote:
-        "Don't build a full app. Test a small idea quickly using a simple prototype, even a Google Form or WhatsApp group can work. Good prototypes answer one specific question without premature polish.",
-    },
+  advisorLabel: "Prototyping Coach",
+  quote:
+    "Don't build a full app. Test a small idea quickly using a simple prototype—even a Google Form or WhatsApp group can work. Good prototypes answer one specific question without premature polish.",
+},
     whatYoullDo: [
       "Build a small, fast, testable prototype.",
       "Test it with 2–3 real users on location.",

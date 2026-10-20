@@ -28,6 +28,14 @@ import {
 
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
+const EXAMPLE_QUESTIONS = [
+  "Do you think waste management is a problem on our campus?",
+  "Where do you notice the most waste?",
+  "How does it affect students?",
+  "What do you think is the main reason behind this problem?",
+  "Have you tried doing anything to solve it?",
+  "What changes would you like to see?",
+] as const;
 
 export function Mission2Engage() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
@@ -105,15 +113,30 @@ export function Mission2Engage() {
         <>
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your conversation</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Objective of Engage mission</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              Upload a document with your notes and Google Drive links to any recordings or photos.
-            </p>
-            <div className="mt-4">
-              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
-            </div>
+           <div className="mt-1 text-sm text-muted">
+  <ul className="list-decimal pl-5 space-y-1">
+    <li>Identify people who experience the problem you observed in Mission 1.</li>
+    <li>Start a conversation with them about their experiences.</li>
+    <li>Ask open-ended questions to understand their challenges and frustrations.</li>
+    <li>Listen carefully to their responses without assuming or suggesting solutions.</li>
+    <li>Submit key responses and takeaways from your conversations.</li>
+  </ul>
+
+    <p className="mt-2">
+    <strong>Remember:</strong> Talk less, listen more, and understand the problem through people's real experiences.
+  </p>
+</div>
+
+<h2 className="mt-6 font-display text-lg font-bold text-foreground">
+  Add evidence from your conversation
+</h2>
+
+<div className="mt-3">
+  <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+</div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               {questionText(journeyConfig, "observation", "Field observation")}
             </label>
@@ -204,7 +227,39 @@ export function Mission2Engage() {
       sidebar={
         <>
           <SelectedProblemBanner statementText={selectedProblemText} />
-          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
+          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
+  <div className="flex items-center gap-2">
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+      AI
+    </span>
+    <p className="text-sm font-semibold text-foreground">Tip from READY</p>
+    <span className="ml-auto shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold tracking-wider text-muted uppercase">
+      {mission.tip.advisorLabel}
+    </span>
+  </div>
+
+  <p className="mt-3 text-sm leading-relaxed text-muted italic">
+    &ldquo;People often say one thing, but do another. Look for stories, not opinions.&rdquo;
+  </p>
+
+  <div className="mt-4 rounded-[var(--radius-card)] bg-surface p-3">
+    <p className="text-sm font-semibold text-foreground">
+      Example: Improving Campus Waste Management
+    </p>
+    <p className="mt-2 text-xs text-muted">Ask people questions like:</p>
+    <ul className="mt-1.5 space-y-1.5">
+      {EXAMPLE_QUESTIONS.map((question) => (
+        <li key={question} className="flex gap-2 text-sm leading-snug text-foreground">
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+          &ldquo;{question}&rdquo;
+        </li>
+      ))}
+    </ul>
+    <p className="mt-3 text-xs leading-relaxed text-muted">
+      These questions help you understand people&apos;s experiences, opinions, and needs before deciding on a solution.
+    </p>
+  </div>
+</div>
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
