@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { ensureFoundationProgress, isMissionUnlocked } from "@/features/missions/lib/mission-progress";
+import { ensureFoundationJourneyContent } from "@/features/missions/lib/foundation-journey";
+import {
+  ensureFoundationProgress,
+  firstIncompleteMissionId,
+  hasFoundationProblemSelected,
+  isMissionAccessible,
+} from "@/features/missions/lib/mission-progress";
 import { Mission1Reality } from "@/features/missions/components/mission-1-reality";
 import { Mission2Engage } from "@/features/missions/components/mission-2-engage";
 import { Mission3Analyze } from "@/features/missions/components/mission-3-analyze";
@@ -20,14 +26,21 @@ export default function MissionPage() {
   useEffect(() => {
     if (!valid) return;
     ensureFoundationProgress()
-      .then(() => {
-        if (!isMissionUnlocked(id)) {
+      .then(async () => {
+        if (!hasFoundationProblemSelected()) {
           router.replace(ROUTES.assessment);
           return;
         }
+        if (!isMissionAccessible(id)) {
+          router.replace(ROUTES.mission(firstIncompleteMissionId()));
+          return;
+        }
+        await ensureFoundationJourneyContent();
         setReady(true);
       })
-      .catch(() => setReady(true));
+      .catch(() => {
+        router.replace(ROUTES.dashboard);
+      });
   }, [valid, id, router]);
 
   if (!valid) notFound();

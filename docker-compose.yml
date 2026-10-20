@@ -41,6 +41,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - backend-uploads:/app/uploads
     ports:
@@ -49,8 +51,6 @@ services:
     networks:
       - imready
 
-  # One-off migration runner — not started by `docker compose up`.
-  # Usage: docker compose --profile tools run --rm migrate
   migrate:
     build:
       context: ./backend
@@ -67,8 +67,7 @@ services:
         condition: service_healthy
     networks:
       - imready
-    profiles:
-      - tools
+    restart: "no"
 
   admin:
     build:

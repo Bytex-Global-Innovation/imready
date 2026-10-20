@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Check, Flag } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { getSelectedProblemStatement } from "../lib/problem-statement";
 import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
@@ -15,34 +14,33 @@ import {
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
+  SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+  useSelectedProblemText,
+} from "../lib/foundation-journey";
 
 const MISSION_ID = 3;
 const mission = getMission(MISSION_ID);
 
-   const FALLBACK_PROBLEM_STATEMENT =
-     "Students keep crowding the counter and asking canteen staff repeatedly if their order is ready.";
-
-const WHY_LAYERS = [
-  { label: "Why: First Layer", key: "why1" },
+const FALLBACK_WHY_LAYERS = [
+  { label: "Why: First Layer (Symptom)", key: "why1" },
   { label: "Why: Second Layer", key: "why2" },
   { label: "Why: Third Layer", key: "why3" },
-  { label: "Why: Fourth Layer", key: "why4" },
+  { label: "Why: Fourth Layer (Operational)", key: "why4" },
 ];
 
-const PATTERN_TAG_OPTIONS = ["Information Gap", "Counter Congestion", "Communication Flow"];
-const WHY_EXAMPLE = [
-  { question: "Why was the project late?", answer: "The student finished it after the deadline." },
-  { question: "Why did it take longer?", answer: "The code had many errors." },
-  { question: "Why were there so many errors?", answer: "Components were integrated at the last minute." },
-  { question: "Why was integration delayed?", answer: "Each component was developed separately without testing." },
-  { question: "Why wasn't testing done earlier?", answer: "There was no planned testing schedule." },
-] as const;
+const FALLBACK_PATTERN_TAGS = ["Information Gap", "Counter Congestion", "Communication Flow"];
 
 export function Mission3Analyze() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [whys, setWhys] = useState<Record<string, string>>({});
@@ -52,8 +50,6 @@ export function Mission3Analyze() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [problemStatement, setProblemStatement] = useState(FALLBACK_PROBLEM_STATEMENT);
-  const [solutions, setSolutions] = useState("");
 
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -66,7 +62,6 @@ export function Mission3Analyze() {
       });
       setRootCause((record.answers.rootCause as string) ?? "");
       setPattern((record.answers.pattern as string) ?? "");
-      setSolutions((record.answers.solutions as string) ?? "");
       setTags((record.answers.tags as string[]) ?? []);
       if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
         setEvidence({
@@ -75,38 +70,26 @@ export function Mission3Analyze() {
           previewUrl: null,
         });
       }
-         const chosen = getSelectedProblemStatement();
-   if (chosen) setProblemStatement(chosen.text);
       setHydrated(true);
     });
   }, []);
-
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { ...whys, rootCause, pattern, tags, solutions },
-      toEvidenceMeta(evidence),
-    );
-  }
 
   function toggleTag(tag: string) {
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }
 
-  const whysFilled = WHY_LAYERS.every((layer) => (whys[layer.key] ?? "").trim().length > 0);
+  const whysFilled = (journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS).every(
+    (layer) => (whys[layer.key] ?? "").trim().length > 0,
+  );
   const canComplete =
-  whysFilled &&
-  rootCause.trim().length > 0 &&
-  pattern.trim().length > 0 &&
-  solutions.trim().length > 0 &&
-  Boolean(evidence.filePath);
+    whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const answers = { ...whys, rootCause, pattern, tags, solutions };
+      const answers = { ...whys, rootCause, pattern, tags };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       await completeMission(MISSION_ID, answers, evidenceMeta);
@@ -120,9 +103,17 @@ export function Mission3Analyze() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const problemStatement =
+    journeyConfig?.analyzeContextText ??
+    '"Students keep crowding the counter and asking canteen staff repeatedly if their order is ready."';
+  const whyLayers = journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS;
+  const patternTagOptions = journeyConfig?.patternTagOptions ?? FALLBACK_PATTERN_TAGS;
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
     <MissionLayout
@@ -135,48 +126,22 @@ export function Mission3Analyze() {
         <>
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-foreground"> The 5 Whys Framework</h2>
-              
+              <h2 className="font-display text-lg font-bold text-foreground">Analyze with a Tool: The 5 Whys Framework</h2>
+              <span className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-semibold whitespace-nowrap text-primary">
+                Diagnostic Mode
+              </span>
             </div>
-            
-<div className="mt-1 text-sm text-muted">
-  <p>
-    A simple diagnostic framework to look beyond symptoms and discover the actual root cause.
-  </p>
-
-  <p className="mt-2 font-semibold">Key Steps:</p>
-
-  <ol className="mt-1 list-decimal pl-5 space-y-1">
-    <li>
-      <strong>Identify the Problem:</strong> Clearly define the issue you want to solve.
-    </li>
-    <li>
-      <strong>Ask Why:</strong> Find the immediate reason behind the problem.
-    </li>
-    <li>
-      <strong>Repeat the Question:</strong> Ask “Why?” about each answer to explore deeper causes.
-    </li>
-    <li>
-      <strong>Identify the Root Cause:</strong> Determine the underlying reason for the problem.
-    </li>
-    <li>
-      <strong>Analyze a Solution:</strong> Address the root cause to prevent the problem from recurring.
-    </li>
-  </ol>
-</div>
-
-<p className="mt-4 text-sm font-medium text-muted">
-  Now, write down your “Why?” questions and answers below to identify the root cause of the problem.
-</p>
-
+            <p className="mt-1 text-sm text-muted">
+              A simple diagnostic framework to look beyond symptoms and discover the actual root cause.
+            </p>
 
             <div className="mt-5 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 p-4">
               <p className="text-xs font-semibold tracking-wider text-amber-700 uppercase">Observed Problem Statement</p>
-              <p className="mt-1 text-sm font-medium text-amber-900">&ldquo;{problemStatement}&rdquo;</p>
+              <p className="mt-1 text-sm font-medium text-amber-900">{problemStatement}</p>
             </div>
 
             <ol className="mt-5">
-              {WHY_LAYERS.map((layer) => {
+              {whyLayers.map((layer) => {
                 const filled = (whys[layer.key] ?? "").trim().length > 0;
                 return (
                   <li key={layer.key} className="flex gap-4">
@@ -196,7 +161,7 @@ export function Mission3Analyze() {
                         type="text"
                         value={whys[layer.key] ?? ""}
                         onChange={(event) => setWhys((prev) => ({ ...prev, [layer.key]: event.target.value }))}
-                        
+                        placeholder={questionPlaceholder(journeyConfig, layer.key, "Because...")}
                         className="mt-1 w-full rounded-[var(--radius-card)] border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
@@ -221,7 +186,11 @@ export function Mission3Analyze() {
                     type="text"
                     value={rootCause}
                     onChange={(event) => setRootCause(event.target.value)}
-                    placeholder="State the actionable root cause..."
+                    placeholder={questionPlaceholder(
+                      journeyConfig,
+                      "rootCause",
+                      "State the actionable root cause...",
+                    )}
                     className="mt-2 w-full rounded-[var(--radius-card)] border border-primary bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <p className="mt-2 text-xs text-primary">Ready for prototyping in Mission 4 (Build, Test &amp; Improve)</p>
@@ -244,16 +213,21 @@ export function Mission3Analyze() {
               <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
             </div>
             <p className="mt-6 text-sm font-medium text-foreground">
-              What fundamental pattern did you detect from student quotes and observations?
+              {questionText(
+                journeyConfig,
+                "pattern",
+                "What fundamental pattern did you detect from your observations?",
+              )}
             </p>
             <textarea
               value={pattern}
               onChange={(event) => setPattern(event.target.value)}
               rows={3}
-              className="mt-2 w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={questionPlaceholder(journeyConfig, "pattern")}
+              className="mt-2 w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <div className="mt-3 flex flex-wrap gap-2">
-              {PATTERN_TAG_OPTIONS.map((tag) => (
+              {patternTagOptions.map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -267,17 +241,6 @@ export function Mission3Analyze() {
               ))}
             </div>
 
-            <p className="mt-6 text-sm font-medium text-foreground">
-  After finding the root cause, what solutions did you come up with?
-</p>
-<textarea
-  value={solutions}
-  onChange={(event) => setSolutions(event.target.value)}
-  rows={3}
-  placeholder="Describe the solutions you thought of to fix the root cause..."
-  className="mt-2 w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-/>
-
             {submitError ? (
               <p className="mt-4 text-sm text-red-600" role="alert">
                 {submitError}
@@ -286,7 +249,6 @@ export function Mission3Analyze() {
 
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(2))}
-              onSaveDraft={persist}
               onNext={handleComplete}
               nextLabel="Next: Complete Mission 3"
               nextDisabled={!canComplete}
@@ -297,35 +259,8 @@ export function Mission3Analyze() {
       }
       sidebar={
         <>
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-  <div className="flex items-center gap-2">
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-      AI
-    </span>
-    <p className="text-sm font-semibold text-foreground">Tip from READY</p>
-    <span className="ml-auto shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold tracking-wider text-muted uppercase">
-      {mission.tip.advisorLabel}
-    </span>
-  </div>
-
-  <p className="mt-3 text-sm text-muted">
-    <span className="font-semibold text-foreground">Example:</span> A student submits a project late.
-  </p>
-
-  <ul className="mt-2.5 space-y-2">
-    {WHY_EXAMPLE.map((item, index) => (
-      <li key={item.question} className="text-sm leading-relaxed">
-        <span className="font-semibold text-primary">Why {index + 1}:</span>{" "}
-        <span className="font-medium text-foreground">{item.question}</span>{" "}
-        <span className="text-muted">{item.answer}</span>
-      </li>
-    ))}
-  </ul>
-
-  <p className="mt-3 rounded-[var(--radius-card)] bg-surface px-3 py-2.5 text-sm text-foreground">
-    <span className="font-semibold">Root Cause:</span> Lack of a structured development and testing plan.
-  </p>
-</div>
+          <SelectedProblemBanner statementText={selectedProblemText} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

@@ -6,7 +6,11 @@ import { ArrowRight, Check, Flame, Lock, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { MISSIONS, MISSION_COMPLETE_CONTENT, getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { getMissionRecord } from "../lib/mission-progress";
+import {
+  firstIncompleteMissionId,
+  getMissionRecord,
+  isMissionAccessible,
+} from "../lib/mission-progress";
 import { ReadyQuestMap } from "./ready-quest-map";
 
 const STAGE_TRACKER = [
@@ -27,7 +31,15 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
   const percent = Math.round((completedCount / MISSIONS.length) * 100);
 
   function goNext() {
-    router.push(nextMission ? ROUTES.mission(nextMission.id) : ROUTES.foundationComplete);
+    if (!nextMission) {
+      router.push(ROUTES.foundationComplete);
+      return;
+    }
+    if (!isMissionAccessible(nextMission.id)) {
+      router.push(ROUTES.mission(firstIncompleteMissionId()));
+      return;
+    }
+    router.push(ROUTES.mission(nextMission.id));
   }
 
   return (

@@ -13,22 +13,25 @@ import {
   MissionFooterNav,
   MissionLayout,
   QuestionField,
+  SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionHelper,
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+  useSelectedProblemText,
+} from "../lib/foundation-journey";
 
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
-const EXAMPLE_QUESTIONS = [
-  "Do you think waste management is a problem on our campus?",
-  "Where do you notice the most waste?",
-  "How does it affect students?",
-  "What do you think is the main reason behind this problem?",
-  "Have you tried doing anything to solve it?",
-  "What changes would you like to see?",
-] as const;
+
 export function Mission2Engage() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [observation, setObservation] = useState("");
@@ -56,14 +59,6 @@ export function Mission2Engage() {
       setHydrated(true);
     });
   }, []);
-
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { observation, surprise, quotes, patterns },
-      toEvidenceMeta(evidence),
-    );
-  }
 
   // Still drives the submit button even though the checklist card is no longer shown.
   const checklist = [
@@ -93,9 +88,12 @@ export function Mission2Engage() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
     <MissionLayout
@@ -110,18 +108,21 @@ export function Mission2Engage() {
               <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your conversation</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            
+            <p className="mt-1 text-sm text-muted">
+              Upload a document with your notes and Google Drive links to any recordings or photos.
+            </p>
             <div className="mt-4">
               <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
             </div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
-              Field observation
+              {questionText(journeyConfig, "observation", "Field observation")}
             </label>
             <textarea
               value={observation}
               onChange={(event) => setObservation(event.target.value)}
               rows={3}
-              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={questionPlaceholder(journeyConfig, "observation")}
+              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -134,24 +135,51 @@ export function Mission2Engage() {
 
             <QuestionField
               index={1}
-              question="What surprised you the most during this interaction?"
-              helper="Identifies behavior that contradicts assumptions."
+              question={questionText(
+                journeyConfig,
+                "surprise",
+                "What surprised you the most during this interaction?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "surprise",
+                "Identifies behavior that contradicts assumptions.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "surprise")}
               value={surprise}
               onChange={setSurprise}
               done={surprise.trim().length > 0}
             />
             <QuestionField
               index={2}
-              question="Any direct quotes that capture their frustration or mindset?"
-              helper="Capture verbatim language instead of translating into your own words."
+              question={questionText(
+                journeyConfig,
+                "quotes",
+                "Any direct quotes that capture their frustration or mindset?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "quotes",
+                "Capture verbatim language instead of translating into your own words.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "quotes")}
               value={quotes}
               onChange={setQuotes}
               done={quotes.trim().length > 0}
             />
             <QuestionField
               index={3}
-              question="What repeating patterns do you see across multiple conversations?"
-              helper="Highlight recurring feelings, wait loops, or workarounds."
+              question={questionText(
+                journeyConfig,
+                "patterns",
+                "What repeating patterns do you see across multiple conversations?",
+              )}
+              helper={questionHelper(
+                journeyConfig,
+                "patterns",
+                "Highlight recurring feelings, wait loops, or workarounds.",
+              )}
+              placeholder={questionPlaceholder(journeyConfig, "patterns")}
               value={patterns}
               onChange={setPatterns}
               done={patterns.trim().length > 0}
@@ -165,7 +193,6 @@ export function Mission2Engage() {
 
             <MissionFooterNav
               onPrevious={() => router.push(ROUTES.mission(1))}
-              onSaveDraft={persist}
               onNext={handleComplete}
               nextLabel="Next: Complete Mission 2"
               nextDisabled={!canComplete}
@@ -176,39 +203,8 @@ export function Mission2Engage() {
       }
       sidebar={
         <>
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-  <div className="flex items-center gap-2">
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-      AI
-    </span>
-    <p className="text-sm font-semibold text-foreground">Tip from READY</p>
-    <span className="ml-auto shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold tracking-wider text-muted uppercase">
-      {mission.tip.advisorLabel}
-    </span>
-  </div>
-
-  <p className="mt-3 text-sm leading-relaxed text-muted italic">
-    &ldquo;People often say one thing, but do another. Look for stories, not opinions.&rdquo;
-  </p>
-
-  <div className="mt-4 rounded-[var(--radius-card)] bg-surface p-3">
-    <p className="text-sm font-semibold text-foreground">
-      Example: Improving Campus Waste Management
-    </p>
-    <p className="mt-2 text-xs text-muted">Ask people questions like:</p>
-    <ul className="mt-1.5 space-y-1.5">
-      {EXAMPLE_QUESTIONS.map((question) => (
-        <li key={question} className="flex gap-2 text-sm leading-snug text-foreground">
-          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-          &ldquo;{question}&rdquo;
-        </li>
-      ))}
-    </ul>
-    <p className="mt-3 text-xs leading-relaxed text-muted">
-      These questions help you understand people&apos;s experiences, opinions, and needs before deciding on a solution.
-    </p>
-  </div>
-</div>
+          <SelectedProblemBanner statementText={selectedProblemText} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

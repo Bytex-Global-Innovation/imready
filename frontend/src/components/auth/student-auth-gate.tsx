@@ -11,7 +11,11 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { ensureFoundationProgress } from "@/features/missions/lib/mission-progress";
+import { ensureFoundationJourneyContent } from "@/features/missions/lib/foundation-journey";
+import {
+  ensureFoundationProgress,
+  hasFoundationProblemSelected,
+} from "@/features/missions/lib/mission-progress";
 import type { StudentProfile } from "@/lib/api";
 import {
   clearStudentSessionCache,
@@ -135,7 +139,14 @@ function StudentSessionProvider({
         const session = await loadStudentSession();
         if (cancelled) return;
 
-        ensureFoundationProgress().catch(() => undefined);
+        ensureFoundationProgress()
+          .then((progress) => {
+            if (hasFoundationProblemSelected() || progress.foundationProblemStatementId) {
+              return ensureFoundationJourneyContent();
+            }
+            return undefined;
+          })
+          .catch(() => undefined);
 
         if (requireProjectsUnlocked && !session.projectsUnlocked) {
           router.replace(ROUTES.dashboard);

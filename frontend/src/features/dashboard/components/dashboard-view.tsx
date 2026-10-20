@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -11,9 +11,9 @@ import {
   Play,
   Star,
 } from "@/components/icons";
+import { useStudentProfile } from "@/components/auth/student-auth-gate";
 import { Button } from "@/components/ui/button";
 import {
-  DASHBOARD_USER,
   FOUNDATION_CARD,
   FOUNDATION_STEPS,
   INTRO_VIDEO,
@@ -21,6 +21,13 @@ import {
 } from "@/constants/dashboard";
 import { ActiveProjectDashboard } from "./active-project-dashboard";
 import { AssessmentInstructionsModal } from "./assessment-instructions-modal";
+import { ROUTES } from "@/constants/routes";
+import {
+  ensureFoundationProgress,
+  firstIncompleteMissionId,
+  hasFoundationProblemSelected,
+  isFoundationComplete,
+} from "@/features/missions/lib/mission-progress";
 import { JourneyPath } from "./journey-path";
 
 const STEP_ICONS: Record<FoundationStepIcon, typeof CalendarDays> = {
@@ -31,10 +38,59 @@ const STEP_ICONS: Record<FoundationStepIcon, typeof CalendarDays> = {
   star: Star,
 };
 
+type FoundationCtaMode = "start" | "continue" | "complete";
+
 export function DashboardView() {
+  const router = useRouter();
+  const { student } = useStudentProfile();
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [foundationCta, setFoundationCta] = useState<{
+    mode: FoundationCtaMode;
+    missionId: number;
+  }>({ mode: "start", missionId: 1 });
   const searchParams = useSearchParams();
   const hasActiveProject = searchParams.get("applied") === "true";
+  const displayName = student?.studentName?.trim() || "Explorer";
+
+  useEffect(() => {
+    ensureFoundationProgress()
+      .then(() => {
+        if (isFoundationComplete()) {
+          setFoundationCta({ mode: "complete", missionId: 5 });
+          return;
+        }
+        if (hasFoundationProblemSelected()) {
+          setFoundationCta({
+            mode: "continue",
+            missionId: firstIncompleteMissionId(),
+          });
+          return;
+        }
+        setFoundationCta({ mode: "start", missionId: 1 });
+      })
+      .catch(() => {
+        setFoundationCta({ mode: "start", missionId: 1 });
+      });
+  }, []);
+
+  function handleFoundationCta() {
+    if (foundationCta.mode === "complete") {
+      router.push(ROUTES.foundationComplete);
+      return;
+    }
+    if (foundationCta.mode === "continue") {
+      router.push(ROUTES.mission(foundationCta.missionId));
+      return;
+    }
+    setInstructionsOpen(true);
+  }
+
+  const foundationButtonLabel =
+    foundationCta.mode === "continue"
+      ? `Continue Mission ${foundationCta.missionId}`
+      : foundationCta.mode === "complete"
+        ? "View Foundation Summary"
+        : FOUNDATION_CARD.cta;
 
   if (hasActiveProject) {
     return <ActiveProjectDashboard />;
@@ -44,7 +100,7 @@ export function DashboardView() {
     <>
       <header className="mb-8">
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          Hi, {DASHBOARD_USER.name}
+          Hi, {displayName}
         </h1>
         <p className="mt-1 text-sm text-muted sm:text-base">
           Welcome to your Stage 0 Explorer Dashboard.
@@ -90,8 +146,8 @@ export function DashboardView() {
             {FOUNDATION_CARD.callout}
           </p>
 
-          <Button className="mt-6" onClick={() => setInstructionsOpen(true)}>
-            {FOUNDATION_CARD.cta}
+          <Button className="mt-6" onClick={handleFoundationCta}>
+            {foundationButtonLabel}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </section>

@@ -1037,6 +1037,7 @@ export interface Project {
   category?: ProjectCategory;
   badge?: string;
   isFree?: boolean;
+  projectPriceAmount?: number | null;
   description?: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -1059,6 +1060,7 @@ export interface ProjectInput {
   category: ProjectCategory;
   badge?: string;
   isFree: boolean;
+  projectPriceAmount?: number | null;
   description: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -1182,7 +1184,18 @@ export const projectsApi = {
   },
 };
 
-export type FoundationStatusFilter = "ALL" | "IN_PROGRESS" | "COMPLETE";
+export type FoundationStatusFilter =
+  | "ALL"
+  | "IN_PROGRESS"
+  | "COMPLETE"
+  | "AT_LEAST_3"
+  | "NOT_STARTED";
+
+export interface FoundationProgressSummary {
+  totalStudents: number;
+  completedAll: number;
+  completedAtLeast3: number;
+}
 
 export interface FoundationProgressListItem {
   studentId: string;
@@ -1197,10 +1210,13 @@ export interface FoundationProgressListItem {
   foundationComplete: boolean;
   foundationCompletedAt: string | null;
   lastUpdatedAt: string | null;
+  problemStatementText: string | null;
+  foundationProblemStatementId: string | null;
 }
 
 export interface FoundationProgressListResponse {
   results: FoundationProgressListItem[];
+  summary: FoundationProgressSummary;
   page: number;
   totalPages: number;
   total: number;
@@ -1240,9 +1256,91 @@ export interface FoundationStudentProgressDetail {
     totalMissions: number;
     foundationComplete: boolean;
     foundationCompletedAt: string | null;
+    selectedProblemStatement?: {
+      id: string;
+      statementText: string;
+    } | null;
+    foundationProblemStatementId?: string | null;
   };
   missions: FoundationMissionDetail[];
 }
+
+export interface FoundationStepQuestion {
+  answerKey: string;
+  question?: string;
+  label?: string;
+  helper?: string;
+  placeholder?: string;
+}
+
+export interface FoundationStepMissionConfig {
+  id: string;
+  missionId: number;
+  tipAdvisorLabel: string;
+  tipQuote: string;
+  analyzeContextText: string | null;
+  patternTagOptions: string[] | null;
+  whyLayerLabels: { key: string; label: string }[] | null;
+  questions: FoundationStepQuestion[];
+  evidenceConfig: Record<string, string> | null;
+}
+
+export interface FoundationStepProblem {
+  id: string;
+  uuid: string;
+  statementText: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export const foundationStepApi = {
+  listProblems: () =>
+    request<{ problemStatements: FoundationStepProblem[] }>(
+      "/admin/foundation/step/problems",
+    ),
+
+  getProblem: (problemId: string) =>
+    request<{ problem: FoundationStepProblem; missions: FoundationStepMissionConfig[] }>(
+      `/admin/foundation/step/problems/${problemId}`,
+    ),
+
+  createProblem: (payload: { statementText: string; isActive?: boolean; sortOrder?: number }) =>
+    request<{ problem: FoundationStepProblem; missions: FoundationStepMissionConfig[] }>(
+      "/admin/foundation/step/problems",
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
+
+  updateProblem: (
+    problemId: string,
+    payload: Partial<{ statementText: string; isActive: boolean; sortOrder: number }>,
+  ) =>
+    request<{ problem: FoundationStepProblem; missions: FoundationStepMissionConfig[] }>(
+      `/admin/foundation/step/problems/${problemId}`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
+
+  deleteProblem: (problemId: string) =>
+    request<{ message: string }>(`/admin/foundation/step/problems/${problemId}`, {
+      method: "DELETE",
+    }),
+
+  updateMission: (
+    problemId: string,
+    missionId: number,
+    payload: Partial<{
+      tipAdvisorLabel: string;
+      tipQuote: string;
+      analyzeContextText: string | null;
+      patternTagOptions: string[] | null;
+      questions: FoundationStepQuestion[];
+      evidenceConfig: Record<string, string> | null;
+    }>,
+  ) =>
+    request<{ mission: FoundationStepMissionConfig }>(
+      `/admin/foundation/step/problems/${problemId}/missions/${missionId}`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
+};
 
 export const foundationApi = {
   getProgressList: async (
@@ -1251,7 +1349,13 @@ export const foundationApi = {
   ): Promise<FoundationProgressListResponse> => {
     if (USE_MOCK) {
       await delay(400);
-      return { results: [], page: 1, totalPages: 1, total: 0 };
+      return {
+        results: [],
+        summary: { totalStudents: 0, completedAll: 0, completedAtLeast3: 0 },
+        page: 1,
+        totalPages: 1,
+        total: 0,
+      };
     }
     const params = new URLSearchParams({ page: String(page) });
     if (opts?.search) params.set("search", opts.search);

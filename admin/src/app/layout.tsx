@@ -7,6 +7,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Dashboard — ImReady Admin",
   description: "Administrative dashboard for the ImReady platform.",
+  icons: {
+    icon: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
+    apple: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
+  },
 };
 
 export default function RootLayout({

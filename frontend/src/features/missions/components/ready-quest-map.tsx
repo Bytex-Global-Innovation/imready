@@ -1,5 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Check, Lock } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import {
+  ensureFoundationProgress,
+  firstIncompleteMissionId,
+} from "../lib/mission-progress";
 
 type StepState = "completed" | "active" | "locked";
 
@@ -67,8 +74,20 @@ const QUEST_STEPS: QuestStep[] = [
   },
 ];
 
-export function ReadyQuestMap({ currentMission }: { currentMission: number }) {
-  const unlocked = Math.min(Math.max(currentMission, 1), QUEST_STEPS.length);
+export function ReadyQuestMap({ currentMission }: { currentMission?: number }) {
+  const [activeMission, setActiveMission] = useState(
+    () => currentMission ?? 1,
+  );
+
+  useEffect(() => {
+    ensureFoundationProgress()
+      .then(() => {
+        setActiveMission(currentMission ?? firstIncompleteMissionId());
+      })
+      .catch(() => undefined);
+  }, [currentMission]);
+
+  const unlocked = Math.min(Math.max(activeMission, 1), QUEST_STEPS.length);
 
   return (
     <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">

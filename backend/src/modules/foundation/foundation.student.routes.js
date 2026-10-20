@@ -6,6 +6,7 @@ const {
   validateBody,
   saveDraftSchema,
   completeMissionSchema,
+  selectProblemSchema,
 } = require('@modules/foundation/foundation.validator');
 const { requireVerifiedStudent } = require('@modules/auth/student.guard');
 const { uploadFoundationEvidence } = require('@middleware/upload-foundation-evidence.middleware');
@@ -15,6 +16,14 @@ const router = express.Router();
 router.use(requireVerifiedStudent);
 
 router.get('/progress', foundationController.getProgress);
+router.get('/problem-statements', foundationController.listProblemStatements);
+router.get('/journey-content', foundationController.getJourneyContent);
+router.get('/stage-framework', foundationController.getStageFramework);
+router.post(
+  '/problem-statement',
+  validateBody(selectProblemSchema),
+  foundationController.selectProblemStatement,
+);
 router.post(
   '/missions/:missionId/evidence',
   uploadFoundationEvidence('evidence'),

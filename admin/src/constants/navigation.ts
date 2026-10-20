@@ -7,6 +7,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   Target,
+  Layers,
 } from "@/components/icons";
 
 export interface NavItem {
@@ -23,4 +24,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Assessments",         href: "/assessments",         icon: ClipboardList   },
   { label: "Assessment Results",  href: "/assessment-results",  icon: ClipboardCheck  },
   { label: "Foundation Progress",   href: "/foundation-progress", icon: Target          },
+  { label: "Foundation Step",       href: "/foundation-step",     icon: Layers          },
 ];

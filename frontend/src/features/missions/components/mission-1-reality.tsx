@@ -14,15 +14,25 @@ import {
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
+  SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
+import {
+  questionHelper,
+  questionPlaceholder,
+  questionText,
+  useFoundationMissionConfig,
+  useSelectedProblemText,
+} from "../lib/foundation-journey";
 
 const MISSION_ID = 1;
 const mission = getMission(MISSION_ID);
 
 export function Mission1Reality() {
+  const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
+  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [caption, setCaption] = useState("");
@@ -47,14 +57,6 @@ export function Mission1Reality() {
     });
   }, []);
 
-  async function persist() {
-    await saveMissionDraft(
-      MISSION_ID,
-      { caption, reflection },
-      toEvidenceMeta(evidence),
-    );
-  }
-
   const reflectionWords = reflection.trim() ? reflection.trim().split(/\s+/).length : 0;
   const canComplete = caption.trim().length > 0 && reflection.trim().length > 0;
 
@@ -76,9 +78,33 @@ export function Mission1Reality() {
     }
   }
 
-  if (!hydrated) {
+  if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
+
+  const evidenceSectionTitle =
+    journeyConfig?.evidenceConfig?.sectionTitle ?? "Add evidence from your observation";
+  const evidenceSectionDescription =
+    journeyConfig?.evidenceConfig?.sectionDescription ??
+    "Upload a document describing what you saw. Include Google Drive links to any photos or recordings.";
+  const captionLabel = questionText(journeyConfig, "caption", "Short title / caption");
+  const captionHelper = questionHelper(
+    journeyConfig,
+    "caption",
+    "Keep it concise and clear about the friction trigger.",
+  );
+  const reflectionHelper = questionHelper(
+    journeyConfig,
+    "reflection",
+    "A few lines about what surprised you. What stood out?",
+  );
+  const reflectionPlaceholder = questionPlaceholder(
+    journeyConfig,
+    "reflection",
+    "Type your observation here...",
+  );
+  const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
     <MissionLayout
@@ -91,8 +117,8 @@ export function Mission1Reality() {
       }
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your observation</h2>
-          
+          <h2 className="font-display text-lg font-bold text-foreground">{evidenceSectionTitle}</h2>
+          <p className="mt-1 text-sm text-muted">{evidenceSectionDescription}</p>
           <span className="mt-3 inline-block rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary">
             Step 1 of 2: Observation &amp; Evidence
           </span>
@@ -103,8 +129,9 @@ export function Mission1Reality() {
               value={evidence}
               onChange={setEvidence}
               caption={caption}
-              captionLabel="Short title / caption"
-              captionHelper="Keep it concise and clear about the friction trigger."
+              captionLabel={captionLabel}
+              captionHelper={captionHelper}
+              uploadHelper={journeyConfig?.evidenceConfig?.uploadHelper}
               onCaptionChange={setCaption}
             />
           </div>
@@ -113,12 +140,12 @@ export function Mission1Reality() {
             <span>Reflect on what you noticed</span>
             <span>Question 2 of 2</span>
           </label>
-          <p className="mb-2 text-sm text-muted">A few lines about what surprised you. What stood out?</p>
+          <p className="mb-2 text-sm text-muted">{reflectionHelper}</p>
           <textarea
             value={reflection}
             onChange={(event) => setReflection(event.target.value)}
             rows={4}
-            placeholder="Example: Long queue at the canteen during lunch hour. Many students did not know how long they had to wait. Some kept asking others when their order will be ready."
+            placeholder={reflectionPlaceholder}
             className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <div className="mt-2">
@@ -134,7 +161,6 @@ export function Mission1Reality() {
           <MissionFooterNav
             onPrevious={() => router.push(ROUTES.dashboard)}
             previousLabel="Back to Dashboard"
-            onSaveDraft={persist}
             onNext={handleComplete}
             nextLabel="Next: Reflection & Submit"
             nextDisabled={!canComplete}
@@ -144,7 +170,8 @@ export function Mission1Reality() {
       }
       sidebar={
         <>
-          <TipFromReady advisorLabel={mission.tip.advisorLabel} quote={mission.tip.quote} />
+          <SelectedProblemBanner statementText={selectedProblemText} />
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

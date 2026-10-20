@@ -61,7 +61,7 @@ function getNavItems(projectsUnlocked: boolean) {
         pathname === ROUTES.dashboard,
     },
     {
-      label: "Free Projects",
+      label: "Unpaid Projects",
       href: ROUTES.freeProjects,
       icon: Gift,
       locked: false,

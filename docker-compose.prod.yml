@@ -6,9 +6,8 @@
 # - Uploads + optional MySQL data: host paths under /srv/imready by default
 #
 # Usage (on VPS, from project directory):
-#   docker compose -f docker-compose.prod.yml config
 #   docker compose -f docker-compose.prod.yml up -d --build
-#   docker compose -f docker-compose.prod.yml --profile tools run --rm migrate
+# Migrations run automatically via the `migrate` service before `backend` starts.
 #
 # NEVER run `docker compose down` without `-f docker-compose.prod.yml` and
 # without confirming you are in IMReady's directory, not ByteX's.
@@ -35,6 +34,23 @@ services:
     networks:
       - imready
 
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: migrator
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - imready
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -51,6 +67,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ${IMREADY_UPLOADS_DIR:-/srv/imready/uploads}:/app/uploads
     ports:
@@ -58,24 +76,6 @@ services:
     init: true
     networks:
       - imready
-
-  migrate:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: migrator
-    env_file:
-      - .env
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - imready
-    profiles:
-      - tools
 
   admin:
     build:

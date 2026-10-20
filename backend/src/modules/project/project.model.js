@@ -40,6 +40,18 @@ const IndustryProject = sequelize.define(
       defaultValue: false,
       field: 'is_free',
     },
+    completionPayoutAmount: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+      defaultValue: null,
+      field: 'completion_payout_amount',
+    },
+    projectPriceAmount: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+      defaultValue: null,
+      field: 'project_price_amount',
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: false,

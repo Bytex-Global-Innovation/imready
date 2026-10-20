@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { PROJECTS, type ProjectItem } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
 import { projectsApi, resolveMediaUrl, type ApiProjectItem } from "@/lib/api";
+import { formatInrAmount } from "@/lib/format-currency";
 import { ApplySuccessModal } from "./apply-success-modal";
 
 function BriefPill({
@@ -71,6 +72,7 @@ function mapApiProject(project: ApiProjectItem): ProjectItem {
       ...resource,
       href: resolveMediaUrl(resource.href) || resource.href,
     })),
+    projectPriceAmount: project.projectPriceAmount ?? null,
   };
 }
 
@@ -146,6 +148,9 @@ export function ProjectBriefView({
     );
   }
 
+  const priceLabel =
+    access === "premium" ? formatInrAmount(project.projectPriceAmount) : null;
+
   return (
     <div className="mx-auto max-w-3xl">
       <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted">
@@ -153,7 +158,7 @@ export function ProjectBriefView({
           href={access === "free" ? ROUTES.freeProjects : ROUTES.projects}
           className="cursor-pointer hover:text-foreground"
         >
-          {access === "free" ? "Free Projects" : "Projects"}
+          {access === "free" ? "Unpaid Projects" : "Projects"}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground">{project.title}</span>
@@ -169,6 +174,11 @@ export function ProjectBriefView({
           ) : null}
           <BriefPill icon={Tag} label={project.badge} />
         </div>
+        {priceLabel ? (
+          <p className="mt-4 rounded-[var(--radius-card)] border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-foreground">
+            This paid project is valued at {priceLabel}.
+          </p>
+        ) : null}
       </header>
 
       <div className="space-y-5">

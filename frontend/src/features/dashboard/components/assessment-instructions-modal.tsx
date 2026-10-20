@@ -9,14 +9,23 @@ import {
   FOUNDATION_INSTRUCTIONS,
   FOUNDATION_NOTICES,
   FOUNDATION_PARTS,
-  FOUNDATION_PROBLEM_STATEMENTS,
   type FoundationNoticeIcon,
 } from "@/constants/dashboard";
 import { ROUTES } from "@/constants/routes";
 import {
-  getSelectedProblemStatement,
-  setSelectedProblemStatement,
-} from "@/features/missions/lib/problem-statement";
+  clearFoundationJourneyCache,
+  setFoundationJourneyCache,
+} from "@/features/missions/lib/foundation-journey";
+import {
+  ensureFoundationProgress,
+  invalidateFoundationProgressCache,
+} from "@/features/missions/lib/mission-progress";
+import {
+  FoundationApiError,
+  foundationApi,
+  type FoundationProblemStatement,
+  type FoundationStageFrameworkPart,
+} from "@/lib/foundation-api";
 import { cn } from "@/lib/utils";
 
 interface AssessmentInstructionsModalProps {
@@ -45,24 +54,93 @@ export function AssessmentInstructionsModal({
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [step, setStep] = useState<"framework" | "instructions">("framework");
+  const [problemOptions, setProblemOptions] = useState<FoundationProblemStatement[]>([]);
+  const [problemsLoading, setProblemsLoading] = useState(false);
+  const [problemsError, setProblemsError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [frameworkParts, setFrameworkParts] = useState<FoundationStageFrameworkPart[]>(
+    () => [...FOUNDATION_PARTS],
+  );
 
-  // Restore a previously saved choice whenever the modal opens.
   useEffect(() => {
     if (!isOpen) return;
     setStep("framework");
-    setSelectedId(getSelectedProblemStatement()?.id ?? null);
+    setProblemsError(null);
+    setSelectedId(null);
+    setFrameworkParts([...FOUNDATION_PARTS]);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || step !== "instructions") return;
+
+    let cancelled = false;
+    setProblemsLoading(true);
+    setProblemsError(null);
+
+    (async () => {
+      try {
+        const [progress, { problemStatements }, framework] = await Promise.all([
+          ensureFoundationProgress(),
+          foundationApi.listProblemStatements(),
+          foundationApi.getStageFramework(),
+        ]);
+        if (!cancelled && framework.parts.length > 0) {
+          setFrameworkParts(framework.parts);
+        }
+        if (cancelled) return;
+        setProblemOptions(problemStatements);
+        const existing =
+          progress.selectedProblemStatement?.id ??
+          progress.foundationProblemStatementId ??
+          null;
+        if (existing) {
+          setSelectedId(existing);
+        } else if (problemStatements[0]) {
+          setSelectedId(problemStatements[0].id);
+        }
+      } catch {
+        if (!cancelled) {
+          setProblemsError("Could not load problem statements. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setProblemsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, step]);
 
   if (!isOpen) return null;
   if (step === "framework") {
-  return <IndustryFrameworkModal onClose={onClose} onNext={() => setStep("instructions")} />;
-}
+    return (
+      <IndustryFrameworkModal onClose={onClose} onNext={() => setStep("instructions")} />
+    );
+  }
 
-  function handleStart() {
-    if (!selectedId) return;
-    setSelectedProblemStatement(selectedId);
-    onClose();
-    router.push(ROUTES.assessment);
+  async function handleStart() {
+    if (!selectedId || isSaving) return;
+    setIsSaving(true);
+    setProblemsError(null);
+    try {
+      clearFoundationJourneyCache();
+      invalidateFoundationProgressCache();
+      const journey = await foundationApi.selectProblemStatement(selectedId);
+      setFoundationJourneyCache(journey);
+      invalidateFoundationProgressCache();
+      await ensureFoundationProgress();
+      onClose();
+      router.push(ROUTES.assessment);
+    } catch (err) {
+      const message =
+        err instanceof FoundationApiError
+          ? err.message
+          : "Could not save your selection. Please try again.";
+      setProblemsError(message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -104,7 +182,7 @@ export function AssessmentInstructionsModal({
               Know the industry readiness framework
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {FOUNDATION_PARTS.map((part, index) => {
+              {frameworkParts.map((part, index) => {
                 const style = PART_STYLES[index];
                 return (
                   <div
@@ -171,32 +249,39 @@ export function AssessmentInstructionsModal({
               Select one campus challenge to investigate across all 5 stages:
             </p>
 
-            <div
-              role="radiogroup"
-              aria-label="Foundation problem statement"
-              className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
-            >
-              {FOUNDATION_PROBLEM_STATEMENTS.map((problem) => {
-                const selected = selectedId === problem.id;
-                return (
-                  <button
-                    key={problem.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setSelectedId(problem.id)}
-                    className={cn(
-                      "cursor-pointer rounded-xl border-2 px-4 py-3.5 text-left text-xs leading-relaxed font-medium text-foreground transition-colors",
-                      selected
-                        ? "border-primary bg-white shadow-sm"
-                        : "border-transparent bg-surface hover:border-brand-100",
-                    )}
-                  >
-                    {problem.text}
-                  </button>
-                );
-              })}
-            </div>
+            {problemsError ? (
+              <p className="mt-4 text-sm text-red-600" role="alert">{problemsError}</p>
+            ) : null}
+            {problemsLoading ? (
+              <p className="mt-4 text-sm text-muted">Loading problem statements…</p>
+            ) : (
+              <div
+                role="radiogroup"
+                aria-label="Foundation problem statement"
+                className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
+              >
+                {problemOptions.map((problem) => {
+                  const selected = selectedId === problem.id;
+                  return (
+                    <button
+                      key={problem.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setSelectedId(problem.id)}
+                      className={cn(
+                        "cursor-pointer rounded-xl border-2 px-4 py-3.5 text-left text-xs leading-relaxed font-medium text-foreground transition-colors",
+                        selected
+                          ? "border-primary bg-white shadow-sm"
+                          : "border-transparent bg-surface hover:border-brand-100",
+                      )}
+                    >
+                      {problem.statementText}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -208,9 +293,12 @@ export function AssessmentInstructionsModal({
            <Button variant="secondary" onClick={() => setStep("framework")} className="sm:min-w-[110px]">
   Go Back
 </Button>
-            <Button onClick={handleStart} disabled={!selectedId} className="sm:min-w-[190px]">
-             
-              I&apos;m Ready, Let&apos;s Start
+            <Button
+              onClick={handleStart}
+              disabled={!selectedId || isSaving || problemsLoading || problemOptions.length === 0}
+              className="sm:min-w-[190px]"
+            >
+              {isSaving ? "Saving…" : "I'm Ready, Let's Start"}
             </Button>
           </div>
         </div>

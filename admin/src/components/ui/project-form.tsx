@@ -52,6 +52,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [isFree, setIsFree] = useState(false);
+  const [projectPriceAmount, setProjectPriceAmount] = useState("");
   const [description, setDescription] = useState("");
   const [imageSrc, setImageSrc] = useState("");
   const [imageAlt, setImageAlt] = useState("");
@@ -98,6 +99,11 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           setTitle(project.title || project.name);
           setCategory(project.category || activeCategories[0]?.slug || "");
           setIsFree(Boolean(project.isFree));
+          setProjectPriceAmount(
+            project.projectPriceAmount != null && project.projectPriceAmount > 0
+              ? String(project.projectPriceAmount)
+              : "",
+          );
           setDescription(project.description || "");
           setImageSrc(project.imageSrc || "");
           setImageAlt(project.imageAlt || "");
@@ -162,6 +168,11 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
       title: title.trim(),
       category,
       isFree,
+      projectPriceAmount: isFree
+        ? null
+        : projectPriceAmount.trim()
+          ? Number(projectPriceAmount)
+          : null,
       description: description.trim(),
       imageSrc: imageSrc.trim(),
       imageAlt: imageAlt.trim() || title.trim(),
@@ -346,10 +357,31 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 value={isFree ? "FREE" : "PREMIUM"}
                 onChange={(e) => setIsFree(e.target.value === "FREE")}
               >
-                <option value="FREE">FREE - shown in Free Projects</option>
+                <option value="FREE">UNPAID - shown in Unpaid Projects</option>
                 <option value="PREMIUM">PREMIUM - locked projects</option>
               </Select>
             </label>
+
+            {!isFree ? (
+              <label className="block text-sm sm:col-span-2">
+                <span className="mb-1 block font-medium text-gray-700">
+                  Project value (INR)
+                </span>
+                <input
+                  className="admin-input w-full max-w-xs"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={projectPriceAmount}
+                  onChange={(e) => setProjectPriceAmount(e.target.value)}
+                  placeholder="e.g. 15000"
+                />
+                <span className="mt-1 block text-xs text-gray-500">
+                  Optional. Shown to students on paid (premium) projects only.
+                </span>
+              </label>
+            ) : null}
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">

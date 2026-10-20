@@ -71,9 +71,19 @@ const API_CATALOG = [
   { method: 'POST', path: '/foundation/missions/:missionId/evidence', auth: 'student', module: 'foundation' },
   { method: 'PUT', path: '/foundation/missions/:missionId/draft', auth: 'student', module: 'foundation' },
   { method: 'POST', path: '/foundation/missions/:missionId/complete', auth: 'student', module: 'foundation' },
+  { method: 'GET', path: '/foundation/problem-statements', auth: 'student', module: 'foundation' },
+  { method: 'GET', path: '/foundation/journey-content', auth: 'student', module: 'foundation' },
+  { method: 'GET', path: '/foundation/stage-framework', auth: 'student', module: 'foundation' },
+  { method: 'POST', path: '/foundation/problem-statement', auth: 'student', module: 'foundation' },
   // Foundation (admin)
   { method: 'GET', path: '/admin/foundation/progress', auth: 'admin', module: 'admin-foundation' },
   { method: 'GET', path: '/admin/foundation/progress/:studentId', auth: 'admin', module: 'admin-foundation' },
+  { method: 'GET', path: '/admin/foundation/step/problems', auth: 'admin', module: 'admin-foundation' },
+  { method: 'POST', path: '/admin/foundation/step/problems', auth: 'admin', module: 'admin-foundation' },
+  { method: 'GET', path: '/admin/foundation/step/problems/:problemId', auth: 'admin', module: 'admin-foundation' },
+  { method: 'PUT', path: '/admin/foundation/step/problems/:problemId', auth: 'admin', module: 'admin-foundation' },
+  { method: 'DELETE', path: '/admin/foundation/step/problems/:problemId', auth: 'admin', module: 'admin-foundation' },
+  { method: 'PUT', path: '/admin/foundation/step/problems/:problemId/missions/:missionId', auth: 'admin', module: 'admin-foundation' },
   // Health (this endpoint)
   { method: 'GET', path: '/health', auth: 'public', module: 'health', probe: 'self' },
 ];
