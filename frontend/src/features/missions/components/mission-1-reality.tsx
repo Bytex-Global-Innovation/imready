@@ -30,6 +30,16 @@ import {
 const MISSION_ID = 1;
 const mission = getMission(MISSION_ID);
 
+
+const MISSION_1_OBJECTIVE =
+  "OBJECTIVE OF THIS MISSION\n" +
+  "Observe your surroundings — college, home, shops, or public places.\n\n" +
+  "1. Identify one moment where someone faces frustration, waiting, confusion, or repeated effort.\n" +
+  "2. Understand who is facing the problem and what they are trying to do.\n" +
+  "3. Document what happened and why it is a problem.\n" +
+  "4. Submit your observation with the situation, person affected, and difficulty faced.\n\n" +
+  "Remember: Identify the problem first. Don't jump to solutions yet!";
+
 export function Mission1Reality() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
@@ -85,7 +95,7 @@ export function Mission1Reality() {
   const evidenceSectionTitle =
     journeyConfig?.evidenceConfig?.sectionTitle ?? "Add evidence from your observation";
   const evidenceSectionDescription =
-    journeyConfig?.evidenceConfig?.sectionDescription ??
+  journeyConfig?.evidenceConfig?.sectionDescription ?? MISSION_1_OBJECTIVE;
     "Upload a document describing what you saw. Include Google Drive links to any photos or recordings.";
   const captionLabel = questionText(journeyConfig, "caption", "Short title / caption");
   const captionHelper = questionHelper(
@@ -118,10 +128,8 @@ export function Mission1Reality() {
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="font-display text-lg font-bold text-foreground">{evidenceSectionTitle}</h2>
-          <p className="mt-1 text-sm text-muted">{evidenceSectionDescription}</p>
-          <span className="mt-3 inline-block rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary">
-            Step 1 of 2: Observation &amp; Evidence
-          </span>
+<p className="mt-1 text-sm whitespace-pre-line text-muted">{evidenceSectionDescription}</p>
+
 
           <div className="mt-5">
             <EvidenceCapture
@@ -138,7 +146,7 @@ export function Mission1Reality() {
 
           <label className="mt-6 mb-2 flex items-center justify-between text-xs font-semibold tracking-wider text-muted uppercase">
             <span>Reflect on what you noticed</span>
-            <span>Question 2 of 2</span>
+           
           </label>
           <p className="mb-2 text-sm text-muted">{reflectionHelper}</p>
           <textarea

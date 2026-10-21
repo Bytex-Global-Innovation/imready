@@ -29,6 +29,7 @@ import {
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
 
+
 export function Mission2Engage() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
@@ -105,15 +106,30 @@ export function Mission2Engage() {
         <>
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Add evidence from your conversation</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Objective of Engage mission</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 2</span>
             </div>
-            <p className="mt-1 text-sm text-muted">
-              Upload a document with your notes and Google Drive links to any recordings or photos.
-            </p>
-            <div className="mt-4">
-              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
-            </div>
+           <div className="mt-1 text-sm text-muted">
+  <ul className="list-decimal pl-5 space-y-1">
+    <li>Identify people who experience the problem you observed in Mission 1.</li>
+    <li>Start a conversation with them about their experiences.</li>
+    <li>Ask open-ended questions to understand their challenges and frustrations.</li>
+    <li>Listen carefully to their responses without assuming or suggesting solutions.</li>
+    <li>Submit key responses and takeaways from your conversations.</li>
+  </ul>
+
+    <p className="mt-2">
+    <strong>Remember:</strong> Talk less, listen more, and understand the problem through people's real experiences.
+  </p>
+</div>
+
+<h2 className="mt-6 font-display text-lg font-bold text-foreground">
+  Add evidence from your conversation
+</h2>
+
+<div className="mt-3">
+  <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+</div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               {questionText(journeyConfig, "observation", "Field observation")}
             </label>
@@ -205,6 +221,7 @@ export function Mission2Engage() {
         <>
           <SelectedProblemBanner statementText={selectedProblemText} />
           <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
+
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }

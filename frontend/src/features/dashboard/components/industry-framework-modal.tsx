@@ -58,7 +58,7 @@ const COMPETENCIES = [
   },
   {
     letter: "Y",
-    name: "Yield",
+    name: "Your Proof",
     title: "Show impact",
     detail: "Portfolio demonstration, verified evidence & outcome storytelling",
     icon: TrendingUp,
@@ -116,7 +116,7 @@ export function IndustryFrameworkModal({ onClose, onNext }: IndustryFrameworkMod
             </h3>
             <p className="mt-1 text-[10px] font-semibold tracking-wider text-muted uppercase">
               The <span className="text-primary">R·E·A·D·Y</span> competencies (Reality • Engage •
-              Analyze • Do • Yield)
+              Analyze • Do • Your Proof)
             </p>
           </div>
 

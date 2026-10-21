@@ -38,6 +38,7 @@ const FALLBACK_WHY_LAYERS = [
 
 const FALLBACK_PATTERN_TAGS = ["Information Gap", "Counter Congestion", "Communication Flow"];
 
+
 export function Mission3Analyze() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
@@ -50,7 +51,7 @@ export function Mission3Analyze() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
@@ -62,6 +63,7 @@ export function Mission3Analyze() {
       });
       setRootCause((record.answers.rootCause as string) ?? "");
       setPattern((record.answers.pattern as string) ?? "");
+     
       setTags((record.answers.tags as string[]) ?? []);
       if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
         setEvidence({
@@ -82,7 +84,7 @@ export function Mission3Analyze() {
     (layer) => (whys[layer.key] ?? "").trim().length > 0,
   );
   const canComplete =
-    whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
+  whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
@@ -113,7 +115,8 @@ export function Mission3Analyze() {
   const whyLayers = journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS;
   const patternTagOptions = journeyConfig?.patternTagOptions ?? FALLBACK_PATTERN_TAGS;
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
-  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
+   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
+  
 
   return (
     <MissionLayout
@@ -127,19 +130,40 @@ export function Mission3Analyze() {
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-lg font-bold text-foreground">Analyze with a Tool: The 5 Whys Framework</h2>
-              <span className="shrink-0 rounded-full bg-surface px-3 py-1 text-xs font-semibold whitespace-nowrap text-primary">
-                Diagnostic Mode
-              </span>
+              
             </div>
-            <p className="mt-1 text-sm text-muted">
-              A simple diagnostic framework to look beyond symptoms and discover the actual root cause.
-            </p>
+           <div className="mt-1 text-sm text-muted">
+  <p>
+    A simple diagnostic framework to look beyond symptoms and discover the actual root cause.
+  </p>
 
-            <div className="mt-5 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 p-4">
-              <p className="text-xs font-semibold tracking-wider text-amber-700 uppercase">Observed Problem Statement</p>
-              <p className="mt-1 text-sm font-medium text-amber-900">{problemStatement}</p>
-            </div>
+  <p className="mt-2 font-semibold">Key Steps:</p>
 
+  <ol className="mt-1 list-decimal pl-5 space-y-1">
+    <li>
+      <strong>Identify the Problem:</strong> Clearly define the issue you want to solve.
+    </li>
+    <li>
+      <strong>Ask Why:</strong> Find the immediate reason behind the problem.
+    </li>
+    <li>
+      <strong>Repeat the Question:</strong> Ask “Why?” about each answer to explore deeper causes.
+    </li>
+    <li>
+      <strong>Identify the Root Cause:</strong> Determine the underlying reason for the problem.
+    </li>
+    <li>
+      <strong>Analyze a Solution:</strong> Address the root cause to prevent the problem from recurring.
+    </li>
+  </ol>
+</div>
+
+<p className="mt-4 text-sm font-medium text-muted">
+  Now, write down your “Why?” questions and answers below to identify the root cause of the problem.
+</p>
+            
+
+            
             <ol className="mt-5">
               {whyLayers.map((layer) => {
                 const filled = (whys[layer.key] ?? "").trim().length > 0;
@@ -240,6 +264,7 @@ export function Mission3Analyze() {
                 </button>
               ))}
             </div>
+            
 
             {submitError ? (
               <p className="mt-4 text-sm text-red-600" role="alert">
@@ -260,7 +285,7 @@ export function Mission3Analyze() {
       sidebar={
         <>
           <SelectedProblemBanner statementText={selectedProblemText} />
-          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
+         <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
