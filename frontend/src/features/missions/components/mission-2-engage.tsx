@@ -28,14 +28,7 @@ import {
 
 const MISSION_ID = 2;
 const mission = getMission(MISSION_ID);
-const EXAMPLE_QUESTIONS = [
-  "Do you think waste management is a problem on our campus?",
-  "Where do you notice the most waste?",
-  "How does it affect students?",
-  "What do you think is the main reason behind this problem?",
-  "Have you tried doing anything to solve it?",
-  "What changes would you like to see?",
-] as const;
+
 
 export function Mission2Engage() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
@@ -227,39 +220,8 @@ export function Mission2Engage() {
       sidebar={
         <>
           <SelectedProblemBanner statementText={selectedProblemText} />
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-4 shadow-sm">
-  <div className="flex items-center gap-2">
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-      AI
-    </span>
-    <p className="text-sm font-semibold text-foreground">Tip from READY</p>
-    <span className="ml-auto shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold tracking-wider text-muted uppercase">
-      {mission.tip.advisorLabel}
-    </span>
-  </div>
+          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
 
-  <p className="mt-3 text-sm leading-relaxed text-muted italic">
-    &ldquo;People often say one thing, but do another. Look for stories, not opinions.&rdquo;
-  </p>
-
-  <div className="mt-4 rounded-[var(--radius-card)] bg-surface p-3">
-    <p className="text-sm font-semibold text-foreground">
-      Example: Improving Campus Waste Management
-    </p>
-    <p className="mt-2 text-xs text-muted">Ask people questions like:</p>
-    <ul className="mt-1.5 space-y-1.5">
-      {EXAMPLE_QUESTIONS.map((question) => (
-        <li key={question} className="flex gap-2 text-sm leading-snug text-foreground">
-          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-          &ldquo;{question}&rdquo;
-        </li>
-      ))}
-    </ul>
-    <p className="mt-3 text-xs leading-relaxed text-muted">
-      These questions help you understand people&apos;s experiences, opinions, and needs before deciding on a solution.
-    </p>
-  </div>
-</div>
           <ReadyQuestMap currentMission={MISSION_ID} />
         </>
       }
