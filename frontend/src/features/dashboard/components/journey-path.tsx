@@ -27,7 +27,7 @@ function StepBadge({ isActive }: { isActive: boolean }) {
 }
 
 export function JourneyPath() {
-  const { projectsUnlocked } = useStudentProfile();
+  const { unpaidProjectsUnlocked } = useStudentProfile();
   const [foundationComplete, setFoundationComplete] = useState(false);
 
   useEffect(() => {
@@ -49,12 +49,12 @@ export function JourneyPath() {
         if (step.id === "industry projects") {
   return {
     ...step,
-    status: projectsUnlocked ? ("active" as const) : ("locked" as const),
+    status: unpaidProjectsUnlocked ? ("active" as const) : ("locked" as const),
   };
 }
         return step;
       }),
-    [foundationComplete, projectsUnlocked],
+    [foundationComplete, unpaidProjectsUnlocked],
   );
 
   return (

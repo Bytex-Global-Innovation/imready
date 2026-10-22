@@ -304,14 +304,27 @@ async function applyToProject(slugOrId, payload) {
 
   const email = String(payload.studentEmail).trim().toLowerCase();
   const studentService = require('@modules/student/student.service');
-  const unlocked = await studentService.hasProjectsUnlocked(email);
-  if (!project.isFree && !unlocked) {
-    const err = new Error(
-      'Projects unlock after you complete all 5 Foundation missions, or after an admin approves premium access.',
-    );
-    err.statusCode = 403;
-    err.code = 'PROJECTS_LOCKED';
-    throw err;
+
+  if (project.isFree) {
+    const unpaidUnlocked = await studentService.hasUnpaidProjectsUnlocked(email);
+    if (!unpaidUnlocked) {
+      const err = new Error(
+        'Complete the Foundation stage to apply for unpaid projects.',
+      );
+      err.statusCode = 403;
+      err.code = 'FOUNDATION_INCOMPLETE';
+      throw err;
+    }
+  } else {
+    const paidUnlocked = await studentService.hasProjectsUnlocked(email);
+    if (!paidUnlocked) {
+      const err = new Error(
+        'Paid industry projects are not available yet. Check back later.',
+      );
+      err.statusCode = 403;
+      err.code = 'PAID_PROJECTS_LOCKED';
+      throw err;
+    }
   }
 
   const existing = await ProjectApplication.findOne({

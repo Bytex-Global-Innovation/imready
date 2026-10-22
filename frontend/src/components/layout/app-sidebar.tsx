@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_USER } from "@/constants/dashboard";
 import { ROUTES } from "@/constants/routes";
+import { PAID_PROJECTS_LOCKED_MESSAGE } from "@/constants/project-access";
 import { SITE_CONFIG } from "@/constants/site";
 import { useStudentProfile } from "@/components/auth/student-auth-gate";
 import { authApi } from "@/lib/api";
@@ -26,9 +27,6 @@ import {
   UpgradePlanModal,
   UPGRADE_TOOLTIP_BENEFITS,
 } from "@/features/dashboard/components/upgrade-plan-modal";
-
-const PROJECTS_LOCKED_MESSAGE =
-  "Projects unlock after you complete all 5 Foundation missions, or after premium access is approved.";
 
 const HELP_CENTER_EMAIL = "support@imready.io";
 
@@ -50,7 +48,7 @@ function UserAvatar({ name }: { name: string }) {
   );
 }
 
-function getNavItems(projectsUnlocked: boolean) {
+function getNavItems(paidProjectsUnlocked: boolean) {
   return [
     {
       label: "Dashboard",
@@ -72,7 +70,8 @@ function getNavItems(projectsUnlocked: boolean) {
       label: " Paid Industry Projects",
       href: ROUTES.projects,
       icon: FolderKanban,
-      locked: !projectsUnlocked,
+      locked: !paidProjectsUnlocked,
+      lockedMessage: PAID_PROJECTS_LOCKED_MESSAGE,
       match: (pathname: string) =>
         pathname === ROUTES.projects || pathname.startsWith(`${ROUTES.projects}/`),
     },
@@ -125,8 +124,8 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
   const router = useRouter();
   const projectsTooltip = useAutoDismissTooltip();
   const helpTooltip = useAutoDismissTooltip();
-  const { student, projectsUnlocked, refresh } = useStudentProfile();
-  const navItems = getNavItems(projectsUnlocked);
+  const { student, paidProjectsUnlocked, refresh } = useStudentProfile();
+  const navItems = getNavItems(paidProjectsUnlocked);
   const displayName = student?.studentName || DASHBOARD_USER.name;
   const displayRole = student?.level || DASHBOARD_USER.role;
   const subscriptionStatus = student?.subscriptionStatus || "FREE";
@@ -229,7 +228,9 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                         className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-r border-b border-red-200 bg-white"
                         aria-hidden
                       />
-                      {PROJECTS_LOCKED_MESSAGE}
+                      {"lockedMessage" in item && item.lockedMessage
+                        ? item.lockedMessage
+                        : PAID_PROJECTS_LOCKED_MESSAGE}
                     </div>
                   ) : null}
                 </div>

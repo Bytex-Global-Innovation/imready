@@ -17,6 +17,9 @@ function attachSessionCookies(res, session) {
 
   return {
     student: session.student,
+    foundationComplete: session.foundationComplete,
+    unpaidProjectsUnlocked: session.unpaidProjectsUnlocked,
+    paidProjectsUnlocked: session.paidProjectsUnlocked,
     projectsUnlocked: session.projectsUnlocked,
     redirectTo: session.redirectTo,
   };

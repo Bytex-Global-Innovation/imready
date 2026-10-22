@@ -19,6 +19,7 @@ const {
 const {
   isFoundationCompleteForStudent,
 } = require('@modules/foundation/foundation.service');
+const config = require('@config/index');
 
 /** New signups must verify within this window or the pending account is deleted. */
 const EMAIL_VERIFICATION_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -117,15 +118,18 @@ async function issueAuthSession(student, { rememberMe = false } = {}) {
   student.refreshRememberMe = Boolean(rememberMe);
   await student.save();
 
-  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  const access = await buildProjectAccess(student);
 
   return {
     accessToken,
     refreshToken,
     rememberMe: Boolean(rememberMe),
     refreshExpiresAt: student.refreshTokenExpiresAt,
-    student: serializeStudent(student, { projectsUnlocked }),
-    projectsUnlocked,
+    student: serializeStudent(student, {
+      foundationComplete: access.foundationComplete,
+      projectsUnlocked: access.paidProjectsUnlocked,
+    }),
+    ...access,
     redirectTo: redirectForStudent(student),
   };
 }
@@ -164,10 +168,45 @@ function verificationExpiryDate() {
   return new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS);
 }
 
-async function resolveProjectsUnlocked(student) {
+async function resolvePaidProjectsUnlocked(student) {
   if (!student) return false;
+  if (!config.paidIndustryProjectsEnabled) return false;
   if (isPremiumUnlocked(student)) return true;
   return isFoundationCompleteForStudent(student);
+}
+
+async function resolveUnpaidProjectsUnlocked(student) {
+  if (!student) return false;
+  return isFoundationCompleteForStudent(student);
+}
+
+/** Paid industry projects (legacy field name on session responses). */
+async function resolveProjectsUnlocked(student) {
+  return resolvePaidProjectsUnlocked(student);
+}
+
+async function buildProjectAccess(student) {
+  const foundationComplete = await isFoundationCompleteForStudent(student);
+  const unpaidProjectsUnlocked = foundationComplete;
+  const paidProjectsUnlocked = await resolvePaidProjectsUnlocked(student);
+  return {
+    foundationComplete,
+    unpaidProjectsUnlocked,
+    paidProjectsUnlocked,
+    projectsUnlocked: paidProjectsUnlocked,
+  };
+}
+
+async function withProjectAccess(student, extra = {}) {
+  const access = await buildProjectAccess(student);
+  return {
+    ...extra,
+    student: serializeStudent(student, {
+      foundationComplete: access.foundationComplete,
+      projectsUnlocked: access.paidProjectsUnlocked,
+    }),
+    ...access,
+  };
 }
 
 async function hasProjectsUnlocked(email) {
@@ -176,7 +215,16 @@ async function hasProjectsUnlocked(email) {
     where: { email: normalized },
     attributes: ['id', 'email', 'subscriptionStatus', 'foundationCompletedAt'],
   });
-  return await resolveProjectsUnlocked(student);
+  return await resolvePaidProjectsUnlocked(student);
+}
+
+async function hasUnpaidProjectsUnlocked(email) {
+  const normalized = String(email).trim().toLowerCase();
+  const student = await StudentAccount.findOne({
+    where: { email: normalized },
+    attributes: ['id', 'email', 'subscriptionStatus', 'foundationCompletedAt'],
+  });
+  return await resolveUnpaidProjectsUnlocked(student);
 }
 
 function serializeStudent(student, extras = {}) {
@@ -413,15 +461,18 @@ async function refreshSession(rawRefreshToken) {
   student.refreshRememberMe = rememberMe;
   await student.save();
 
-  const projectsUnlocked = await resolveProjectsUnlocked(student);
+  const access = await buildProjectAccess(student);
 
   return {
     accessToken,
     refreshToken,
     rememberMe,
     refreshExpiresAt: absoluteExpiry,
-    student: serializeStudent(student, { projectsUnlocked }),
-    projectsUnlocked,
+    student: serializeStudent(student, {
+      foundationComplete: access.foundationComplete,
+      projectsUnlocked: access.paidProjectsUnlocked,
+    }),
+    ...access,
     redirectTo: redirectForStudent(student),
   };
 }
@@ -493,12 +544,9 @@ async function getMe(studentId) {
     throw unauthorized('Unauthorized');
   }
 
-  const projectsUnlocked = await resolveProjectsUnlocked(student);
-  return {
-    student: serializeStudent(student, { projectsUnlocked }),
-    projectsUnlocked,
+  return withProjectAccess(student, {
     redirectTo: redirectForStudent(student),
-  };
+  });
 }
 
 async function requestPremium(studentId) {
@@ -840,7 +888,11 @@ module.exports = {
   listStudents,
   serializeStudent,
   hasProjectsUnlocked,
+  hasUnpaidProjectsUnlocked,
   resolveProjectsUnlocked,
+  resolvePaidProjectsUnlocked,
+  resolveUnpaidProjectsUnlocked,
+  buildProjectAccess,
   redirectForDoor,
   redirectForStudent,
   purgeExpiredUnverifiedStudents,

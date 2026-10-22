@@ -26,6 +26,10 @@ import {
 
 type StudentSessionContextValue = {
   student: StudentProfile | null;
+  foundationComplete: boolean;
+  unpaidProjectsUnlocked: boolean;
+  paidProjectsUnlocked: boolean;
+  /** Paid industry projects route access (legacy name). */
   projectsUnlocked: boolean;
   ready: boolean;
   refresh: () => Promise<void>;
@@ -85,18 +89,18 @@ function NestedProjectsGuard({
 
   useEffect(() => {
     if (!requireProjectsUnlocked || !session?.ready) return;
-    if (!session.projectsUnlocked) {
+    if (!session.paidProjectsUnlocked) {
       router.replace(ROUTES.dashboard);
     }
   }, [
     requireProjectsUnlocked,
     router,
     session?.ready,
-    session?.projectsUnlocked,
+    session?.paidProjectsUnlocked,
   ]);
 
   if (!session?.ready) return <SessionLoading />;
-  if (requireProjectsUnlocked && !session.projectsUnlocked) {
+  if (requireProjectsUnlocked && !session.paidProjectsUnlocked) {
     return <SessionLoading />;
   }
   return <>{children}</>;
@@ -115,14 +119,22 @@ function StudentSessionProvider({
   const [student, setStudent] = useState<StudentProfile | null>(
     () => cached?.student ?? null,
   );
-  const [projectsUnlocked, setProjectsUnlocked] = useState(
-    () => cached?.projectsUnlocked ?? false,
+  const [foundationComplete, setFoundationComplete] = useState(
+    () => cached?.foundationComplete ?? false,
+  );
+  const [unpaidProjectsUnlocked, setUnpaidProjectsUnlocked] = useState(
+    () => cached?.unpaidProjectsUnlocked ?? false,
+  );
+  const [paidProjectsUnlocked, setPaidProjectsUnlocked] = useState(
+    () => cached?.paidProjectsUnlocked ?? cached?.projectsUnlocked ?? false,
   );
   const [ready, setReady] = useState(() => Boolean(cached));
 
   const applySession = useCallback((session: StudentSession) => {
     setStudent(session.student);
-    setProjectsUnlocked(session.projectsUnlocked);
+    setFoundationComplete(session.foundationComplete);
+    setUnpaidProjectsUnlocked(session.unpaidProjectsUnlocked);
+    setPaidProjectsUnlocked(session.paidProjectsUnlocked);
     setReady(true);
   }, []);
 
@@ -148,7 +160,7 @@ function StudentSessionProvider({
           })
           .catch(() => undefined);
 
-        if (requireProjectsUnlocked && !session.projectsUnlocked) {
+        if (requireProjectsUnlocked && !session.paidProjectsUnlocked) {
           router.replace(ROUTES.dashboard);
           return;
         }
@@ -174,11 +186,21 @@ function StudentSessionProvider({
   const value = useMemo<StudentSessionContextValue>(
     () => ({
       student,
-      projectsUnlocked,
+      foundationComplete,
+      unpaidProjectsUnlocked,
+      paidProjectsUnlocked,
+      projectsUnlocked: paidProjectsUnlocked,
       ready,
       refresh,
     }),
-    [student, projectsUnlocked, ready, refresh],
+    [
+      student,
+      foundationComplete,
+      unpaidProjectsUnlocked,
+      paidProjectsUnlocked,
+      ready,
+      refresh,
+    ],
   );
 
   if (!ready) return <SessionLoading />;
@@ -197,6 +219,9 @@ export function useStudentProfile() {
   if (!session) {
     return {
       student: null as StudentProfile | null,
+      foundationComplete: false,
+      unpaidProjectsUnlocked: false,
+      paidProjectsUnlocked: false,
       projectsUnlocked: false,
       loading: true,
       refresh: async () => {},
@@ -205,7 +230,10 @@ export function useStudentProfile() {
 
   return {
     student: session.student,
-    projectsUnlocked: session.projectsUnlocked,
+    foundationComplete: session.foundationComplete,
+    unpaidProjectsUnlocked: session.unpaidProjectsUnlocked,
+    paidProjectsUnlocked: session.paidProjectsUnlocked,
+    projectsUnlocked: session.paidProjectsUnlocked,
     loading: !session.ready,
     refresh: session.refresh,
   };

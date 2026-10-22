@@ -76,7 +76,7 @@ export function Mission5Yield() {
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       const result = await completeMission(MISSION_ID, answers, evidenceMeta);
-      if (result.projectsUnlocked) {
+      if (result.foundationComplete) {
         await refresh();
       }
       router.push(ROUTES.foundationComplete);

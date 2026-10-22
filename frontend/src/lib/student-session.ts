@@ -2,6 +2,10 @@ import { authApi, type StudentProfile } from "@/lib/api";
 
 export type StudentSession = {
   student: StudentProfile;
+  foundationComplete: boolean;
+  unpaidProjectsUnlocked: boolean;
+  paidProjectsUnlocked: boolean;
+  /** @deprecated Use paidProjectsUnlocked */
   projectsUnlocked: boolean;
 };
 
@@ -33,7 +37,10 @@ export async function loadStudentSession(
     .then((data) => {
       meCache = {
         student: data.student,
-        projectsUnlocked: data.projectsUnlocked,
+        foundationComplete: Boolean(data.foundationComplete),
+        unpaidProjectsUnlocked: Boolean(data.unpaidProjectsUnlocked),
+        paidProjectsUnlocked: Boolean(data.paidProjectsUnlocked),
+        projectsUnlocked: Boolean(data.paidProjectsUnlocked ?? data.projectsUnlocked),
       };
       return meCache;
     })

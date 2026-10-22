@@ -7,9 +7,12 @@ import {
   BarChart2,
   CheckCircle2,
   ChevronRight,
+  Lock,
   Tag,
 } from "@/components/icons";
+import { useStudentProfile } from "@/components/auth/student-auth-gate";
 import { Button } from "@/components/ui/button";
+import { UNPAID_PROJECTS_LOCKED_MESSAGE } from "@/constants/project-access";
 import { Card } from "@/components/ui/card";
 import { PROJECTS, type ProjectItem } from "@/constants/projects";
 import { ROUTES } from "@/constants/routes";
@@ -90,6 +93,9 @@ export function ProjectBriefView({
   const [isApplying, setIsApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const { unpaidProjectsUnlocked, paidProjectsUnlocked } = useStudentProfile();
+  const canApply =
+    access === "free" ? unpaidProjectsUnlocked : paidProjectsUnlocked;
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +123,7 @@ export function ProjectBriefView({
   }, [projectId, access]);
 
   async function handleApply() {
-    if (!project) return;
+    if (!project || !canApply) return;
     setIsApplying(true);
     setApplyError(null);
     try {
@@ -247,20 +253,47 @@ export function ProjectBriefView({
       )}
 
       <div className="mt-6 text-center">
-        <Button className="w-full" onClick={handleApply} disabled={isApplying}>
-          {isApplying ? "Enrolling…" : "Enroll & Submit Your Solution Next"}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-        <p className="mt-3 text-xs text-muted">
-          By starting this project, you agree to our{" "}
-          <Link
-            href={ROUTES.terms}
-            className="cursor-pointer font-medium text-primary underline underline-offset-2 hover:text-primary-hover"
+        {canApply ? (
+          <Button className="w-full" onClick={handleApply} disabled={isApplying}>
+            {isApplying ? "Enrolling…" : "Enroll & Submit Your Solution Next"}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <div
+            className="w-full rounded-[var(--radius-card)] border border-border bg-surface px-4 py-4"
+            role="status"
           >
-            Submission Terms
-          </Link>
-          .
-        </p>
+            <p className="flex items-center justify-center gap-2 text-sm font-semibold text-foreground">
+              <Lock className="h-4 w-4 text-muted" aria-hidden />
+              Project locked
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              {access === "free"
+                ? UNPAID_PROJECTS_LOCKED_MESSAGE
+                : "Paid industry projects are not available yet."}
+            </p>
+            {access === "free" ? (
+              <Link
+                href={ROUTES.assessment}
+                className="mt-3 inline-block text-sm font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                Continue Foundation stage
+              </Link>
+            ) : null}
+          </div>
+        )}
+        {canApply ? (
+          <p className="mt-3 text-xs text-muted">
+            By starting this project, you agree to our{" "}
+            <Link
+              href={ROUTES.terms}
+              className="cursor-pointer font-medium text-primary underline underline-offset-2 hover:text-primary-hover"
+            >
+              Submission Terms
+            </Link>
+            .
+          </p>
+        ) : null}
       </div>
 
       <ApplySuccessModal

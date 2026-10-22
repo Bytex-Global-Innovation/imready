@@ -12,10 +12,13 @@ import {
   Database,
   Info,
   Layers,
+  Lock,
   Monitor,
   type LucideIcon,
 } from "@/components/icons";
+import { useStudentProfile } from "@/components/auth/student-auth-gate";
 import { Button } from "@/components/ui/button";
+import { UNPAID_PROJECTS_LOCKED_MESSAGE } from "@/constants/project-access";
 import {
   PROJECT_CATEGORIES,
   PROJECTS,
@@ -84,9 +87,11 @@ function mapApiProject(project: ApiProjectItem): ProjectItem {
 function ProjectCard({
   project,
   access,
+  canApply,
 }: {
   project: ProjectItem;
   access: "free" | "premium";
+  canApply: boolean;
 }) {
   const isRemote =
     project.imageSrc.startsWith("http") || project.imageSrc.startsWith("blob:");
@@ -161,24 +166,50 @@ function ProjectCard({
           </ul>
         </div>
 
-        <Button
-          size="sm"
-          className="mt-4 w-full"
-          href={
-            access === "free"
-              ? ROUTES.freeProjectDetail(project.id)
-              : ROUTES.projectDetail(project.id)
-          }
-        >
-          Apply for Project
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
+        {canApply ? (
+          <Button
+            size="sm"
+            className="mt-4 w-full"
+            href={
+              access === "free"
+                ? ROUTES.freeProjectDetail(project.id)
+                : ROUTES.projectDetail(project.id)
+            }
+          >
+            Apply for Project
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <div
+            className="mt-4 w-full rounded-[var(--radius-button)] border border-border bg-surface px-3 py-3 text-center"
+            role="status"
+          >
+            <p className="flex items-center justify-center gap-2 text-sm font-semibold text-foreground">
+              <Lock className="h-4 w-4 text-muted" aria-hidden />
+              Locked
+            </p>
+            <p className="mt-1.5 text-[11px] leading-snug text-muted">
+              {UNPAID_PROJECTS_LOCKED_MESSAGE}
+            </p>
+            <Link
+              href={ROUTES.assessment}
+              className="mt-2 inline-block text-xs font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              Go to Foundation stage
+            </Link>
+          </div>
+        )}
       </div>
     </article>
   );
 }
 
 export function ProjectsView({ access = "premium" }: { access?: "free" | "premium" }) {
+  const { unpaidProjectsUnlocked, paidProjectsUnlocked, loading: sessionLoading } =
+    useStudentProfile();
+  const canApply =
+    access === "free" ? unpaidProjectsUnlocked : paidProjectsUnlocked;
+
   const [categories, setCategories] =
     useState<ProjectCategoryTab[]>(PROJECT_CATEGORIES);
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(
@@ -253,6 +284,19 @@ export function ProjectsView({ access = "premium" }: { access?: "free" | "premiu
         </p>
       </header>
 
+      {access === "free" && !sessionLoading && !unpaidProjectsUnlocked ? (
+        <aside
+          className="mb-6 flex gap-3 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 sm:items-start"
+          role="note"
+        >
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" aria-hidden />
+          <p className="text-sm leading-relaxed text-amber-950">
+            {UNPAID_PROJECTS_LOCKED_MESSAGE} You can browse projects below; applying
+            unlocks automatically when Foundation is complete.
+          </p>
+        </aside>
+      ) : null}
+
       <div
         className="mb-6 flex gap-2 overflow-x-auto pb-1 sm:mb-8 sm:flex-wrap"
         role="tablist"
@@ -293,7 +337,12 @@ export function ProjectsView({ access = "premium" }: { access?: "free" | "premiu
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} access={access} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              access={access}
+              canApply={canApply}
+            />
           ))}
         </div>
       )}

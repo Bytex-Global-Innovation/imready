@@ -21,6 +21,9 @@ const config = {
   get jwtSecret() {
     return requiredEnv('JWT_SECRET', { minLength: 32 });
   },
+  /** When false, paid industry project routes stay locked for all students. */
+  paidIndustryProjectsEnabled:
+    process.env.PAID_INDUSTRY_PROJECTS_ENABLED === 'true',
 };
 
 module.exports = config;

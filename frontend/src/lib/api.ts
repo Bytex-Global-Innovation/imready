@@ -268,10 +268,34 @@ export interface StudentProfile {
   projectsUnlocked?: boolean;
 }
 
-export interface AuthSession {
+export interface ProjectAccessSession {
+  foundationComplete?: boolean;
+  unpaidProjectsUnlocked?: boolean;
+  paidProjectsUnlocked?: boolean;
+  projectsUnlocked?: boolean;
+}
+
+export interface AuthSession extends ProjectAccessSession {
   student: StudentProfile;
   redirectTo: string;
-  projectsUnlocked?: boolean;
+}
+
+function cacheStudentAuthSession(
+  result: ProjectAccessSession & { student: StudentProfile },
+) {
+  setCachedStudentSession({
+    student: result.student,
+    foundationComplete: Boolean(
+      result.foundationComplete ?? result.student.foundationComplete,
+    ),
+    unpaidProjectsUnlocked: Boolean(result.unpaidProjectsUnlocked),
+    paidProjectsUnlocked: Boolean(
+      result.paidProjectsUnlocked ?? result.projectsUnlocked,
+    ),
+    projectsUnlocked: Boolean(
+      result.paidProjectsUnlocked ?? result.projectsUnlocked,
+    ),
+  });
 }
 
 export const authApi = {
@@ -298,10 +322,7 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    setCachedStudentSession({
-      student: result.student,
-      projectsUnlocked: Boolean(result.projectsUnlocked),
-    });
+    cacheStudentAuthSession(result);
     return result;
   },
 
@@ -310,10 +331,7 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ token }),
     });
-    setCachedStudentSession({
-      student: result.student,
-      projectsUnlocked: Boolean(result.projectsUnlocked),
-    });
+    cacheStudentAuthSession(result);
     return result;
   },
 
@@ -335,11 +353,7 @@ export const authApi = {
       body: JSON.stringify(payload),
     }),
 
-  me: (): Promise<{
-    student: StudentProfile;
-    projectsUnlocked: boolean;
-    redirectTo: string;
-  }> => request("/auth/students/me", {}, true),
+  me: (): Promise<AuthSession> => request("/auth/students/me", {}, true),
 
   requestPremium: async (): Promise<{
     message: string;
@@ -351,10 +365,7 @@ export const authApi = {
       student: StudentProfile;
       projectsUnlocked: boolean;
     }>("/auth/students/request-premium", { method: "POST" }, true);
-    setCachedStudentSession({
-      student: result.student,
-      projectsUnlocked: Boolean(result.projectsUnlocked),
-    });
+    cacheStudentAuthSession(result);
     return result;
   },
 
@@ -376,10 +387,7 @@ export const authApi = {
       { method: "POST", body: formData },
       true,
     );
-    setCachedStudentSession({
-      student: result.student,
-      projectsUnlocked: Boolean(result.projectsUnlocked),
-    });
+    cacheStudentAuthSession(result);
     return result;
   },
 
