@@ -95,7 +95,8 @@ export function Mission1Reality() {
   const evidenceSectionTitle =
     journeyConfig?.evidenceConfig?.sectionTitle ?? "Add evidence from your observation";
   const evidenceSectionDescription =
-  journeyConfig?.evidenceConfig?.sectionDescription ?? MISSION_1_OBJECTIVE;
+    journeyConfig?.evidenceConfig?.sectionDescription ??
+    MISSION_1_OBJECTIVE ??
     "Upload a document describing what you saw. Include Google Drive links to any photos or recordings.";
   const captionLabel = questionText(journeyConfig, "caption", "Short title / caption");
   const captionHelper = questionHelper(

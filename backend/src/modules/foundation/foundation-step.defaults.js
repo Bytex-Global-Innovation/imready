@@ -148,6 +148,14 @@ function missionQuestions(missionId) {
           helper: 'One small iteration based on feedback.',
           placeholder: 'Next time I would...',
         },
+        {
+          answerKey: 'implementation',
+          question: 'How will you implement these improvements?',
+          helper:
+            'Describe the steps, tools, or changes you will use to put your improvement into action.',
+          placeholder:
+            'Describe the steps, tools, or changes you will use to put your improvement into action...',
+        },
       ];
     case 5:
       return [
@@ -199,11 +207,18 @@ function evidenceConfigForMission(missionId) {
       return { uploadHelper };
     case 4:
       return {
+        pageSubtitle:
+          'Create a simple prototype and test it in the real world. Keep it small, fast, and testable.',
         sectionTitle: 'Share your prototype presentation video',
         sectionDescription:
           'Add a YouTube or Google Drive link to a short video showcasing what you built and tested.',
         videoLinkHelper:
           'Use an unlisted/public YouTube URL or a Google Drive file link with view access for reviewers.',
+        reflectionSectionTitle: 'Tell Us What Happened: Test Reflection',
+        reflectionSectionDescription: 'Document your real-world test results',
+        improvementSectionTitle: 'Improvement Phase',
+        improvementSectionDescription:
+          'Decide what to change and how you will make it happen',
       };
     case 5:
       return {

@@ -22,6 +22,7 @@ import {
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
 import {
+  evidenceConfigText,
   questionHelper,
   questionPlaceholder,
   questionText,
@@ -118,13 +119,49 @@ export function Mission4Do() {
 
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
+  const pageSubtitle =
+    evidenceConfigText(journeyConfig, "pageSubtitle", mission.subtitle) ?? mission.subtitle;
   const sectionTitle =
-    journeyConfig?.evidenceConfig?.sectionTitle ?? "Share your prototype presentation video";
+    evidenceConfigText(journeyConfig, "sectionTitle", "Share your prototype presentation video") ??
+    "Share your prototype presentation video";
   const sectionDescription =
-    journeyConfig?.evidenceConfig?.sectionDescription ??
+    evidenceConfigText(
+      journeyConfig,
+      "sectionDescription",
+      "Add a YouTube or Google Drive link to a short video showcasing what you built and tested.",
+    ) ??
     "Add a YouTube or Google Drive link to a short video showcasing what you built and tested.";
+  const reflectionSectionTitle =
+    evidenceConfigText(
+      journeyConfig,
+      "reflectionSectionTitle",
+      "Tell Us What Happened: Test Reflection",
+    ) ?? "Tell Us What Happened: Test Reflection";
+  const reflectionSectionDescription =
+    evidenceConfigText(
+      journeyConfig,
+      "reflectionSectionDescription",
+      "Document your real-world test results",
+    ) ?? "Document your real-world test results";
+  const improvementSectionTitle =
+    evidenceConfigText(journeyConfig, "improvementSectionTitle", "Improvement Phase") ??
+    "Improvement Phase";
+  const improvementSectionDescription =
+    evidenceConfigText(
+      journeyConfig,
+      "improvementSectionDescription",
+      "Decide what to change and how you will make it happen",
+    ) ?? "Decide what to change and how you will make it happen";
   const videoHelper =
-    journeyConfig?.evidenceConfig?.videoLinkHelper ??
+    evidenceConfigText(
+      journeyConfig,
+      "videoLinkHelper",
+      questionHelper(
+        journeyConfig,
+        "presentationVideoUrl",
+        "Paste a YouTube or Google Drive link to your prototype or demo video.",
+      ),
+    ) ??
     questionHelper(
       journeyConfig,
       "presentationVideoUrl",
@@ -136,7 +173,7 @@ export function Mission4Do() {
       breadcrumb={<MissionBreadcrumb stageLabel="Stage 0: Foundation" current="Active Mission" />}
       badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Mission 4 of 5`} />}
       title={mission.title}
-      subtitle={mission.subtitle}
+      subtitle={pageSubtitle}
       headerRight={
         mission.frameworkPhaseLabel ? (
           <span className="shrink-0 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-primary">
@@ -170,7 +207,7 @@ export function Mission4Do() {
               />
             </div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
-              {questionText(journeyConfig, "description", "Artifact Description")}
+              {questionText(journeyConfig, "description", "Describe your prototype")}
             </label>
             <textarea
               value={description}
@@ -179,23 +216,33 @@ export function Mission4Do() {
               placeholder={questionPlaceholder(
                 journeyConfig,
                 "description",
-                "Describe what you built and how it works...",
+                "We tried a simple token board at the counter...",
               )}
               className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            {questionHelper(journeyConfig, "description") ? (
+              <p className="mt-1.5 text-xs text-muted">
+                {questionHelper(journeyConfig, "description")}
+              </p>
+            ) : null}
           </div>
 
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Tell Us What Happened: Test Reflection</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{reflectionSectionTitle}</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 2 of 3</span>
             </div>
-            <p className="mt-1 mb-4 text-sm text-muted">Document your real-world test results</p>
+            <p className="mt-1 mb-4 text-sm text-muted">{reflectionSectionDescription}</p>
 
             <QuestionField
               index={1}
-              question={questionText(journeyConfig, "respond", "How did people respond?")}
-              placeholder={questionPlaceholder(journeyConfig, "respond")}
+              question={questionText(
+                journeyConfig,
+                "respond",
+                "How did people respond when you tested it?",
+              )}
+              helper={questionHelper(journeyConfig, "respond")}
+              placeholder={questionPlaceholder(journeyConfig, "respond", "Students said...")}
               value={respond}
               onChange={setRespond}
               done={respond.trim().length > 0}
@@ -203,7 +250,12 @@ export function Mission4Do() {
             <QuestionField
               index={2}
               question={questionText(journeyConfig, "worked", "What worked?")}
-              placeholder={questionPlaceholder(journeyConfig, "worked")}
+              helper={questionHelper(journeyConfig, "worked")}
+              placeholder={questionPlaceholder(
+                journeyConfig,
+                "worked",
+                "Wait time felt shorter because...",
+              )}
               value={worked}
               onChange={setWorked}
               done={worked.trim().length > 0}
@@ -211,7 +263,8 @@ export function Mission4Do() {
             <QuestionField
               index={3}
               question={questionText(journeyConfig, "didntWork", "What didn't work?")}
-              placeholder={questionPlaceholder(journeyConfig, "didntWork")}
+              helper={questionHelper(journeyConfig, "didntWork")}
+              placeholder={questionPlaceholder(journeyConfig, "didntWork", "Some students still...")}
               value={didntWork}
               onChange={setDidntWork}
               done={didntWork.trim().length > 0}
@@ -220,12 +273,10 @@ export function Mission4Do() {
 
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Improvement Phase</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{improvementSectionTitle}</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 3 of 3</span>
             </div>
-            <p className="mt-1 mb-4 text-sm text-muted">
-              Decide what to change and how you will make it happen
-            </p>
+            <p className="mt-1 mb-4 text-sm text-muted">{improvementSectionDescription}</p>
 
             <QuestionField
               index={1}
@@ -234,7 +285,8 @@ export function Mission4Do() {
                 "improve",
                 "What is one improvement you would make next?",
               )}
-              placeholder={questionPlaceholder(journeyConfig, "improve")}
+              helper={questionHelper(journeyConfig, "improve")}
+              placeholder={questionPlaceholder(journeyConfig, "improve", "Next time I would...")}
               value={improve}
               onChange={setImprove}
               done={improve.trim().length > 0}
@@ -246,6 +298,7 @@ export function Mission4Do() {
                 "implementation",
                 "How will you implement these improvements?",
               )}
+              helper={questionHelper(journeyConfig, "implementation")}
               placeholder={questionPlaceholder(
                 journeyConfig,
                 "implementation",

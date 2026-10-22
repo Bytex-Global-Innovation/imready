@@ -3,6 +3,7 @@
 import { Plus } from "@/components/icons";
 import type { FoundationStepMissionConfig, FoundationStepQuestion } from "@/lib/api";
 import MissionQuestionCard from "./mission-question-card";
+import MissionSectionFields from "./mission-section-fields";
 
 const MISSION_TABS = [1, 2, 3, 4, 5] as const;
 
@@ -125,6 +126,8 @@ export default function MissionEditor({
             </p>
           </div>
         ) : null}
+
+        <MissionSectionFields draft={draft} onDraftChange={onDraftChange} />
 
         {activeMission === 3 ? (
           <section className="space-y-2">
