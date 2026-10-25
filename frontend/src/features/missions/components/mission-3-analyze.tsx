@@ -33,10 +33,10 @@ const FALLBACK_WHY_LAYERS = [
   { label: "Why: First Layer (Symptom)", key: "why1" },
   { label: "Why: Second Layer", key: "why2" },
   { label: "Why: Third Layer", key: "why3" },
-  { label: "Why: Fourth Layer (Operational)", key: "why4" },
+  { label: "Why: Fourth Layer", key: "why4" },
 ];
 
-const FALLBACK_PATTERN_TAGS = ["Information Gap", "Counter Congestion", "Communication Flow"];
+
 
 
 export function Mission3Analyze() {
@@ -47,7 +47,7 @@ export function Mission3Analyze() {
   const [whys, setWhys] = useState<Record<string, string>>({});
   const [rootCause, setRootCause] = useState("");
   const [pattern, setPattern] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export function Mission3Analyze() {
       setRootCause((record.answers.rootCause as string) ?? "");
       setPattern((record.answers.pattern as string) ?? "");
      
-      setTags((record.answers.tags as string[]) ?? []);
+    
       if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
         setEvidence({
           fileName: record.evidence!.fileName,
@@ -76,9 +76,7 @@ export function Mission3Analyze() {
     });
   }, []);
 
-  function toggleTag(tag: string) {
-    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
-  }
+  
 
   const whysFilled = (journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS).every(
     (layer) => (whys[layer.key] ?? "").trim().length > 0,
@@ -91,7 +89,7 @@ export function Mission3Analyze() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const answers = { ...whys, rootCause, pattern, tags };
+      const answers = { ...whys, rootCause, pattern };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       await completeMission(MISSION_ID, answers, evidenceMeta);
@@ -113,14 +111,14 @@ export function Mission3Analyze() {
     journeyConfig?.analyzeContextText ??
     '"Students keep crowding the counter and asking canteen staff repeatedly if their order is ready."';
   const whyLayers = journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS;
-  const patternTagOptions = journeyConfig?.patternTagOptions ?? FALLBACK_PATTERN_TAGS;
+  
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
    const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
   
 
   return (
     <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel="Stage 0: Foundation" current="Mission 3: Analyze" />}
+      breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Mission 3: Analyze" />}
       badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Step 3 of 5`} />}
       title={mission.title}
       subtitle={mission.subtitle}
@@ -153,8 +151,8 @@ export function Mission3Analyze() {
       <strong>Identify the Root Cause:</strong> Determine the underlying reason for the problem.
     </li>
     <li>
-      <strong>Analyze a Solution:</strong> Address the root cause to prevent the problem from recurring.
-    </li>
+      <strong>Explore Possible Solutions:</strong> Identify and consider all probable solutions to address the problem.
+    </li> 
   </ol>
 </div>
 
@@ -217,7 +215,7 @@ export function Mission3Analyze() {
                     )}
                     className="mt-2 w-full rounded-[var(--radius-card)] border border-primary bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
-                  <p className="mt-2 text-xs text-primary">Ready for prototyping in Mission 4 (Build, Test &amp; Improve)</p>
+                 
                 </div>
               </li>
             </ol>
@@ -226,9 +224,7 @@ export function Mission3Analyze() {
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-lg font-bold text-foreground">Evidence Synthesis &amp; Pattern Confirmation</h2>
-              <span className="shrink-0 text-xs font-semibold tracking-wider whitespace-nowrap text-muted uppercase">
-                Step 2 of 2
-              </span>
+              
             </div>
             <p className="mt-3 text-sm text-muted">
               Upload a document summarizing your analysis. Include Google Drive links to supporting notes or recordings.
@@ -250,20 +246,7 @@ export function Mission3Analyze() {
               placeholder={questionPlaceholder(journeyConfig, "pattern")}
               className="mt-2 w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {patternTagOptions.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    tags.includes(tag) ? "border-primary bg-surface text-primary" : "border-border bg-white text-muted hover:text-foreground"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
+           
             
 
             {submitError ? (

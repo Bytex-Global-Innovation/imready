@@ -42,7 +42,7 @@ export function FoundationCompleteView() {
   return (
     <div className="mx-auto max-w-5xl">
       <p className="text-xs font-semibold tracking-wider text-muted uppercase">
-        Journey <span className="mx-1 text-brand-100">/</span> Stage 0: Foundation{" "}
+        Journey <span className="mx-1 text-brand-100">/</span> Foundation{" "}
         <span className="mx-1 text-brand-100">/</span>{" "}
         <span className="text-primary">Foundation Complete</span>
       </p>
@@ -79,7 +79,7 @@ export function FoundationCompleteView() {
           <Button variant="secondary" onClick={() => router.push(ROUTES.dashboard)}>
             Join Guided Cohort
           </Button>
-          <Button variant="secondary" onClick={() => router.push(ROUTES.projects)}>
+          <Button variant="secondary" onClick={() => router.push(ROUTES.freeProjects)}>
             Explore Next Steps &amp; Industry Projects
           </Button>
         </div>
@@ -123,7 +123,7 @@ export function FoundationCompleteView() {
       </div>
 
       <div className="mt-8 flex justify-center pb-4">
-        <Button onClick={() => router.push(ROUTES.projects)}>
+        <Button onClick={() => router.push(ROUTES.freeProjects)}>
           Explore projects in the next stage
           <ArrowRight className="h-4 w-4" />
         </Button>

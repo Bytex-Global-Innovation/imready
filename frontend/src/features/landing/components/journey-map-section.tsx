@@ -6,25 +6,6 @@ import {
   Leaf,
   BarChart2,
   ShieldCheck,
-  Briefcase,
-  Trophy,
-  Target,
-  Users,
-  FolderOpen,
-  MessageSquare,
-  CalendarDays,
-  RefreshCw,
-  Wrench,
-  Award,
-  Link2,
-  Lock,
-  Bell,
-  DollarSign,
-  Layers,
-  Globe,
-  Rocket,
-  GraduationCap,
-  Star,
   Check,
   ArrowRight,
   MousePointerClick,
@@ -41,7 +22,6 @@ type StageTone = {
   accent: string;
   badgeSoft: string;
   mindset: string;
-  cardIcon: string;
 };
 
 /** Per-stage visual tokens — keeps JSX free of repeated color conditionals. */
@@ -54,7 +34,6 @@ const STAGE_TONES: StageTone[] = [
     accent: "text-brand-600",
     badgeSoft: "border-brand-100 bg-brand-50 text-brand-700",
     mindset: "border-brand-100 bg-brand-50",
-    cardIcon: "bg-brand-50 text-brand-600",
   },
   {
     progress: "bg-cyan-500",
@@ -64,7 +43,6 @@ const STAGE_TONES: StageTone[] = [
     accent: "text-cyan-600",
     badgeSoft: "border-cyan-100 bg-cyan-50 text-cyan-700",
     mindset: "border-cyan-100 bg-cyan-50",
-    cardIcon: "bg-cyan-50 text-cyan-600",
   },
   {
     progress: "bg-violet-500",
@@ -74,42 +52,13 @@ const STAGE_TONES: StageTone[] = [
     accent: "text-violet-600",
     badgeSoft: "border-violet-100 bg-violet-50 text-violet-700",
     mindset: "border-violet-100 bg-violet-50",
-    cardIcon: "bg-violet-50 text-violet-600",
-  },
-  {
-    progress: "bg-purple-400",
-    connectorDot: "border-purple-300",
-    cardActive: "border-purple-400 bg-purple-50 shadow-md shadow-purple-100",
-    badgeActive: "border-purple-400 bg-purple-400 text-white",
-    accent: "text-purple-600",
-    badgeSoft: "border-purple-100 bg-purple-50 text-purple-700",
-    mindset: "border-purple-100 bg-purple-50",
-    cardIcon: "bg-purple-50 text-purple-600",
-  },
-  {
-    progress: "bg-amber-500",
-    connectorDot: "border-amber-300",
-    cardActive: "border-amber-500 bg-amber-50 shadow-md shadow-amber-100",
-    badgeActive: "border-amber-500 bg-amber-500 text-white",
-    accent: "text-amber-600",
-    badgeSoft: "border-amber-100 bg-amber-50 text-amber-700",
-    mindset: "border-amber-100 bg-amber-50",
-    cardIcon: "bg-amber-50 text-amber-600",
   },
 ];
 
-const NODE_ICONS: LucideIcon[] = [Leaf, BarChart2, ShieldCheck, Briefcase, Trophy];
-
-const CARD_ICONS: LucideIcon[][] = [
-  [Target, Users, FolderOpen, MessageSquare],
-  [CalendarDays, RefreshCw, BarChart2, Wrench],
-  [Award, Link2, Lock, Bell],
-  [Briefcase, DollarSign, Layers, Globe],
-  [Trophy, Rocket, GraduationCap, Star],
-];
+const NODE_ICONS: LucideIcon[] = [Leaf, BarChart2, ShieldCheck];
 
 const STAGE_TRACK_SCROLL =
-  "mt-12 overflow-x-scroll pb-3 [scrollbar-width:thin] [scrollbar-color:var(--border)_var(--surface-alt)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-surface-alt [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border";
+  "mt-12 overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:var(--border)_var(--surface-alt)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-surface-alt [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border";
 
 const STAGE_CARD_BASE =
   "group relative flex w-[100px] shrink-0 cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 transition-all duration-300 ease-out lg:w-[130px] lg:gap-2.5 lg:rounded-2xl lg:px-3 lg:py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-hero-accent focus-visible:ring-offset-2";
@@ -197,7 +146,7 @@ function StageTrackCard({
 
       <span
         className={cn(
-          "text-xs font-bold tracking-tight transition-colors duration-300 lg:text-sm",
+          "text-center text-xs font-bold tracking-tight transition-colors duration-300 lg:text-sm",
           isActive ? tone.accent : "text-hero-heading",
         )}
       >
@@ -220,18 +169,16 @@ function StageTrackCard({
 function StageDetailPanel({
   stage,
   tone,
-  cardIcons,
 }: {
   stage: (typeof JOURNEY_MAP_STAGES)[number];
   tone: StageTone;
-  cardIcons: LucideIcon[];
 }) {
   return (
     <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-opacity duration-300">
       <div className={cn("h-0.5 w-full transition-colors duration-500", tone.progress)} />
 
-      <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_280px] lg:gap-10">
-        <div>
+      <div className="p-6 sm:p-8">
+        <div className="max-w-3xl">
           <span
             className={cn(
               "inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-widest",
@@ -258,7 +205,6 @@ function StageDetailPanel({
             ))}
           </ul>
 
-
           <div className={cn("mt-6 rounded-xl border px-4 py-4", tone.mindset)}>
             <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-hero-body">
               Mindset Shift
@@ -267,28 +213,6 @@ function StageDetailPanel({
               &ldquo;{stage.mindset}&rdquo;
             </p>
           </div>
-        </div>
-
-        <div className="flex flex-col gap-2.5">
-          {stage.cards.map((label, cardIdx) => {
-            const Icon = cardIcons[cardIdx];
-            return (
-              <div
-                key={label}
-                className="group/card flex items-center gap-3 rounded-xl border border-border bg-white p-3.5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md"
-              >
-                <div
-                  className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/card:scale-110",
-                    tone.cardIcon,
-                  )}
-                >
-                  {Icon && <Icon size={15} strokeWidth={2} aria-hidden="true" />}
-                </div>
-                <span className="text-sm font-medium leading-snug text-hero-heading">{label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
@@ -321,9 +245,11 @@ export function JourneyMapSection() {
           <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">
             {JOURNEY_MAP_SECTION.description}
           </p>
-          <p className="mt-1 text-base leading-relaxed text-hero-body sm:text-lg">
-            {JOURNEY_MAP_SECTION.subdescription}
-          </p>
+          {JOURNEY_MAP_SECTION.subdescription ? (
+            <p className="mt-1 text-base leading-relaxed text-hero-body sm:text-lg">
+              {JOURNEY_MAP_SECTION.subdescription}
+            </p>
+          ) : null}
           <div className="mt-5 flex justify-center sm:mt-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-sm font-medium text-hero-accent shadow-sm sm:px-5 sm:text-base">
               <MousePointerClick size={17} strokeWidth={2.25} aria-hidden="true" />
@@ -334,7 +260,7 @@ export function JourneyMapSection() {
         </div>
 
         <div className={STAGE_TRACK_SCROLL}>
-          <div className="flex min-w-[560px] items-center px-2 lg:min-w-[700px]">
+          <div className="mx-auto flex min-w-[360px] max-w-3xl items-center px-2">
             {JOURNEY_MAP_STAGES.flatMap((stageItem, index) => {
               const items = [
                 <StageTrackCard
@@ -362,11 +288,7 @@ export function JourneyMapSection() {
         </div>
 
         <div key={panelKey}>
-          <StageDetailPanel
-            stage={stage}
-            tone={tone}
-            cardIcons={CARD_ICONS[active]}
-          />
+          <StageDetailPanel stage={stage} tone={tone} />
         </div>
       </div>
     </section>

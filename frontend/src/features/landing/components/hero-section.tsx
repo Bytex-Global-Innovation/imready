@@ -1,46 +1,52 @@
-import Image from "next/image";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
+import { JourneyCard } from "./journey-card";
+
+const HERO_HIGHLIGHTS = [
+  "6–8 hrs per week",
+  "Mentor-reviewed work",
+  "Real industry briefs",
+] as const;
 
 export function HeroSection() {
   return (
     <section className="overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16 xl:py-18">
-        <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 xl:gap-12">
-          <h1 className="order-1 font-display text-[2rem] font-bold leading-[1.15] tracking-tight text-hero-heading sm:text-5xl lg:col-start-1 lg:max-w-[560px] lg:text-[3.25rem] xl:text-[3.5rem]">
-  Graduate With Skills. Not Just a Degree.
-</h1>
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 xl:gap-12">
+          <div className="lg:max-w-[560px]">
+            <h1 className="font-display text-[2rem] font-bold leading-[1.15] tracking-tight text-hero-heading sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem]">
+              Graduate With experience, not Just a degree.
+            </h1>
 
-         <p className="order-2 text-base leading-[1.7] text-hero-body sm:text-lg lg:col-start-1 lg:max-w-[560px]">
-  Bridge the gap between what you learn and what the industry expects.
-  ImReady connects students with practical projects, industry mentors, and
-  portfolio-building experiences that transform academic knowledge into
-  job-ready skills.
-</p>
+            <p className="mt-5 text-base leading-[1.7] text-hero-body sm:text-lg">
+              Bridge the gap between what you learn and what the industry expects.
+              ImReady connects students with practical projects, industry mentors, and
+              portfolio-building experiences that transform academic knowledge into
+              job-ready skills.
+            </p>
 
-          <div className="relative order-3 min-w-0 lg:order-none lg:col-start-2 lg:row-span-4 lg:row-start-1">
-            <div
-              className="pointer-events-none absolute -inset-x-6 -inset-y-4 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(243_244_255_/_0.92)_0%,transparent_72%)]"
-              aria-hidden="true"
-            />
-            <figure className="relative m-0 w-full lg:ml-auto lg:max-w-[760px]">
-              <Image
-                src="/hero-section.png"
-                alt="Five-step journey from college learning to placement ready: real projects, mentor review, portfolio building, and career readiness."
-                width={1365}
-                height={1001}
-                priority
-                quality={95}
-                className="h-auto w-full object-contain object-center"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 50vw"
-              />
-            </figure>
-          </div>
+            <ul className="mt-6 flex flex-wrap gap-2.5">
+              {HERO_HIGHLIGHTS.map((item) => (
+                <li
+                  key={item}
+                  className="rounded-full border border-brand-100 bg-white px-4 py-2 text-sm font-medium text-primary shadow-sm"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
 
-          <div className="order-4 pt-1 lg:col-start-1 lg:max-w-[560px]">
-            <Button size="lg" href={ROUTES.signup}>
+            <Button size="lg" href={ROUTES.signup} className="mt-6">
               Start Your Industry Journey
             </Button>
+
+            <p className="mt-4 text-sm font-medium text-primary">
+              Join for free today and get your first industry project and mentor review.
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <JourneyCard />
           </div>
         </div>
       </div>

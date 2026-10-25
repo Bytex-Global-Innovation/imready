@@ -6,6 +6,7 @@ import { JourneyMapSection } from "@/features/landing/components/journey-map-sec
 import { MentorshipSection } from "@/features/landing/components/mentorship-section";
 import { ProjectShowcaseSection } from "@/features/landing/components/project-showcase-section";
 import { SectionDivider } from "@/features/landing/components/section-divider";
+import { CtaSection } from "@/features/landing/components/cta-section";
 
 export default function HomePage() {
   return (
@@ -22,7 +23,12 @@ export default function HomePage() {
         <ProjectShowcaseSection />
         <SectionDivider />
         <FaqSection />
+
+                
+
+        <CtaSection />
       </main>
+      
       <Footer variant="hero" />
     </>
   );

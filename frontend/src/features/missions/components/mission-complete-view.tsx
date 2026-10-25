@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Flame, Zap } from "@/components/icons";
+import { ArrowRight, Check } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { MISSIONS, MISSION_COMPLETE_CONTENT, getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
@@ -40,7 +40,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
   return (
     <div className="mx-auto max-w-6xl">
       <p className="text-xs font-semibold tracking-wider text-muted uppercase">
-        Journey <span className="mx-1 text-brand-100">/</span> Stage 0: Foundation{" "}
+        Journey <span className="mx-1 text-brand-100">/</span>  Foundation{" "}
         <span className="mx-1 text-brand-100">/</span>{" "}
         <span className="text-primary">Mission {missionId} Complete</span>
       </p>
@@ -57,11 +57,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
               Mission {missionId} Complete!
             </h1>
             <p className="mt-2 text-base text-muted">{content.celebrationLine}</p>
-            <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-              <Flame className="h-4 w-4" />
-              +{mission.xpReward} READY Points
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs">XP Earned</span>
-            </span>
+           
             <p className="mt-4 text-sm text-muted">
               Keep going. You&apos;re building a sharper eye for reality.
             </p>
@@ -91,11 +87,7 @@ export function MissionCompleteView({ missionId }: { missionId: number }) {
                 ))}
               </ol>
 
-              <div className="mt-4 flex items-center gap-2 rounded-[var(--radius-card)] bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-                <Zap className="h-4 w-4" />
-                Unlock for Mission {nextMission.id}:{" "}
-                <span className="font-semibold">+{nextMission.xpReward} READY Points</span>
-              </div>
+             
             </div>
           ) : null}
 

@@ -98,7 +98,7 @@ export function Mission2Engage() {
 
   return (
     <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel="Stage 0: Foundation" current="Active Mission" />}
+      breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Active Mission" />}
       badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Mission 2 of 5`} />}
       title={mission.title}
       subtitle={mission.subtitle}

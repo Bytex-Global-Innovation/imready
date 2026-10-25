@@ -38,35 +38,35 @@ export const FOUNDATION_STEPS = [
   {
     id: "lessons",
     step: 1,
-    label: "Watch the introduction video",
+    label: ". Watch the introduction video",
     note: null,
     icon: "calendar" as FoundationStepIcon,
   },
   {
     id: "mission",
     step: 2,
-    label: "Know the industry readiness framework (R.E.A.D.Y)",
+    label: ". Know the industry readiness framework (R.E.A.D.Y)",
     note: null,
     icon: "check" as FoundationStepIcon,
   },
   {
     id: "evidence",
     step: 3,
-    label: "Select your desired problem statement",
+    label: ". Select your desired problem statement",
     note: null,
     icon: "document" as FoundationStepIcon,
   },
   {
     id: "feedback",
     step: 4,
-    label: "Complete all 5 missions and upload your evidence in each mission",
+    label: ". Complete all 5 missions and upload your evidence in each mission",
     note: null,
     icon: "chart" as FoundationStepIcon,
   },
   {
     id: "profile",
     step: 5,
-    label: "Unlock industry projects",
+    label: ". Unlock industry projects",
     note: null,
     icon: "star" as FoundationStepIcon,
   },
@@ -138,7 +138,7 @@ export const FOUNDATION_PROBLEM_STATEMENTS = [
   },
 ] as const;
 export const FOUNDATION_INSTRUCTIONS = {
-  title: "Stage 0: Foundation Stage Instructions",
+  title: "Foundation Stage Instructions",
   intro:
     "This foundational stage guides you through 5 real-world micro-missions to build and verify your problem-solving capabilities.",
 } as const;

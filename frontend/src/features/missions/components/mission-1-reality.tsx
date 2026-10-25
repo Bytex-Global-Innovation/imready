@@ -118,7 +118,7 @@ export function Mission1Reality() {
 
   return (
     <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel="Stage 0: Foundation" current="Mission 1: Reality" />}
+      breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Mission 1: Reality" />}
       badge={<ActiveMissionBadge label={mission.activeBadgeLabel} />}
       title={mission.title}
       subtitle={mission.subtitle}
