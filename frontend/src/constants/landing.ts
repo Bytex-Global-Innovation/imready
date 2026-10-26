@@ -1,27 +1,28 @@
 export const GAP_SECTION = {
   eyebrow: "Old way vs ImReady way",
-  title: "From Classroom Learning to",
-titleAccent: "Industry Readiness.",
-  description: "There's a gap between learning how something works and knowing how to use it in the real world. ImReady helps students close that gap before placements begin.",
+  title: "From classroom learning to",
+  titleAccent: "industry readiness.",
+  description:
+    "Knowing how something works is different from using it on the job. ImReady helps you close that gap long before placements begin.",
   traditional: {
-   title: "TRADITIONAL COLLEGE JOURNEY",
+    title: "Traditional college journey",
     steps: [
-  "Lectures & Exams",
-  "Academic Assignments",
-  "Theoretical Learning",
-  "Placement Preparation in Final Year",
-],
-    shock: "Limited Industry Experience",
+      "Lectures and exams",
+      "Academic assignments",
+      "Theoretical learning",
+      "Placement preparation in final year",
+    ],
+    shock: "Limited industry experience",
   },
   imready: {
-    title: "IMREADY JOURNEY",
+    title: "ImReady journey",
     steps: [
-  "Guided Industry Projects",
-  "Industry Mentorship",
-  "Practical Skill Building",
-  "Portfolio of Real Work",
-  "Industry Exposure From Year 1",
-],
+      "Guided industry projects",
+      "Industry mentorship",
+      "Practical skill building",
+      "A portfolio of real work",
+      "Industry exposure from Year 1",
+    ],
   },
   conclusion: {
     heading: "College rewards marks. Industry rewards capability.",
@@ -77,8 +78,8 @@ export const PROJECT_SHOWCASE_ITEMS = [
 
 export const JOURNEY_MAP_SECTION = {
   eyebrow: "YOUR INDUSTRY JOURNEY",
-  title: "From Where You Are to Where Industry Needs You to Be.",
-  description: "You don't need to have it all figured out today. Follow a structured 5-stage journey that helps you discover your strengths, build practical skills, gain real experience, and become industry-ready.",
+  title: "Your journey: from foundation to paid industry work.",
+  description: "You don’t need it all figured out today. Three steps, each building on the last: lay your foundation, prove yourself on real industry projects, then get paid for your expertise. Tap a step to explore it.",
   subdescription: "",
   hint: "Click any stage to explore what you'll unlock",
 } as const;
@@ -86,98 +87,44 @@ export const JOURNEY_MAP_SECTION = {
 export const JOURNEY_MAP_STAGES = [
   {
     num: "01",
-    name: "Emerging",
-    headline: 'You stop being "just another student."',
-    desc: "Instead of waiting until your final year, you begin solving real problems from Day 1 of your ImReady journey.",
+    name: "Foundation",
+    headline: 'Build a foundation industry respects',
+    desc: "Start with the core skills, tools and workflows real teams use, guided by a mentor from day one. You finish ready for real work.",
     points: [
-      "Complete your first guided industry project",
-      "Paired with an industry mentor",
-      "Build foundational code and research confidence",
+      "Learn the core tools and workflows teams use",
+      "Complete a guided starter project",
+      "Unlock access to real industry projects",
     ],
-    mindset: "Maybe I really can build actual industry software.",
-    cards: [
-      "First real project scoped and assigned",
-      "Paired with an industry mentor",
-      "Portfolio entry #1 created",
-      "Professional communication practiced",
-    ],
+    mindset: "Maybe I really can build actual industry product.",
+    
   },
   {
     num: "02",
-    name: "Developing",
-    headline: "You learn from people who build every day.",
-    desc: "Real feedback from working professionals. Real industry workflows. Real growth.",
+    name: "Industry Projects",
+    headline: "Real briefs. Real feedback. A portfolio that proves it.",
+    desc: "Work on projects set by industry and reviewed by working professionals. Every project you finish becomes verified proof of what you can do.",
     points: [
-      "Work directly with industry mentors",
-      "Receive structured feedback on deliverables",
-      "Grow your portfolio with reviewed outputs",
-      "Learn live industry workflows and deployment pipelines",
+      "Deliver real industry briefs",
+      "Get regular mentor reviews and feedback",
+      "Grow a verified portfolio",
     ],
-    mindset: "I am becoming a capable developer.",
-    cards: [
-      "Mentor sessions scheduled weekly",
-      "Feedback → Revise → Deliver cycle",
-      "Second project in progress",
-      "Industry tools adopted",
-    ],
+    mindset: "I have real work I can point to.",
+    
   },
   {
     num: "03",
-    name: "Secured",
-    headline: "Your work begins speaking for itself.",
-    desc: 'Instead of saying "I know AI" — you say "I built this." Evidence over claims.',
+    name: "Paid Industry Projects",
+    headline: "Your expertise, valued and paid.",
+    desc: 'Once your work meets industry standards, you move into paid projects. You are rewarded for the skills you have built and the track record behind them.',
     points: [
-      "Verified portfolio created and audited",
-      "Projects linked, not just listed",
-      "Placement confidence secured",
-      "Placement-ready proof of work assembled",
+      "Take on paid industry projects",
+      "Deliver to professional standards",
+      "Build a track record employers trust",
     ],
-    mindset: "I belong in the industry.",
-    cards: [
-      "Portfolio certified by industry reviewers",
-      "Projects linked, not just listed",
-      "Placement confidence secured",
-      "Work presented to real stakeholders",
-    ],
+    mindset: "I’m earning from skills I built in college",
+    
   },
-  {
-    num: "04",
-    name: "Established",
-    headline: "Now you're creating value.",
-    desc: "People begin trusting you with meaningful, paid work. You've crossed from student to contributor.",
-    points: [
-      "Freelancing opportunities open via networks",
-      "Startup project collaborations",
-      "Paid research assignments",
-      "Real-world open-source or company codebase contributions",
-    ],
-    mindset: "I don't just learn. I build and contribute to businesses.",
-    cards: [
-      "First client or startup project",
-      "Earning while still studying",
-      "Deep expertise in a domain",
-      "Industry network formed",
-    ],
-  },
-  {
-    num: "05",
-    name: "Distinguished",
-    headline: "Very few students reach here.",
-    desc: "These students don't wait for opportunities. They create them. Industry knows their name.",
-    points: [
-      "Lead cross-functional engineering teams",
-      "Build innovative, high-impact patented architectures",
-      "Mentor the next junior cohort",
-      "Work on sponsored research with IP co-filing",
-    ],
-    mindset: "My portfolio co-files intellectual property in my own name.",
-    cards: [
-      "Top 1% of ImReady cohort",
-      "Founding team material",
-      "Mentoring junior students",
-      "Featured in ImReady showcase",
-    ],
-  },
+  
 ] as const;
 
 export const LANDING_FAQ = {
@@ -205,9 +152,9 @@ export const LANDING_FAQ = {
         "Active industry professionals—product managers, software engineers, data analysts, and startup founders who build products daily. They provide constructive code reviews and project standup critiques.",
     },
     {
-      question: "Is the pilot batch free?",
+      question: "Does it cost anything to join?",
       answer:
-        "Yes—completely free for students of selected founding partner colleges. We are co-building the pilot batch with our educational partners at this stage.",
+        "No. It’s free for students of our selected founding partner colleges. Join now to get your first industry project and mentor.",
     },
   ],
 } as const;
@@ -215,13 +162,13 @@ export const LANDING_FAQ = {
 
 export const MENTORSHIP_SECTION = {
   eyebrow: "Mentorship Excellence",
-  title: "Learn from the best to achieve",
-  titleAccent: "your best.",
+  title: "Learn from people who do this work.",
+  
   description:
-    "Our elite team of industry experts and alumni from world-class institutions are dedicated to guiding your educational transition with precision and clarity.",
-  academicMentorsTitle: "Academic Mentors",
+    "Your mentors are working professionals and alumni of leading institutions. They review your work and tell you what industry expects.",
+  academicMentorsTitle: "Your Mentors",
   academicMentorsSubtitle: "Top institution alumni guiding your core path.",
-  successfulExplorersTitle: "Successful Explorers",
+  successfulExplorersTitle: "What students have achieved ",
   successfulExplorersSubtitle:
     "Meet the students who have transformed their careers through our mentorship program.",
 } as const;

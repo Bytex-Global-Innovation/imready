@@ -98,7 +98,7 @@ export function Mission5Yield() {
 
   return (
     <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel="Stage 0: Foundation" current="Mission 5: Your Proof" />}
+      breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Mission 5: Your Proof" />}
       badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Mission 5 of 5`} />}
       title={mission.title}
       subtitle={mission.subtitle}

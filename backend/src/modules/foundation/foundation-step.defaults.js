@@ -39,7 +39,7 @@ const WHY_LAYERS = [
   { key: 'why1', label: 'Why: First Layer (Symptom)' },
   { key: 'why2', label: 'Why: Second Layer' },
   { key: 'why3', label: 'Why: Third Layer' },
-  { key: 'why4', label: 'Why: Fourth Layer (Operational)' },
+  { key: 'why4', label: 'Why: Fourth Layer' },
 ];
 
 const DEFAULT_PATTERN_TAGS = ['Information Gap', 'Counter Congestion', 'Communication Flow'];

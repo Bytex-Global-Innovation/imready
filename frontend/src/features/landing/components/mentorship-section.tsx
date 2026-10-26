@@ -40,9 +40,7 @@ export function MentorshipSection() {
 
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-hero-heading sm:text-4xl lg:text-5xl">
             {MENTORSHIP_SECTION.title}{" "}
-            <span className="text-hero-accent">
-              {MENTORSHIP_SECTION.titleAccent}
-            </span>
+           
           </h2>
 
           <p className="mt-4 text-base leading-relaxed text-hero-body sm:text-lg">

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FoundationCompleteCard } from "./foundation-complete-card";
 import {
   ArrowRight,
   BarChart3,
@@ -48,6 +49,7 @@ export function DashboardView() {
     mode: FoundationCtaMode;
     missionId: number;
   }>({ mode: "start", missionId: 1 });
+  const [progressChecked, setProgressChecked] = useState(false);
   const searchParams = useSearchParams();
   const hasActiveProject = searchParams.get("applied") === "true";
   const displayName = student?.studentName?.trim() || "Explorer";
@@ -70,14 +72,13 @@ export function DashboardView() {
       })
       .catch(() => {
         setFoundationCta({ mode: "start", missionId: 1 });
+      })
+      .finally(() => {
+        setProgressChecked(true);
       });
   }, []);
 
   function handleFoundationCta() {
-    if (foundationCta.mode === "complete") {
-      router.push(ROUTES.foundationComplete);
-      return;
-    }
     if (foundationCta.mode === "continue") {
       router.push(ROUTES.mission(foundationCta.missionId));
       return;
@@ -88,13 +89,13 @@ export function DashboardView() {
   const foundationButtonLabel =
     foundationCta.mode === "continue"
       ? `Continue Mission ${foundationCta.missionId}`
-      : foundationCta.mode === "complete"
-        ? "View Foundation Summary"
-        : FOUNDATION_CARD.cta;
+      : FOUNDATION_CARD.cta;
 
   if (hasActiveProject) {
     return <ActiveProjectDashboard />;
   }
+
+  const foundationComplete = foundationCta.mode === "complete";
 
   return (
     <>
@@ -103,74 +104,74 @@ export function DashboardView() {
           Hi, {displayName}
         </h1>
         <p className="mt-1 text-sm text-muted sm:text-base">
-          Welcome to your Stage 0 Explorer Dashboard.
+          Your journey to industry readiness starts here.
         </p>
       </header>
 
       <JourneyPath />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-        <section className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-5 sm:p-7 xl:col-span-3">
-          <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
-            {FOUNDATION_CARD.title}
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            {FOUNDATION_CARD.description}
-          </p>
+      {!progressChecked ? (
+        <div className="py-10 text-center text-sm text-muted">Loading your progress…</div>
+      ) : foundationComplete ? (
+        <FoundationCompleteCard />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+          <section className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-5 sm:p-7 xl:col-span-3">
+            <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+              {FOUNDATION_CARD.title}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+              {FOUNDATION_CARD.description}
+            </p>
 
-          <ol className="mt-6 space-y-3.5">
-            {FOUNDATION_STEPS.map((item) => {
-              const Icon = STEP_ICONS[item.icon];
-              return (
-                <li key={item.id} className="flex items-start gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <p className="pt-1 text-sm leading-snug sm:text-base">
-                    <span className="font-semibold text-foreground">
-                      {item.step}
-                    </span>{" "}
-                    <span className="font-medium text-foreground">
-                      {item.label}
+            <ol className="mt-6 space-y-3.5">
+              {FOUNDATION_STEPS.map((item) => {
+                const Icon = STEP_ICONS[item.icon];
+                return (
+                  <li key={item.id} className="flex items-start gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                      <Icon className="h-4 w-4" />
                     </span>
-                    {item.note ? (
-                      <span className="text-muted"> {item.note}</span>
-                    ) : null}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
+                    <p className="pt-1 text-sm leading-snug sm:text-base">
+                      <span className="font-semibold text-foreground">{item.step}</span>{" "}
+                      <span className="font-medium text-foreground">{item.label}</span>
+                      {item.note ? <span className="text-muted"> {item.note}</span> : null}
+                    </p>
+                  </li>
+                );
+              })}
+            </ol>
 
-          <p className="mt-6 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">
-            {FOUNDATION_CARD.callout}
-          </p>
+            <p className="mt-6 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">
+              {FOUNDATION_CARD.callout}
+            </p>
 
-          <Button className="mt-6" onClick={handleFoundationCta}>
-            {foundationButtonLabel}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </section>
+            <Button className="mt-6" onClick={handleFoundationCta}>
+              {foundationButtonLabel}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </section>
 
-        <section className="xl:col-span-2">
-          <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
-            {INTRO_VIDEO.title}
-          </h2>
-          <div className="relative mt-4 flex aspect-video items-center justify-center overflow-hidden rounded-[var(--radius-card)] bg-surface">
-            <button
-              type="button"
-              aria-label="Play introduction video"
-              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform hover:scale-105"
-            >
-              <Play className="h-6 w-6 fill-current" />
-            </button>
-            <span className="absolute right-3 bottom-3 rounded bg-foreground/80 px-2 py-0.5 text-xs font-medium text-white">
-              {INTRO_VIDEO.duration}
-            </span>
-          </div>
-          <p className="mt-3 text-sm text-muted">{INTRO_VIDEO.caption}</p>
-        </section>
-      </div>
+          <section className="xl:col-span-2">
+            <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
+              {INTRO_VIDEO.title}
+            </h2>
+            <div className="relative mt-4 flex aspect-video items-center justify-center overflow-hidden rounded-[var(--radius-card)] bg-surface">
+              <button
+                type="button"
+                aria-label="Play introduction video"
+                className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform hover:scale-105"
+              >
+                <Play className="h-6 w-6 fill-current" />
+              </button>
+              <span className="absolute right-3 bottom-3 rounded bg-foreground/80 px-2 py-0.5 text-xs font-medium text-white">
+                {INTRO_VIDEO.duration}
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-muted">{INTRO_VIDEO.caption}</p>
+          </section>
+        </div>
+      )}
 
       <AssessmentInstructionsModal
         isOpen={instructionsOpen}
