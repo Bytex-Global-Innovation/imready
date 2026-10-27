@@ -37,7 +37,7 @@ export function HeroSection() {
             </ul>
 
             <Button size="lg" href={ROUTES.signup} className="mt-6">
-              Start Your Industry Journey
+              Start My Industry Journey
             </Button>
 
             <p className="mt-4 text-sm font-medium text-primary">

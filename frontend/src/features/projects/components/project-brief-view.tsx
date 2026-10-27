@@ -172,7 +172,7 @@ export function ProjectBriefView({
 
       <header className="mb-6">
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          {project.title} – Project Brief
+          {project.title} – Industry Projects
         </h1>
         <div className="mt-4 flex flex-wrap gap-2">
           {project.level ? (

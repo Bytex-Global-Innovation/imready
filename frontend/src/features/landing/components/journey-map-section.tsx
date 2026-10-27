@@ -159,7 +159,7 @@ function StageTrackCard({
           isActive ? tone.accent : "text-hero-body group-hover:text-hero-heading",
         )}
       >
-        {isActive ? "Current Stage" : "Explore Stage"}
+        {isActive ? "" : ""}
         {!isActive && <ArrowRight size={11} strokeWidth={2.5} aria-hidden="true" />}
       </span>
     </button>

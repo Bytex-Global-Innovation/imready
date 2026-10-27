@@ -107,8 +107,8 @@ export function ProjectShowcaseSection() {
 
       <div className="mt-9 text-center sm:mt-10">
         <Button href={ROUTES.signup} size="lg">
-          Find your project brief
-        </Button>
+          Find Your Industry Project
+        </Button> 
       </div>
     </section>
   );

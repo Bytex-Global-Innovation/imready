@@ -1,5 +1,5 @@
 export const NAV_LINKS = [
-  { label: "The Gap", href: "#gap" },
+  { label: "Why I'm Ready", href: "#gap" },
   { label: "Journey", href: "#journey" },
   { label: "Projects", href: "#projects" },
   { label: "FAQ", href: "#faq" },
