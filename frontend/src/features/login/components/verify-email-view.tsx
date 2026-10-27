@@ -8,23 +8,8 @@ import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { ApiError, authApi } from "@/lib/api";
 
-/** Only allow student-app destinations after verify (never admin). */
-function resolvePostVerifyPath(
-  ...candidates: Array<string | null | undefined>
-) {
-  for (const value of candidates) {
-    if (!value) continue;
-    if (
-      value === "/details" ||
-      value === ROUTES.details ||
-      value === "/bytex"
-    ) {
-      return ROUTES.details;
-    }
-    if (value === "/dashboard" || value === ROUTES.dashboard) {
-      return ROUTES.dashboard;
-    }
-  }
+/** After email verification, always land on the student dashboard. */
+function resolvePostVerifyPath() {
   return ROUTES.dashboard;
 }
 
@@ -32,8 +17,6 @@ export function VerifyEmailView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
-  const nextHint = searchParams.get("next");
-
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     token ? "loading" : "error",
   );
@@ -50,20 +33,10 @@ export function VerifyEmailView() {
         const result = await authApi.verifyEmail(token);
         if (cancelled) return;
 
-        // Prefer API redirect (from careerDoor); fall back to email `next` hint.
-        // bytex-unlock → /details ; written-challenge (free) → /dashboard
-        const destination = resolvePostVerifyPath(
-          result.redirectTo,
-          nextHint,
-        );
-        const isPremium = destination === ROUTES.details;
+        const destination = resolvePostVerifyPath();
 
         setStatus("success");
-        setMessage(
-          isPremium
-            ? "Email verified. Taking you to premium payment details…"
-            : "Email verified. Taking you to your dashboard…",
-        );
+        setMessage("Email verified. Taking you to your dashboard…");
         router.replace(destination);
       } catch (err) {
         if (cancelled) return;
@@ -80,7 +53,7 @@ export function VerifyEmailView() {
     return () => {
       cancelled = true;
     };
-  }, [router, token, nextHint]);
+  }, [router, token]);
 
   return (
     <div className="mx-auto w-full max-w-md">

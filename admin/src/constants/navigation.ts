@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Target,
   Layers,
+  LayoutGrid,
 } from "@/components/icons";
 
 export interface NavItem {
@@ -21,6 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Students",            href: "/students",            icon: Users           },
   { label: "Projects",            href: "/projects",            icon: FolderKanban    },
   { label: "Project Categories",  href: "/project-categories",  icon: Tags            },
+  { label: "Target Domains",      href: "/target-domains",      icon: LayoutGrid      },
   { label: "Assessments",         href: "/assessments",         icon: ClipboardList   },
   { label: "Assessment Results",  href: "/assessment-results",  icon: ClipboardCheck  },
   { label: "Foundation Progress",   href: "/foundation-progress", icon: Target          },

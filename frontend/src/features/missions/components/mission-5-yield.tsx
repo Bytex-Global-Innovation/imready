@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
 import { useStudentProfile } from "@/components/auth/student-auth-gate";
@@ -14,17 +13,24 @@ import {
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
+  PresentationVideoLinkField,
   SelectedProblemBanner,
   TipFromReady,
   type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
 import {
+  evidenceConfigText,
+  questionHelper,
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
   useSelectedProblemText,
 } from "../lib/foundation-journey";
+import {
+  isAllowedPresentationVideoUrl,
+  validatePresentationVideoUrl,
+} from "../lib/presentation-video-url";
 
 const MISSION_ID = 5;
 const mission = getMission(MISSION_ID);
@@ -40,10 +46,13 @@ export function Mission5Yield() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
- const [improvements, setImprovements] = useState("");
+  const [presentationVideoUrl, setPresentationVideoUrl] = useState("");
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [improvements, setImprovements] = useState("");
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
+      setPresentationVideoUrl((record.answers.presentationVideoUrl as string) ?? "");
       setImprovements((record.answers.improvements as string) ?? "");
       setValidation((record.answers.validation as string) ?? "");
       setImpact((record.answers.impact as string) ?? "");
@@ -59,20 +68,33 @@ export function Mission5Yield() {
   }, []);
 
   // Still drives the submit button even though the checklist card is no longer shown.
- const checklist = [
-  { label: "Upload final proof document", done: Boolean(evidence.filePath) },
-  { label: "Describe improvements to your prototype", done: improvements.trim().length > 0 },
-  { label: "Describe how you validated it", done: validation.trim().length > 0 },
-  { label: "Reflect on the impact", done: impact.trim().length > 0 },
-];
+  const videoValid = isAllowedPresentationVideoUrl(presentationVideoUrl);
+  const checklist = [
+    { label: "Upload final proof document", done: Boolean(evidence.filePath) },
+    { label: "Add impact video link (YouTube or Google Drive)", done: videoValid },
+    { label: "Describe improvements to your prototype", done: improvements.trim().length > 0 },
+    { label: "Describe how you validated it", done: validation.trim().length > 0 },
+    { label: "Reflect on the impact", done: impact.trim().length > 0 },
+  ];
   const canComplete = checklist.every((item) => item.done);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
+    const check = validatePresentationVideoUrl(presentationVideoUrl);
+    if (!check.ok) {
+      setVideoError(check.message);
+      return;
+    }
+    setVideoError(null);
     try {
-      const answers = { improvements, validation, impact };
+      const answers = {
+        presentationVideoUrl: presentationVideoUrl.trim(),
+        improvements,
+        validation,
+        impact,
+      };
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       const result = await completeMission(MISSION_ID, answers, evidenceMeta);
@@ -95,6 +117,24 @@ export function Mission5Yield() {
 
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
+  const sectionTitle =
+    evidenceConfigText(journeyConfig, "sectionTitle", "Show your final proof") ??
+    "Show your final proof";
+  const videoHelper =
+    evidenceConfigText(
+      journeyConfig,
+      "videoLinkHelper",
+      questionHelper(
+        journeyConfig,
+        "presentationVideoUrl",
+        "Paste a YouTube or Google Drive link showing your final proof and impact.",
+      ),
+    ) ??
+    questionHelper(
+      journeyConfig,
+      "presentationVideoUrl",
+      "Paste a YouTube or Google Drive link showing your final proof and impact.",
+    );
 
   return (
     <MissionLayout
@@ -104,11 +144,30 @@ export function Mission5Yield() {
       subtitle={mission.subtitle}
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="font-display text-lg font-bold text-foreground">Show your final proof</h2>
-          
+          <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
+
           <div className="mt-4">
             <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
           </div>
+
+          <div className="mt-6">
+            <PresentationVideoLinkField
+              value={presentationVideoUrl}
+              onChange={(value) => {
+                setPresentationVideoUrl(value);
+                if (videoError) setVideoError(null);
+              }}
+              label={questionText(journeyConfig, "presentationVideoUrl", "Impact video link")}
+              helper={videoHelper}
+              placeholder={questionPlaceholder(
+                journeyConfig,
+                "presentationVideoUrl",
+                "https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view",
+              )}
+              error={videoError}
+            />
+          </div>
+
           <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
   Did you make any improvements to your prototype from the previous mission (Do)? If yes, what did you change?
 </label>

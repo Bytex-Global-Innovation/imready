@@ -20,8 +20,11 @@ const {
   uploadPaymentScreenshot,
 } = require('@middleware/upload-payment-screenshot.middleware');
 
+const targetDomainController = require('@modules/target-domain/target-domain.controller');
+
 const router = express.Router();
 
+router.get('/target-domains', targetDomainController.listPublic);
 router.post('/signup', sensitiveActionLimiter, validateBody(signupSchema), studentController.signup);
 router.post('/login', loginLimiter, validateBody(loginSchema), studentController.login);
 router.post(

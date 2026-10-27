@@ -20,6 +20,7 @@ const {
   isFoundationCompleteForStudent,
 } = require('@modules/foundation/foundation.service');
 const config = require('@config/index');
+const targetDomainService = require('@modules/target-domain/target-domain.service');
 
 /** New signups must verify within this window or the pending account is deleted. */
 const EMAIL_VERIFICATION_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -264,7 +265,24 @@ async function signup(payload) {
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
-  const domain = DOMAIN_LABELS[payload.targetDomain] || payload.targetDomain;
+  const collegeName =
+    payload.college === 'Other'
+      ? String(payload.collegeOtherName || '').trim()
+      : String(payload.college).trim();
+  if (!collegeName) {
+    throw badRequest('Please enter your college or institution name');
+  }
+
+  const targetDomainOther = String(payload.targetDomainOther || '').trim() || null;
+  await targetDomainService.validateSignupDomains(
+    payload.targetDomains,
+    targetDomainOther,
+  );
+  const domain = await targetDomainService.formatDomainsForStudent(
+    payload.targetDomains,
+    targetDomainOther,
+  );
+  const careerDoor = payload.careerDoor || 'written-challenge';
   const rawToken = createRawToken();
 
   const student = await StudentAccount.create({
@@ -274,13 +292,15 @@ async function signup(payload) {
     countryCode: payload.countryCode || '+91',
     phone: payload.phone.trim(),
     passwordHash,
-    collegeName: payload.college.trim(),
+    collegeName,
     streamMajor: payload.streamMajor.trim(),
     graduationYear: String(payload.graduationYear),
     domain,
+    targetDomainsJson: payload.targetDomains,
+    targetDomainOther,
     level: 'Beginner',
-    careerDoor: payload.careerDoor,
-    subscriptionStatus: subscriptionFromCareerDoor(payload.careerDoor),
+    careerDoor,
+    subscriptionStatus: subscriptionFromCareerDoor(careerDoor),
     status: 'PENDING',
     isActive: true,
     emailVerifiedAt: null,

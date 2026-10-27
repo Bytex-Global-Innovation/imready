@@ -1,4 +1,4 @@
-export const SIGNUP_STEP_NUMBERS = [1, 2, 3] as const;
+export const SIGNUP_STEP_NUMBERS = [1, 2] as const;
 export type SignupStep = (typeof SIGNUP_STEP_NUMBERS)[number];
 
 export const ROUTES = {

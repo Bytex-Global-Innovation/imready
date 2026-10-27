@@ -27,14 +27,20 @@ function StepBadge({ isActive }: { isActive: boolean }) {
 }
 
 export function JourneyPath() {
-  const { unpaidProjectsUnlocked } = useStudentProfile();
-  const [foundationComplete, setFoundationComplete] = useState(false);
+  const {
+    foundationComplete: serverFoundationComplete,
+    unpaidProjectsUnlocked,
+  } = useStudentProfile();
+  const [localFoundationComplete, setLocalFoundationComplete] = useState(false);
 
   useEffect(() => {
     ensureFoundationProgress()
-      .then(() => setFoundationComplete(isFoundationComplete()))
-      .catch(() => setFoundationComplete(false));
+      .then(() => setLocalFoundationComplete(isFoundationComplete()))
+      .catch(() => setLocalFoundationComplete(false));
   }, []);
+
+  const foundationComplete =
+    localFoundationComplete || serverFoundationComplete || unpaidProjectsUnlocked;
 
   const steps = useMemo(
     () =>

@@ -7,6 +7,7 @@ import {
   ensureFoundationProgress,
   firstIncompleteMissionId,
 } from "../lib/mission-progress";
+import { MissionWhatsAppCommunity } from "./mission-ui";
 
 type StepState = "completed" | "active" | "locked";
 
@@ -202,6 +203,7 @@ export function ReadyQuestMap({ currentMission }: { currentMission?: number }) {
           );
         })}
       </ol>
+      <MissionWhatsAppCommunity className="mt-4" />
     </div>
   );
 }

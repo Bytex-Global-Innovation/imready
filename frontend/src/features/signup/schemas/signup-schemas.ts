@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import { CAREER_DOORS } from "../constants/career-doors";
 
 export const COUNTRY_CODES = [
   { code: "+1", label: "US +1" },
@@ -9,7 +8,12 @@ export const COUNTRY_CODES = [
   { code: "+81", label: "JP +81" },
 ] as const;
 
+export const COLLEGE_OTHER_VALUE = "Other";
+
 export const COLLEGE_OPTIONS = [
+  "VIT Pune",
+  "SSGMCE Shegaon",
+  "PCCoE",
   "Indian Institute of Technology (IIT) Bombay",
   "Indian Institute of Technology (IIT) Delhi",
   "Vellore Institute of Technology (VIT)",
@@ -19,7 +23,7 @@ export const COLLEGE_OPTIONS = [
   "PES University",
   "National Institute of Technology (NIT) Trichy",
   "Delhi Technological University (DTU)",
-  "Other",
+  COLLEGE_OTHER_VALUE,
 ] as const;
 
 export const STREAM_OPTIONS = [
@@ -41,13 +45,6 @@ export const GRADUATION_YEARS = [
   "2028",
   "2029",
   "2030",
-] as const;
-
-export const TARGET_DOMAINS = [
-  { id: "ai", label: "Artificial Intelligence" },
-  { id: "iot", label: "IoT" },
-  { id: "web-dev", label: "Web Dev" },
-  { id: "product", label: "Product" },
 ] as const;
 
 const phoneRegex = /^[\d\s()-]{10,}$/;
@@ -85,36 +82,42 @@ export const academicDetailsSchema = yup.object({
     .trim()
     .required("College or institution is required")
     .oneOf([...COLLEGE_OPTIONS], "Please select a valid college"),
+  collegeOtherName: yup.string().when("college", {
+    is: COLLEGE_OTHER_VALUE,
+    then: (schema) =>
+      schema
+        .trim()
+        .required("Please enter your college or institution name")
+        .min(2, "College name must be at least 2 characters"),
+    otherwise: (schema) => schema.trim().optional(),
+  }),
   streamMajor: yup.string().required("Please select your stream or major"),
   graduationYear: yup
     .string()
     .required("Please select your year of graduation")
     .oneOf([...GRADUATION_YEARS], "Please select a valid graduation year"),
-  targetDomain: yup
-    .string()
-    .required("Please select a target domain")
-    .oneOf(
-      TARGET_DOMAINS.map((domain) => domain.id),
-      "Please select a valid target domain",
-    ),
-});
-
-export const chooseDoorSchema = yup.object({
-  careerDoor: yup
-    .string()
-    .required("Please choose a door to continue")
-    .oneOf(
-      CAREER_DOORS.map((door) => door.id),
-      "Please choose a valid door",
-    ),
+  targetDomains: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, "Select at least one target domain")
+    .required(),
+  targetDomainOther: yup.string().when("targetDomains", {
+    is: (domains: string[] | undefined) =>
+      Array.isArray(domains) && domains.includes("other"),
+    then: (schema) =>
+      schema
+        .trim()
+        .required("Please specify your target domain")
+        .min(2, "Please enter at least 2 characters"),
+    otherwise: (schema) => schema.trim().optional(),
+  }),
   agreedToTerms: yup
     .boolean()
     .oneOf([true], "You must agree to the Terms of Service and Privacy Policy"),
+  careerDoor: yup.string().default("written-challenge"),
 });
 
-export const signupSchema = personalInfoSchema
-  .concat(academicDetailsSchema)
-  .concat(chooseDoorSchema);
+export const signupSchema = personalInfoSchema.concat(academicDetailsSchema);
 
 export type SignupFormValues = {
   fullName: string;
@@ -124,9 +127,11 @@ export type SignupFormValues = {
   password: string;
   confirmPassword: string;
   college: string;
+  collegeOtherName: string;
   streamMajor: string;
   graduationYear: string;
-  targetDomain: string;
+  targetDomains: string[];
+  targetDomainOther: string;
   careerDoor: string;
   agreedToTerms: boolean;
 };
@@ -134,7 +139,6 @@ export type SignupFormValues = {
 export const SIGNUP_STEPS = [
   { id: 1, label: "Personal Info" },
   { id: 2, label: "Academic Details" },
-  { id: 3, label: "Choose Your Door" },
 ] as const;
 
 export const STEP_FIELDS: Record<number, (keyof SignupFormValues)[]> = {
@@ -146,6 +150,13 @@ export const STEP_FIELDS: Record<number, (keyof SignupFormValues)[]> = {
     "password",
     "confirmPassword",
   ],
-  2: ["college", "streamMajor", "graduationYear", "targetDomain"],
-  3: ["careerDoor", "agreedToTerms"],
+  2: [
+    "college",
+    "collegeOtherName",
+    "streamMajor",
+    "graduationYear",
+    "targetDomains",
+    "targetDomainOther",
+    "agreedToTerms",
+  ],
 };

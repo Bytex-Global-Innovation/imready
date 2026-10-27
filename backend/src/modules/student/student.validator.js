@@ -16,14 +16,22 @@ const signupSchema = Joi.object({
   phone: Joi.string().trim().min(10).max(32).required(),
   password: Joi.string().min(6).max(128).required(),
   college: Joi.string().trim().min(2).max(255).required(),
+  collegeOtherName: Joi.when('college', {
+    is: 'Other',
+    then: Joi.string().trim().min(2).max(255).required(),
+    otherwise: Joi.string().trim().max(255).allow('', null).optional(),
+  }),
   streamMajor: Joi.string().trim().min(1).max(120).required(),
   graduationYear: Joi.string().trim().max(8).required(),
-  targetDomain: Joi.string()
-    .valid('ai', 'iot', 'web-dev', 'product')
+  targetDomains: Joi.array()
+    .items(Joi.string().trim().min(1).max(160))
+    .min(1)
+    .max(12)
     .required(),
+  targetDomainOther: Joi.string().trim().max(120).allow('', null).optional(),
   careerDoor: Joi.string()
     .valid('written-challenge', 'bytex-unlock')
-    .required(),
+    .default('written-challenge'),
   agreedToTerms: Joi.boolean().valid(true).required(),
 }).unknown(false);
 

@@ -160,6 +160,14 @@ function missionQuestions(missionId) {
     case 5:
       return [
         {
+          answerKey: 'presentationVideoUrl',
+          label: 'Impact video link',
+          helper:
+            'Paste a YouTube or Google Drive link to a short video showing your final proof and impact.',
+          placeholder:
+            'https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view',
+        },
+        {
           answerKey: 'improvements',
           question:
             'Did you make any improvements to your prototype from the previous mission (Do)? If yes, what did you change?',
@@ -224,7 +232,9 @@ function evidenceConfigForMission(missionId) {
       return {
         sectionTitle: 'Show your final proof',
         sectionDescription:
-          'Upload a document with your final proof and Google Drive links to photos, videos, or recordings.',
+          'Upload a document with your final proof, add a video link, and include Google Drive links to photos or recordings where helpful.',
+        videoLinkHelper:
+          'Use an unlisted/public YouTube URL or a Google Drive file link with view access for reviewers.',
         uploadHelper,
       };
     default:

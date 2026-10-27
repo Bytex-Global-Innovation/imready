@@ -15,6 +15,7 @@ export {
   FolderKanban,
   Home,
   LayoutDashboard,
+  LayoutGrid,
   Layers,
   Tags,
   Lock,

@@ -43,7 +43,8 @@ type FoundationCtaMode = "start" | "continue" | "complete";
 
 export function DashboardView() {
   const router = useRouter();
-  const { student } = useStudentProfile();
+  const { student, foundationComplete: serverFoundationComplete, unpaidProjectsUnlocked } =
+    useStudentProfile();
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [foundationCta, setFoundationCta] = useState<{
     mode: FoundationCtaMode;
@@ -95,7 +96,13 @@ export function DashboardView() {
     return <ActiveProjectDashboard />;
   }
 
-  const foundationComplete = foundationCta.mode === "complete";
+  const localFoundationComplete = foundationCta.mode === "complete";
+  const foundationComplete =
+    localFoundationComplete || serverFoundationComplete || unpaidProjectsUnlocked;
+  const showFoundationOnboarding =
+    progressChecked && !foundationComplete;
+  const showFoundationCompleteCard =
+    progressChecked && foundationComplete && !unpaidProjectsUnlocked;
 
   return (
     <>
@@ -112,9 +119,9 @@ export function DashboardView() {
 
       {!progressChecked ? (
         <div className="py-10 text-center text-sm text-muted">Loading your progress…</div>
-      ) : foundationComplete ? (
+      ) : showFoundationCompleteCard ? (
         <FoundationCompleteCard />
-      ) : (
+      ) : showFoundationOnboarding ? (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
           <section className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-5 sm:p-7 xl:col-span-3">
             <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
@@ -171,7 +178,21 @@ export function DashboardView() {
             <p className="mt-3 text-sm text-muted">{INTRO_VIDEO.caption}</p>
           </section>
         </div>
-      )}
+      ) : unpaidProjectsUnlocked ? (
+        <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+            Industry projects are unlocked
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">
+            You&apos;ve finished Foundation. Browse hands-on projects in your domain and apply
+            when you&apos;re ready.
+          </p>
+          <Button href={ROUTES.projects} className="mt-6">
+            Explore Industry Projects
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </section>
+      ) : null}
 
       <AssessmentInstructionsModal
         isOpen={instructionsOpen}

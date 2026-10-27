@@ -1022,6 +1022,118 @@ export const projectCategoriesApi = {
   },
 };
 
+// ─── Target domains (signup) ────────────────────────────────────────────────────
+
+export interface TargetDomainItem {
+  id: string;
+  uuid: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+  isOther: boolean;
+  sortOrder?: number;
+}
+
+export const targetDomainsApi = {
+  list: async (): Promise<{ domains: TargetDomainItem[] }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        domains: [
+          {
+            id: "1",
+            uuid: "mock-ai",
+            name: "Artificial Intelligence",
+            slug: "ai",
+            isActive: true,
+            isOther: false,
+            sortOrder: 1,
+          },
+          {
+            id: "2",
+            uuid: "mock-other",
+            name: "Others",
+            slug: "other",
+            isActive: true,
+            isOther: true,
+            sortOrder: 99,
+          },
+        ],
+      };
+    }
+    return request<{ domains: TargetDomainItem[] }>("/admin/target-domains");
+  },
+
+  create: async (payload: {
+    name: string;
+    slug?: string;
+    description?: string;
+    isActive?: boolean;
+    isOther?: boolean;
+    sortOrder?: number;
+  }): Promise<TargetDomainItem> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        id: String(Date.now()),
+        uuid: `mock-${Date.now()}`,
+        name: payload.name,
+        slug: payload.slug || payload.name.toLowerCase().replace(/\s+/g, "-"),
+        description: payload.description || "",
+        isActive: payload.isActive !== false,
+        isOther: Boolean(payload.isOther),
+        sortOrder: payload.sortOrder ?? 0,
+      };
+    }
+    return request<TargetDomainItem>("/admin/target-domains", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  update: async (
+    id: string,
+    payload: {
+      name: string;
+      slug?: string;
+      description?: string;
+      isActive?: boolean;
+      isOther?: boolean;
+      sortOrder?: number;
+    },
+  ): Promise<TargetDomainItem> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return {
+        id,
+        uuid: `mock-${id}`,
+        name: payload.name,
+        slug: payload.slug || payload.name.toLowerCase().replace(/\s+/g, "-"),
+        description: payload.description || "",
+        isActive: payload.isActive !== false,
+        isOther: Boolean(payload.isOther),
+        sortOrder: payload.sortOrder ?? 0,
+      };
+    }
+    return request<TargetDomainItem>(`/admin/target-domains/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  delete: async (id: string): Promise<{ id: string; deleted: boolean }> => {
+    if (USE_MOCK) {
+      await delay(300);
+      return { id, deleted: true };
+    }
+    return request<{ id: string; deleted: boolean }>(
+      `/admin/target-domains/${id}`,
+      { method: "DELETE" },
+    );
+  },
+};
+
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
 export type ProjectStatus = "ACTIVE" | "PENDING" | "REVIEW" | "ARCHIVED";

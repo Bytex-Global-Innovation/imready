@@ -11,7 +11,6 @@ import { authApi } from "@/lib/api";
 import { RegistrationStepper } from "./registration-stepper";
 import { PersonalInfoStep } from "./personal-info-step";
 import { AcademicDetailsStep } from "./academic-details-step";
-import { ChooseDoorStep } from "./choose-door-step";
 import { SignupErrorModal } from "./signup-error-modal";
 import {
   signupSchema,
@@ -30,10 +29,12 @@ const defaultValues: SignupFormValues = {
   password: "",
   confirmPassword: "",
   college: "",
+  collegeOtherName: "",
   streamMajor: "",
   graduationYear: "",
-  targetDomain: "",
-  careerDoor: "",
+  targetDomains: [],
+  targetDomainOther: "",
+  careerDoor: "written-challenge",
   agreedToTerms: false,
 };
 
@@ -42,7 +43,12 @@ function readDraft(): SignupFormValues {
   try {
     const raw = window.sessionStorage.getItem(SIGNUP_DRAFT_KEY);
     if (!raw) return defaultValues;
-    return { ...defaultValues, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) as Partial<SignupFormValues>;
+    return {
+      ...defaultValues,
+      ...parsed,
+      targetDomains: Array.isArray(parsed.targetDomains) ? parsed.targetDomains : [],
+    };
   } catch {
     return defaultValues;
   }
@@ -51,7 +57,7 @@ function readDraft(): SignupFormValues {
 function readStep(): SignupStep {
   if (typeof window === "undefined") return 1;
   const raw = Number(window.sessionStorage.getItem(SIGNUP_STEP_KEY) || 1);
-  return raw === 2 || raw === 3 ? raw : 1;
+  return raw === 2 ? 2 : 1;
 }
 
 function writeDraft(values: SignupFormValues) {
@@ -72,38 +78,16 @@ function clearDraft() {
 
 function ArrowForwardIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M14 5l7 7m0 0l-7 7m7-7H3"
-      />
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
     </svg>
   );
 }
 
 function ArrowBackIcon() {
   return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-      />
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
   );
 }
@@ -138,20 +122,11 @@ export function SignupForm() {
     setReady(true);
   }, [reset]);
 
-  useEffect(() => {
-    if (!ready) return;
-    const subscription = watch((values) => {
-      writeDraft(values as SignupFormValues);
-    });
-    return () => subscription.unsubscribe();
-  }, [ready, watch]);
-
-  const selectedDoor = watch("careerDoor");
-  const selectedDomain = watch("targetDomain");
+  const selectedDomains = watch("targetDomains") || [];
+  const selectedCollege = watch("college");
   const agreedToTerms = watch("agreedToTerms");
   const watchedValues = watch();
 
-  // Keep the draft in sync as the person types/selects, on every step.
   useEffect(() => {
     writeDraft(watchedValues);
   }, [watchedValues]);
@@ -169,16 +144,13 @@ export function SignupForm() {
   async function handleContinue() {
     const fields = STEP_FIELDS[currentStep];
     const isValid = await trigger(fields);
-
-    if (isValid && currentStep < 3) {
-      goToStep((currentStep + 1) as SignupStep);
+    if (isValid && currentStep < 2) {
+      goToStep(2);
     }
   }
 
   function handleBack() {
-    if (currentStep > 1) {
-      goToStep((currentStep - 1) as SignupStep);
-    }
+    if (currentStep > 1) goToStep(1);
   }
 
   async function onSubmit(data: SignupFormValues) {
@@ -193,10 +165,15 @@ export function SignupForm() {
         phone: data.phone,
         password: data.password,
         college: data.college,
+        collegeOtherName:
+          data.college === "Other" ? data.collegeOtherName : undefined,
         streamMajor: data.streamMajor,
         graduationYear: data.graduationYear,
-        targetDomain: data.targetDomain,
-        careerDoor: data.careerDoor,
+        targetDomains: data.targetDomains,
+        targetDomainOther: data.targetDomains.includes("other")
+          ? data.targetDomainOther
+          : undefined,
+        careerDoor: "written-challenge",
         agreedToTerms: data.agreedToTerms,
       });
 
@@ -218,23 +195,11 @@ export function SignupForm() {
   async function onInvalid() {
     const step1Ok = await trigger(STEP_FIELDS[1]);
     if (!step1Ok) {
-      setSubmitError(
-        "Please complete Personal Info (step 1) before creating your account.",
-      );
+      setSubmitError("Please complete Personal Info (step 1) before creating your account.");
       goToStep(1);
       return;
     }
-    const step2Ok = await trigger(STEP_FIELDS[2]);
-    if (!step2Ok) {
-      setSubmitError(
-        "Please complete Academic Details (step 2) before creating your account.",
-      );
-      goToStep(2);
-      return;
-    }
-    setSubmitError(
-      "Please fix the highlighted fields before creating your account.",
-    );
+    setSubmitError("Please fix the highlighted fields before creating your account.");
   }
 
   if (!ready) {
@@ -255,21 +220,16 @@ export function SignupForm() {
         </header>
         <Card className="space-y-4 border-border/80 p-6 text-center shadow-md">
           <p className="text-sm leading-relaxed text-muted">
-            {successMessage ||
-              "We've sent a verification email. Please check your inbox and click Verify."}
+            {successMessage}
           </p>
           <p className="text-sm text-foreground">
             Sent to{" "}
             <span className="font-semibold text-[#153a75]">{pendingEmail}</span>
           </p>
           <p className="text-xs text-muted">
-            The verification link expires in 1 hour. After that you&apos;ll need
-            to sign up again.
+            After you verify, you&apos;ll go straight to your dashboard.
           </p>
-          <Button
-            href={ROUTES.login}
-            className="w-full bg-[#153a75] hover:bg-[#102b55]"
-          >
+          <Button href={ROUTES.login} className="w-full bg-[#153a75] hover:bg-[#102b55]">
             Go to Login
           </Button>
         </Card>
@@ -295,9 +255,7 @@ export function SignupForm() {
       <Card className="border-border/80 p-5 shadow-md sm:p-8">
         <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
           {submitError && (
-            <p className="mb-4 text-sm text-red-600" role="alert">
-              {submitError}
-            </p>
+            <p className="mb-4 text-sm text-red-600" role="alert">{submitError}</p>
           )}
 
           {currentStep === 1 && (
@@ -307,56 +265,53 @@ export function SignupForm() {
             <AcademicDetailsStep
               register={register}
               errors={errors}
-              selectedDomain={selectedDomain}
-            />
-          )}
-          {currentStep === 3 && (
-            <ChooseDoorStep
-              register={register}
-              errors={errors}
-              selectedDoor={selectedDoor}
-              agreedToTerms={agreedToTerms}
+              selectedDomains={selectedDomains}
+              selectedCollege={selectedCollege}
               setValue={setValue}
-              isSubmitting={isSubmitting}
-              onBack={handleBack}
+              agreedToTerms={Boolean(agreedToTerms)}
             />
           )}
 
-          {currentStep !== 3 && (
-            <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {currentStep > 1 ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleBack}
-                  className="w-full cursor-pointer sm:w-auto"
-                >
-                  <ArrowBackIcon />
-                  Back
-                </Button>
-              ) : (
-                <span className="hidden sm:block" />
-              )}
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {currentStep > 1 ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleBack}
+                className="w-full cursor-pointer sm:w-auto"
+              >
+                <ArrowBackIcon />
+                Back
+              </Button>
+            ) : (
+              <span className="hidden sm:block" />
+            )}
 
+            {currentStep === 1 ? (
               <Button
                 type="button"
                 onClick={handleContinue}
-                className="w-full cursor-pointer sm:ml-auto bg-[#153a75] hover:bg-[#102b55] sm:w-auto"
+                className="w-full cursor-pointer bg-[#153a75] hover:bg-[#102b55] sm:ml-auto sm:w-auto"
               >
                 Continue
                 <ArrowForwardIcon />
               </Button>
-            </div>
-          )}
+            ) : (
+              <Button
+                type="submit"
+                disabled={isSubmitting || !agreedToTerms}
+                className="w-full cursor-pointer bg-[#153a75] hover:bg-[#102b55] sm:ml-auto sm:w-auto"
+              >
+                {isSubmitting ? "Creating account…" : "Create account"}
+              </Button>
+            )}
+          </div>
         </form>
       </Card>
 
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link
-          href={ROUTES.login}
-          className="cursor-pointer font-medium text-[#153a75] transition-colors hover:text-primary-hover"
-        >
+        <Link href={ROUTES.login} className="cursor-pointer font-medium text-[#153a75] hover:text-primary-hover">
           Log In
         </Link>
       </p>

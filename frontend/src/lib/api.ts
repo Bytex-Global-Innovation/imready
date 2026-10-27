@@ -230,6 +230,16 @@ export const projectsApi = {
     ),
 };
 
+export interface TargetDomainItem {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  isOther: boolean;
+  sortOrder?: number;
+}
+
 export interface SignupPayload {
   fullName: string;
   email: string;
@@ -237,10 +247,12 @@ export interface SignupPayload {
   phone: string;
   password: string;
   college: string;
+  collegeOtherName?: string;
   streamMajor: string;
   graduationYear: string;
-  targetDomain: string;
-  careerDoor: string;
+  targetDomains: string[];
+  targetDomainOther?: string;
+  careerDoor?: string;
   agreedToTerms: boolean;
 }
 
@@ -299,6 +311,9 @@ function cacheStudentAuthSession(
 }
 
 export const authApi = {
+  listTargetDomains: (): Promise<{ domains: TargetDomainItem[] }> =>
+    request<{ domains: TargetDomainItem[] }>("/auth/students/target-domains"),
+
   signup: (payload: SignupPayload) =>
     request<{
       message: string;

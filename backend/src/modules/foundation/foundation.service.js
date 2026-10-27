@@ -211,6 +211,17 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
       deleteEvidenceFile(existing.evidenceFilePath);
     }
     evidence = { fileName: null, fileType: null, filePath: null };
+  } else if (missionId === 5) {
+    const videoRaw = answers.presentationVideoUrl;
+    if (complete || (videoRaw && String(videoRaw).trim())) {
+      const check = validatePresentationVideoUrl(videoRaw);
+      if (!check.ok) {
+        throw badRequest(check.message, 'INVALID_VIDEO_URL');
+      }
+      answers.presentationVideoUrl = check.normalized;
+    } else if (complete) {
+      throw badRequest('Impact video link is required', 'INVALID_VIDEO_URL');
+    }
   } else if (existing?.evidenceFilePath && existing.evidenceFilePath !== evidence.filePath) {
     deleteEvidenceFile(existing.evidenceFilePath);
   }

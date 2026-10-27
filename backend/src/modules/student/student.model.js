@@ -65,6 +65,16 @@ const StudentAccount = sequelize.define(
       allowNull: false,
       defaultValue: '',
     },
+    targetDomainsJson: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      field: 'target_domains_json',
+    },
+    targetDomainOther: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: 'target_domain_other',
+    },
     level: {
       type: DataTypes.STRING(64),
       allowNull: false,
