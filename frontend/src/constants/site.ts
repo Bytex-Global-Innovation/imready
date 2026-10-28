@@ -23,6 +23,6 @@ export const SITE_CONFIG = {
   name: "ImReady",
   tagline:
     "Bridging the gap between academic learning and industry expectations through hands-on experience.",
-  email: "hello@imready.com",
+  email: "imready.in",
   copyright: "© 2026 ImReady. All rights reserved.",
 } as const;

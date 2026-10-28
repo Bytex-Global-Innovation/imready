@@ -28,7 +28,7 @@ import {
   UPGRADE_TOOLTIP_BENEFITS,
 } from "@/features/dashboard/components/upgrade-plan-modal";
 
-const HELP_CENTER_EMAIL = "support@imready.in";
+const HELP_CENTER_EMAIL = "imready.in";
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
