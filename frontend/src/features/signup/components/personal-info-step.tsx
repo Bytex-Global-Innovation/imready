@@ -1,17 +1,23 @@
 "use client";
 
-import type { UseFormRegister, FieldErrors } from "react-hook-form";
+import type { UseFormRegister, FieldErrors, Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { COUNTRY_CODES, type SignupFormValues } from "../schemas/signup-schemas";
+import {
+  COUNTRY_CODES,
+  DEFAULT_COUNTRY_CODE,
+  type SignupFormValues,
+} from "../schemas/signup-schemas";
 
 interface PersonalInfoStepProps {
   register: UseFormRegister<SignupFormValues>;
+  control: Control<SignupFormValues>;
   errors: FieldErrors<SignupFormValues>;
 }
 
-export function PersonalInfoStep({ register, errors }: PersonalInfoStepProps) {
+export function PersonalInfoStep({ register, control, errors }: PersonalInfoStepProps) {
   return (
     <div className="space-y-5">
       <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
@@ -53,17 +59,28 @@ export function PersonalInfoStep({ register, errors }: PersonalInfoStepProps) {
           </Label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="w-full min-w-0 shrink-0 sm:w-28">
-              <Select
-                id="countryCode"
-                aria-label="Country code"
-                {...register("countryCode")}
-              >
-                {COUNTRY_CODES.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.label}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                name="countryCode"
+                control={control}
+                defaultValue={DEFAULT_COUNTRY_CODE}
+                render={({ field }) => (
+                  <Select
+                    id="countryCode"
+                    aria-label="Country code"
+                    value={field.value || DEFAULT_COUNTRY_CODE}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  >
+                    {COUNTRY_CODES.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              />
             </div>
             <Input
               id="phone"

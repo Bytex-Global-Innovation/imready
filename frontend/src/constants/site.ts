@@ -10,7 +10,7 @@ export const FOOTER_LINKS = {
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
     { label: "Cookie Policy", href: "/cookies" },
-    { label: "FAQ", href: "/faq" },
+    // { label: "FAQ", href: "/faq" },
   ],
   programs: [
     { label: "Software Engineering", href: "#" },
@@ -24,5 +24,5 @@ export const SITE_CONFIG = {
   tagline:
     "Bridging the gap between academic learning and industry expectations through hands-on experience.",
   email: "hello@imready.com",
-  copyright: "© 2024 ImReady. All rights reserved.",
+  copyright: "© 2026 ImReady. All rights reserved.",
 } as const;

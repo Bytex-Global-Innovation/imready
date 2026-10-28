@@ -15,6 +15,7 @@ import { SignupErrorModal } from "./signup-error-modal";
 import {
   signupSchema,
   STEP_FIELDS,
+  DEFAULT_COUNTRY_CODE,
   type SignupFormValues,
 } from "../schemas/signup-schemas";
 
@@ -24,7 +25,7 @@ const SIGNUP_STEP_KEY = "imready_signup_step";
 const defaultValues: SignupFormValues = {
   fullName: "",
   email: "",
-  countryCode: "+91",
+  countryCode: DEFAULT_COUNTRY_CODE,
   phone: "",
   password: "",
   confirmPassword: "",
@@ -47,6 +48,7 @@ function readDraft(): SignupFormValues {
     return {
       ...defaultValues,
       ...parsed,
+      countryCode: parsed.countryCode?.trim() || DEFAULT_COUNTRY_CODE,
       targetDomains: Array.isArray(parsed.targetDomains) ? parsed.targetDomains : [],
     };
   } catch {
@@ -109,6 +111,7 @@ export function SignupForm() {
     reset,
     getValues,
     setValue,
+    control,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema) as Resolver<SignupFormValues>,
@@ -259,7 +262,7 @@ export function SignupForm() {
           )}
 
           {currentStep === 1 && (
-            <PersonalInfoStep register={register} errors={errors} />
+            <PersonalInfoStep register={register} control={control} errors={errors} />
           )}
           {currentStep === 2 && (
             <AcademicDetailsStep

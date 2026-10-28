@@ -1,12 +1,14 @@
 import * as yup from "yup";
 
 export const COUNTRY_CODES = [
+  { code: "+91", label: "IN +91" },
   { code: "+1", label: "US +1" },
   { code: "+44", label: "UK +44" },
-  { code: "+91", label: "IN +91" },
   { code: "+61", label: "AU +61" },
   { code: "+81", label: "JP +81" },
 ] as const;
+
+export const DEFAULT_COUNTRY_CODE = "+91";
 
 export const COLLEGE_OTHER_VALUE = "Other";
 

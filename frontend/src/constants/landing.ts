@@ -204,7 +204,7 @@ export const ACADEMIC_MENTORS: MentorshipPerson[] = [
 export const SUCCESSFUL_EXPLORERS: MentorshipPerson[] = [
   {
     name: "Urja Wagh",
-    role: "Marketing head at Softbyte Pvt.Ltd.",
+    role: "Associate Manager at Softbyte Pvt.Ltd.",
     imageSrc: "/achievement-2.jpeg",
     imageAlt: "Portrait of Urja Wagh",
   },
