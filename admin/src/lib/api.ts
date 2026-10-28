@@ -76,7 +76,7 @@ export const authApi = {
   login: async (email: string, password: string) => {
     if (USE_MOCK) {
       await delay(600);
-      if (email === "admin@imready.io" && password === "password123") {
+      if (email === "admin@imready.in" && password === "password123") {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         setAdminSessionExpiresAt(expiresAt);
         return { expiresAt, expiresIn: 900, admin: { id: "1", email } };
