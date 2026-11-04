@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { JourneyCard } from "./journey-card";
 
 const HERO_HIGHLIGHTS = [
-  "6–8 hrs per week",
-  "Mentor-reviewed work",
-  "Real industry briefs",
+  "Start foundation stage",
+  "Unlock and Apply for industry projects",
+  " Do well and continue on the same project in paid manner",
 ] as const;
 
 export function HeroSection() {

@@ -231,3 +231,45 @@ export const INDUSTRY_LOGOS = [
 ] as const;
 
 export const INDUSTRY_LOGOS_LABEL = "Learn from the Best in the Industry";
+
+export const WHO_IS_FOR_SECTION = {
+  eyebrow: "Tailored pathways",
+  title: "Who Is ImReady For?",
+  description:
+    "Tailored roadmaps crafted specifically for every ambition and degree path.",
+} as const;
+
+export const WHO_IS_FOR_AUDIENCES = [
+  {
+    title: "Career Aspirants",
+    description:
+      "Students looking to improve their employability, build practical skills, strengthen their portfolios and prepare for internships and placements.",
+    tag: "Get career ready",
+    imageSrc: "/career-aspirants.jpg",
+    imageAlt: "Students collaborating on laptops in a busy team workspace",
+  },
+  {
+    title: "Industry Experience Seekers",
+    description:
+      "Students who want to work on real-world industry problems, collaborate with teams and gain hands-on project experience before entering the workforce.",
+    tag: "Get industry ready",
+    imageSrc: "/industry-experience-seekers.jpg",
+    imageAlt: "Student working hands-on with electronic components",
+  },
+  {
+    title: "Curious Explorers",
+    description:
+      "Students who want to explore different domains, discover their interests, experiment with ideas and learn by doing.",
+    tag: "Explore paths",
+    imageSrc: "/curious-explorers.jpg",
+    imageAlt: "Group of students smiling around a laptop",
+  },
+  {
+    title: "Aspiring Entrepreneurs",
+    description:
+      "Students who want to identify problems, validate ideas, build technology products and explore their entrepreneurial potential.",
+    tag: "Launch ideas",
+    imageSrc: "/aspiring-entrepreneurs.jpg",
+    imageAlt: "Student coding on multiple monitors",
+  },
+] as const;
