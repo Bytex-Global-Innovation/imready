@@ -2,7 +2,6 @@ import {
   Building2,
   Check,
   Rocket,
-  Star,
   X,
 } from "@/components/icons";
 import { GAP_SECTION } from "@/constants/landing";
@@ -35,14 +34,14 @@ export function GapSection() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-hero-body shadow-sm">
                   <Building2 size={18} strokeWidth={2} aria-hidden="true" />
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-hero-body">
+                <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-black">
                   {traditional.title}
                 </h3>
               </div>
 
               <ul className="space-y-4">
                 {traditional.steps.map((step) => (
-                  <li key={step} className="flex items-center gap-3 text-sm text-hero-body">
+                  <li key={step} className="flex items-center gap-3 text-sm text-black">
                     <Check
                       size={18}
                       strokeWidth={2.5}
@@ -93,10 +92,7 @@ export function GapSection() {
         </div>
 
         <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-border bg-surface-alt p-6 sm:p-8">
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-hero-accent shadow-sm">
-              <Star size={20} strokeWidth={2} aria-hidden="true" />
-            </div>
+          <div className="text-center">
             <div>
               <h3 className="font-display text-xl font-bold text-hero-heading sm:text-2xl">
                 {conclusion.heading}
