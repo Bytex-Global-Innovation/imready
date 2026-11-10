@@ -394,7 +394,7 @@ export function AppSidebar({
               title="Help Center"
               aria-label="Help Center"
               aria-describedby={helpTooltip.isOpen ? "help-center-tooltip" : undefined}
-              onClick={helpTooltip.toggle}
+              onClick={() => helpTooltip.toggle(collapsed)}
               className={cn(
                 "flex w-full cursor-pointer items-center rounded-[var(--radius-button)] text-left text-sm font-medium text-muted transition-colors hover:bg-white hover:text-foreground",
                 collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
