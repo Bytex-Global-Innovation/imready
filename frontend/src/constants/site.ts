@@ -1,5 +1,6 @@
 export const NAV_LINKS = [
   { label: "Why I'm Ready", href: "#gap" },
+  { label: "Who is ImReady For?", href: "#who-is-it-for" },
   { label: "Journey", href: "#journey" },
   { label: "Projects", href: "#projects" },
   { label: "FAQ", href: "#faq" },

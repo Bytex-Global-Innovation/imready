@@ -7,6 +7,7 @@ import { MentorshipSection } from "@/features/landing/components/mentorship-sect
 import { ProjectShowcaseSection } from "@/features/landing/components/project-showcase-section";
 import { SectionDivider } from "@/features/landing/components/section-divider";
 import { CtaSection } from "@/features/landing/components/cta-section";
+import { WhoIsForSection } from "@/features/landing/components/who-is-for-section";
 
 export default function HomePage() {
   return (
@@ -15,6 +16,8 @@ export default function HomePage() {
         <HeroSection />
         <SectionDivider />
         <GapSection />
+        <SectionDivider />
+        <WhoIsForSection />
         <SectionDivider />
         <JourneyMapSection />
         <SectionDivider />
