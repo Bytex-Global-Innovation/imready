@@ -75,6 +75,35 @@ async function getAdminStudentProgress(req, res, next) {
   }
 }
 
+async function listAdminVerificationRequests(req, res, next) {
+  try {
+    const page = Number(req.query.page) || 1;
+    const status = req.query.status ? String(req.query.status) : 'PENDING';
+    const result = await foundationService.listAdminVerificationRequests({
+      page,
+      status,
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function reviewFoundationVerification(req, res, next) {
+  try {
+    const result = await foundationService.reviewFoundationVerification(
+      req.params.studentId,
+      {
+        decision: req.body?.decision,
+        note: req.body?.note,
+      },
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function listProblemStatements(req, res, next) {
   try {
     const result = await foundationStepService.listProblemStatements({ activeOnly: true });
@@ -182,6 +211,8 @@ module.exports = {
   completeMission,
   listAdminProgress,
   getAdminStudentProgress,
+  listAdminVerificationRequests,
+  reviewFoundationVerification,
   listProblemStatements,
   listAdminProblemStatements,
   getAdminProblemStatement,

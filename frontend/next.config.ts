@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
         hostname: "api.imready.in",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },

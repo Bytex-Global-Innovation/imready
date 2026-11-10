@@ -56,6 +56,77 @@ function serializeProjectPrice(project) {
   return serializeMoneyColumn(project.projectPriceAmount);
 }
 
+function toDateOnlyString(value) {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return /^\d{4}-\d{2}-\d{2}/.test(trimmed) ? trimmed.slice(0, 10) : null;
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
+function startOfUtcDay(dateOnly) {
+  const [y, m, d] = String(dateOnly).split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+function addDaysToDateOnly(dateOnly, days) {
+  const ms = startOfUtcDay(dateOnly) + Number(days) * 24 * 60 * 60 * 1000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+function diffDaysRemaining(closesAtDateOnly, todayDateOnly) {
+  const diffMs = startOfUtcDay(closesAtDateOnly) - startOfUtcDay(todayDateOnly);
+  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
+}
+
+function todayDateOnly() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function resolveApplicationWindow(project) {
+  const today = todayDateOnly();
+  const opensAt =
+    toDateOnlyString(project.applyOpensAt) ||
+    toDateOnlyString(project.createdAt) ||
+    today;
+  let closesAt = toDateOnlyString(project.applyClosesAt);
+  const windowDays =
+    project.applyWindowDays != null && Number(project.applyWindowDays) > 0
+      ? Number(project.applyWindowDays)
+      : null;
+
+  if (!closesAt && windowDays) {
+    closesAt = addDaysToDateOnly(opensAt, windowDays);
+  }
+
+  const notYetOpen = startOfUtcDay(today) < startOfUtcDay(opensAt);
+  const isClosed = closesAt ? startOfUtcDay(today) > startOfUtcDay(closesAt) : false;
+  const remainingDays = closesAt && !isClosed ? diffDaysRemaining(closesAt, today) : closesAt ? 0 : null;
+
+  return {
+    applyOpensAt: opensAt,
+    applyClosesAt: closesAt,
+    applyWindowDays: windowDays,
+    remainingDays,
+    applicationsOpen: !notYetOpen && !isClosed,
+    applicationsClosed: isClosed,
+    applicationsNotYetOpen: notYetOpen,
+  };
+}
+
+function defaultWhatYouGain() {
+  return [
+    'Work on a real product problem',
+    'Build industry-relevant skills',
+    'Get verified proof of work',
+    'Potential opportunity for paid continuation (Stage 3)',
+  ];
+}
+
 function serializeAdminProject(project) {
   return {
     id: String(project.id),
@@ -80,34 +151,77 @@ function serializeAdminProject(project) {
     deliverables: project.deliverables || [],
     evaluationCriteria: project.evaluationCriteria || [],
     resources: project.resources || [],
+    companyName: project.companyName || '',
+    whatYouGain: project.whatYouGain || [],
+    cohortStarts: project.cohortStarts || '',
+    mentorshipLabel: project.mentorshipLabel || 'Verified Industry Partner',
+    teamFormationNote: project.teamFormationNote || '',
+    applyOpensAt: toDateOnlyString(project.applyOpensAt),
+    applyClosesAt: toDateOnlyString(project.applyClosesAt),
+    applyWindowDays: project.applyWindowDays != null ? Number(project.applyWindowDays) : null,
     teamSize: project.teamSize,
     status: project.status,
   };
 }
 
+function formatTeamSizeLabel(teamSize) {
+  const n = Number(teamSize) || 1;
+  if (n <= 1) return '1 student';
+  return `2–${n} students`;
+}
+
+function teamSizeBounds(teamSize) {
+  const max = Math.max(1, Number(teamSize) || 1);
+  const min = max <= 1 ? 1 : Math.min(2, max);
+  return { teamSizeMin: min, teamSizeMax: max };
+}
+
 function serializeStudentProject(project) {
+  const techStack = (project.techStack || []).map((label) =>
+    typeof label === 'string' ? { label } : { label: label.label || String(label) },
+  );
+  const requirements = (project.requirements || [])
+    .map((item) => (typeof item === 'string' ? item : item?.label || String(item)))
+    .filter(Boolean);
+  const techLabels = techStack.map((item) => item.label).filter(Boolean);
+  // Prefer admin requirements on cards; fall back to tech stack.
+  const tags = [...new Set([...(requirements.length ? requirements : techLabels)])];
+  const gains = Array.isArray(project.whatYouGain) && project.whatYouGain.length
+    ? project.whatYouGain
+    : defaultWhatYouGain();
+  const applicationWindow = resolveApplicationWindow(project);
   return {
     id: project.slug,
     dbId: String(project.id),
     category: project.category,
-    badge: project.badge,
+    badge: project.badge || '',
     isFree: Boolean(project.isFree),
     projectPriceAmount: serializeProjectPrice(project),
     title: project.title,
+    companyName: project.companyName || project.mentorName || '',
     description: project.description,
     imageSrc: project.imageSrc,
     imageAlt: project.imageAlt || project.title,
-    requirements: project.requirements || [],
-    techStack: (project.techStack || []).map((label) =>
-      typeof label === 'string' ? { label } : { label: label.label || String(label) },
-    ),
-    estimatedTime: project.estimatedTime,
+    requirements,
+    techStack,
+    tags,
+    estimatedTime: project.estimatedTime || '',
+    teamSize: Number(project.teamSize) || 1,
+    teamSizeLabel: formatTeamSizeLabel(project.teamSize),
+    ...teamSizeBounds(project.teamSize),
     level: project.level,
     overview: project.overview,
     briefRequirements: project.briefRequirements || [],
     deliverables: project.deliverables || [],
     evaluationCriteria: project.evaluationCriteria || [],
     resources: project.resources || [],
+    whatYouGain: gains,
+    cohortStarts: project.cohortStarts || 'To be announced',
+    mentorshipLabel: project.mentorshipLabel || 'Verified Industry Partner',
+    teamFormationNote:
+      project.teamFormationNote ||
+      'Submit your interest to form or join an active team.',
+    ...applicationWindow,
   };
 }
 
@@ -175,6 +289,17 @@ async function createProject(payload) {
     evaluationCriteria: payload.evaluationCriteria || [],
     resources: payload.resources || [],
     mentorName: '',
+    companyName: payload.companyName || '',
+    whatYouGain: payload.whatYouGain || defaultWhatYouGain(),
+    cohortStarts: payload.cohortStarts || '',
+    mentorshipLabel: payload.mentorshipLabel || 'Verified Industry Partner',
+    teamFormationNote: payload.teamFormationNote || '',
+    applyOpensAt: toDateOnlyString(payload.applyOpensAt) || todayDateOnly(),
+    applyClosesAt: toDateOnlyString(payload.applyClosesAt),
+    applyWindowDays:
+      payload.applyWindowDays != null && Number(payload.applyWindowDays) > 0
+        ? Number(payload.applyWindowDays)
+        : null,
     teamSize: payload.teamSize || 1,
     status: payload.status || 'ACTIVE',
   });
@@ -218,6 +343,29 @@ async function updateProject(id, payload) {
     evaluationCriteria: payload.evaluationCriteria || [],
     resources: payload.resources || [],
     mentorName: '',
+    companyName: payload.companyName || project.companyName || '',
+    whatYouGain: payload.whatYouGain || project.whatYouGain || defaultWhatYouGain(),
+    cohortStarts: payload.cohortStarts != null ? payload.cohortStarts : project.cohortStarts || '',
+    mentorshipLabel:
+      payload.mentorshipLabel || project.mentorshipLabel || 'Verified Industry Partner',
+    teamFormationNote:
+      payload.teamFormationNote != null
+        ? payload.teamFormationNote
+        : project.teamFormationNote || '',
+    applyOpensAt:
+      toDateOnlyString(payload.applyOpensAt) ||
+      toDateOnlyString(project.applyOpensAt) ||
+      todayDateOnly(),
+    applyClosesAt:
+      payload.applyClosesAt === null || payload.applyClosesAt === ''
+        ? null
+        : toDateOnlyString(payload.applyClosesAt) || toDateOnlyString(project.applyClosesAt),
+    applyWindowDays:
+      payload.applyWindowDays === null || payload.applyWindowDays === ''
+        ? null
+        : payload.applyWindowDays != null && Number(payload.applyWindowDays) > 0
+          ? Number(payload.applyWindowDays)
+          : project.applyWindowDays,
     teamSize: payload.teamSize || 1,
     status: payload.status || project.status,
   });
@@ -308,11 +456,23 @@ async function applyToProject(slugOrId, payload) {
   if (project.isFree) {
     const unpaidUnlocked = await studentService.hasUnpaidProjectsUnlocked(email);
     if (!unpaidUnlocked) {
+      const student = await StudentAccount.findOne({
+        where: { email },
+        attributes: ['foundationVerificationStatus', 'foundationCompletedAt'],
+      });
+      const status = student?.foundationVerificationStatus || 'NONE';
       const err = new Error(
-        'Complete the Foundation stage to apply for unpaid projects.',
+        status === 'PENDING'
+          ? 'Your Foundation submission is under admin review. You can apply after verification (usually 24–48 hours).'
+          : status === 'FAILED'
+            ? 'Your Foundation submission was not approved, so you cannot apply to unpaid projects yet.'
+            : 'Complete the Foundation stage and get admin verification to apply for unpaid projects.',
       );
       err.statusCode = 403;
-      err.code = 'FOUNDATION_INCOMPLETE';
+      err.code =
+        status === 'PENDING' || status === 'FAILED'
+          ? 'FOUNDATION_VERIFICATION_REQUIRED'
+          : 'FOUNDATION_INCOMPLETE';
       throw err;
     }
   } else {
@@ -325,6 +485,24 @@ async function applyToProject(slugOrId, payload) {
       err.code = 'PAID_PROJECTS_LOCKED';
       throw err;
     }
+  }
+
+  const window = resolveApplicationWindow(project);
+  if (window.applicationsNotYetOpen) {
+    const err = new Error(
+      `Applications open on ${window.applyOpensAt}. Please check back then.`,
+    );
+    err.statusCode = 403;
+    err.code = 'APPLICATIONS_NOT_OPEN';
+    throw err;
+  }
+  if (window.applicationsClosed) {
+    const err = new Error(
+      'The application window for this project has closed.',
+    );
+    err.statusCode = 403;
+    err.code = 'APPLICATIONS_CLOSED';
+    throw err;
   }
 
   const existing = await ProjectApplication.findOne({
@@ -340,12 +518,18 @@ async function applyToProject(slugOrId, payload) {
     if (student) studentId = student.id;
   }
 
+  const contributions = Array.isArray(payload.contributions)
+    ? payload.contributions.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+
   const application = await ProjectApplication.create({
     uuid: crypto.randomUUID(),
     studentId,
     projectId: project.id,
     studentName: payload.studentName.trim(),
     studentEmail: email,
+    motivation: payload.motivation ? String(payload.motivation).trim() : null,
+    contributions,
     status: 'PENDING',
   });
 
@@ -356,6 +540,85 @@ async function applyToProject(slugOrId, payload) {
   };
 }
 
+function serializeAdminApplication(row) {
+  const bounds = teamSizeBounds(row.project?.teamSize);
+  return {
+    id: String(row.id),
+    uuid: row.uuid,
+    studentId: row.studentId != null ? String(row.studentId) : null,
+    studentName: row.studentName,
+    studentEmail: row.studentEmail,
+    motivation: row.motivation || '',
+    contributions: Array.isArray(row.contributions) ? row.contributions : [],
+    status: row.status,
+    projectId: row.project ? String(row.project.id) : String(row.projectId),
+    projectSlug: row.project?.slug || '',
+    projectTitle: row.project?.title || '',
+    projectCompanyName: row.project?.companyName || '',
+    projectTeamSize: Number(row.project?.teamSize) || 1,
+    projectTeamSizeLabel: formatTeamSizeLabel(row.project?.teamSize),
+    ...bounds,
+    submittedAt: row.createdAt
+      ? new Date(row.createdAt).toISOString()
+      : null,
+    submittedAtLabel: row.createdAt
+      ? new Date(row.createdAt).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : '',
+  };
+}
+
+async function listAdminApplications({ page = 1, pageSize = 20, status, projectId } = {}) {
+  const safePage = Math.max(1, Number(page) || 1);
+  const where = {};
+  if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(String(status).toUpperCase())) {
+    where.status = String(status).toUpperCase();
+  }
+  if (projectId) {
+    where.projectId = Number(projectId) || 0;
+  }
+
+  const { rows, count } = await ProjectApplication.findAndCountAll({
+    where,
+    include: [
+      {
+        model: IndustryProject,
+        as: 'project',
+        attributes: ['id', 'slug', 'title', 'companyName', 'teamSize'],
+      },
+    ],
+    order: [['id', 'DESC']],
+    limit: pageSize,
+    offset: (safePage - 1) * pageSize,
+  });
+
+  return {
+    applications: rows.map(serializeAdminApplication),
+    total: count,
+    page: safePage,
+    totalPages: Math.max(1, Math.ceil(count / pageSize)),
+  };
+}
+
+async function getAdminApplication(id) {
+  const row = await ProjectApplication.findByPk(id, {
+    include: [
+      {
+        model: IndustryProject,
+        as: 'project',
+        attributes: ['id', 'slug', 'title', 'companyName', 'teamSize', 'isFree'],
+      },
+    ],
+  });
+  if (!row) throw notFound('Application not found');
+  return serializeAdminApplication(row);
+}
+
 async function getDashboardSummary() {
   const [studentsCount, projectsCount, assessmentsCount, pendingApps, recent] =
     await Promise.all([
@@ -364,7 +627,13 @@ async function getDashboardSummary() {
       Assessment.count({ where: { deletedAt: null } }),
       ProjectApplication.count({ where: { status: 'PENDING' } }),
       ProjectApplication.findAll({
-        include: [{ model: IndustryProject, as: 'project', attributes: ['id', 'slug', 'title'] }],
+        include: [
+          {
+            model: IndustryProject,
+            as: 'project',
+            attributes: ['id', 'slug', 'title', 'companyName', 'teamSize'],
+          },
+        ],
         order: [['id', 'DESC']],
         limit: 8,
       }),
@@ -375,20 +644,20 @@ async function getDashboardSummary() {
     projectsCount,
     assessmentsCount,
     pendingApprovals: pendingApps,
-    recentApplications: recent.map((row) => ({
-      id: String(row.id),
-      studentName: row.studentName,
-      projectId: row.project?.slug || String(row.projectId),
-      projectTitle: row.project?.title || '',
-      submittedAt: row.createdAt
-        ? new Date(row.createdAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })
-        : '',
-      status: row.status,
-    })),
+    recentApplications: recent.map((row) => {
+      const full = serializeAdminApplication(row);
+      return {
+        id: full.id,
+        studentName: full.studentName,
+        studentEmail: full.studentEmail,
+        projectId: full.projectSlug || full.projectId,
+        projectTitle: full.projectTitle,
+        submittedAt: full.submittedAtLabel,
+        status: full.status,
+        motivation: full.motivation,
+        contributions: full.contributions,
+      };
+    }),
   };
 }
 
@@ -402,4 +671,6 @@ module.exports = {
   getPublicProjectBySlug,
   applyToProject,
   getDashboardSummary,
+  listAdminApplications,
+  getAdminApplication,
 };

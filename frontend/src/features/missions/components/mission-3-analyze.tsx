@@ -5,18 +5,15 @@ import { useRouter } from "next/navigation";
 import { Check, Flag } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
-  EvidenceCapture,
-  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
   SelectedProblemBanner,
   TipFromReady,
-  type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
 import {
@@ -43,7 +40,6 @@ export function Mission3Analyze() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [whys, setWhys] = useState<Record<string, string>>({});
   const [rootCause, setRootCause] = useState("");
   const [pattern, setPattern] = useState("");
@@ -63,15 +59,6 @@ export function Mission3Analyze() {
       });
       setRootCause((record.answers.rootCause as string) ?? "");
       setPattern((record.answers.pattern as string) ?? "");
-     
-    
-      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
-        setEvidence({
-          fileName: record.evidence!.fileName,
-          filePath: record.evidence?.filePath ?? null,
-          previewUrl: null,
-        });
-      }
       setHydrated(true);
     });
   }, []);
@@ -82,7 +69,7 @@ export function Mission3Analyze() {
     (layer) => (whys[layer.key] ?? "").trim().length > 0,
   );
   const canComplete =
-  whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0 && Boolean(evidence.filePath);
+    whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0;
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
@@ -90,9 +77,8 @@ export function Mission3Analyze() {
     setSubmitError(null);
     try {
       const answers = { ...whys, rootCause, pattern };
-      const evidenceMeta = toEvidenceMeta(evidence);
-      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
-      await completeMission(MISSION_ID, answers, evidenceMeta);
+      await saveMissionDraft(MISSION_ID, answers, null);
+      await completeMission(MISSION_ID, answers, null);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
@@ -223,14 +209,7 @@ export function Mission3Analyze() {
 
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-foreground">Evidence Synthesis &amp; Pattern Confirmation</h2>
-              
-            </div>
-            <p className="mt-3 text-sm text-muted">
-              Upload a document summarizing your analysis. Include Google Drive links to supporting notes or recordings.
-            </p>
-            <div className="mt-4">
-              <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
+              <h2 className="font-display text-lg font-bold text-foreground">Pattern confirmation</h2>
             </div>
             <p className="mt-6 text-sm font-medium text-foreground">
               {questionText(

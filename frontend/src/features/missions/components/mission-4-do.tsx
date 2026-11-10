@@ -15,7 +15,6 @@ import {
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
-  PresentationVideoLinkField,
   QuestionField,
   SelectedProblemBanner,
   TipFromReady,
@@ -29,10 +28,6 @@ import {
   useFoundationMissionConfig,
   useSelectedProblemText,
 } from "../lib/foundation-journey";
-import {
-  isAllowedPresentationVideoUrl,
-  validatePresentationVideoUrl,
-} from "../lib/presentation-video-url";
 
 const MISSION_ID = 4;
 const mission = getMission(MISSION_ID);
@@ -41,8 +36,6 @@ export function Mission4Do() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
-  const [presentationVideoUrl, setPresentationVideoUrl] = useState("");
-  const [videoError, setVideoError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [respond, setRespond] = useState("");
   const [worked, setWorked] = useState("");
@@ -56,7 +49,6 @@ export function Mission4Do() {
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
-      setPresentationVideoUrl((record.answers.presentationVideoUrl as string) ?? "");
       setDescription((record.answers.description as string) ?? "");
       setRespond((record.answers.respond as string) ?? "");
       setWorked((record.answers.worked as string) ?? "");
@@ -69,7 +61,6 @@ export function Mission4Do() {
 
   function buildAnswers() {
     return {
-      presentationVideoUrl: presentationVideoUrl.trim(),
       description,
       respond,
       worked,
@@ -79,26 +70,19 @@ export function Mission4Do() {
     };
   }
 
-  const videoValid = isAllowedPresentationVideoUrl(presentationVideoUrl);
   const checklist = [
-    { label: "Add presentation video link (YouTube or Google Drive)", done: videoValid },
+    { label: "Describe your prototype", done: description.trim().length > 0 },
     { label: "Test it with real users", done: respond.trim().length > 0 },
     { label: "Observe what happens", done: worked.trim().length > 0 && didntWork.trim().length > 0 },
     { label: "Make one improvement", done: improve.trim().length > 0 },
     { label: "Plan how to implement the improvements", done: implementation.trim().length > 0 },
   ];
-  const canComplete = checklist.every((item) => item.done) && description.trim().length > 0;
+  const canComplete = checklist.every((item) => item.done);
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
-    const check = validatePresentationVideoUrl(presentationVideoUrl);
-    if (!check.ok) {
-      setVideoError(check.message);
-      return;
-    }
     setIsSubmitting(true);
     setSubmitError(null);
-    setVideoError(null);
     try {
       const answers = buildAnswers();
       await saveMissionDraft(MISSION_ID, answers, null);
@@ -121,16 +105,6 @@ export function Mission4Do() {
   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
   const pageSubtitle =
     evidenceConfigText(journeyConfig, "pageSubtitle", mission.subtitle) ?? mission.subtitle;
-  const sectionTitle =
-    evidenceConfigText(journeyConfig, "sectionTitle", "Share your prototype presentation video") ??
-    "Share your prototype presentation video";
-  const sectionDescription =
-    evidenceConfigText(
-      journeyConfig,
-      "sectionDescription",
-      "Add a YouTube or Google Drive link to a short video showcasing what you built and tested.",
-    ) ??
-    "Add a YouTube or Google Drive link to a short video showcasing what you built and tested.";
   const reflectionSectionTitle =
     evidenceConfigText(
       journeyConfig,
@@ -152,21 +126,6 @@ export function Mission4Do() {
       "improvementSectionDescription",
       "Decide what to change and how you will make it happen",
     ) ?? "Decide what to change and how you will make it happen";
-  const videoHelper =
-    evidenceConfigText(
-      journeyConfig,
-      "videoLinkHelper",
-      questionHelper(
-        journeyConfig,
-        "presentationVideoUrl",
-        "Paste a YouTube or Google Drive link to your prototype or demo video.",
-      ),
-    ) ??
-    questionHelper(
-      journeyConfig,
-      "presentationVideoUrl",
-      "Paste a YouTube or Google Drive link to your prototype or demo video.",
-    );
 
   return (
     <MissionLayout
@@ -185,28 +144,13 @@ export function Mission4Do() {
         <>
           <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Describe your prototype</h2>
               <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 3</span>
             </div>
-            <p className="mt-1 text-sm text-muted">{sectionDescription}</p>
-            <div className="mt-4">
-              <PresentationVideoLinkField
-                value={presentationVideoUrl}
-                onChange={(value) => {
-                  setPresentationVideoUrl(value);
-                  if (videoError) setVideoError(null);
-                }}
-                label={questionText(journeyConfig, "presentationVideoUrl", "Presentation video link")}
-                helper={videoHelper}
-                placeholder={questionPlaceholder(
-                  journeyConfig,
-                  "presentationVideoUrl",
-                  "https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view",
-                )}
-                error={videoError}
-              />
-            </div>
-            <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+            <p className="mt-1 text-sm text-muted">
+              What did you build or test? Keep it small, fast, and testable.
+            </p>
+            <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               {questionText(journeyConfig, "description", "Describe your prototype")}
             </label>
             <textarea

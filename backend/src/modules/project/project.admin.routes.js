@@ -48,6 +48,9 @@ router.post('/uploads', uploadProjectFile('file'), (req, res) => {
   });
 });
 
+router.get('/applications', projectController.listAdminApplications);
+router.get('/applications/:applicationId', projectController.getAdminApplication);
+
 router.get('/', projectController.listAdminProjects);
 router.post('/', validateBody(createProjectSchema), projectController.createProject);
 router.get('/:id', projectController.getAdminProject);

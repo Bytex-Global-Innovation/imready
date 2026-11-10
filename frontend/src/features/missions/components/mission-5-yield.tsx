@@ -48,6 +48,8 @@ export function Mission5Yield() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [presentationVideoUrl, setPresentationVideoUrl] = useState("");
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false);
+  const [redirectSeconds, setRedirectSeconds] = useState(5);
   const [improvements, setImprovements] = useState("");
   useEffect(() => {
     ensureFoundationProgress().then(() => {
@@ -69,9 +71,9 @@ export function Mission5Yield() {
 
   // Still drives the submit button even though the checklist card is no longer shown.
   const videoValid = isAllowedPresentationVideoUrl(presentationVideoUrl);
+  const hasProof = Boolean(evidence.filePath) || videoValid;
   const checklist = [
-    { label: "Upload final proof document", done: Boolean(evidence.filePath) },
-    { label: "Add impact video link (YouTube or Google Drive)", done: videoValid },
+    { label: "Upload evidence document or add a video link", done: hasProof },
     { label: "Describe improvements to your prototype", done: improvements.trim().length > 0 },
     { label: "Describe how you validated it", done: validation.trim().length > 0 },
     { label: "Reflect on the impact", done: impact.trim().length > 0 },
@@ -80,36 +82,57 @@ export function Mission5Yield() {
 
   async function handleComplete() {
     if (!canComplete || isSubmitting) return;
-    setIsSubmitting(true);
-    setSubmitError(null);
-    const check = validatePresentationVideoUrl(presentationVideoUrl);
-    if (!check.ok) {
-      setVideoError(check.message);
+    if (!evidence.filePath && !presentationVideoUrl.trim()) {
+      setVideoError("Upload an evidence document or add a YouTube / Google Drive video link.");
       return;
     }
+    if (presentationVideoUrl.trim()) {
+      const check = validatePresentationVideoUrl(presentationVideoUrl);
+      if (!check.ok) {
+        setVideoError(check.message);
+        return;
+      }
+    }
+    setIsSubmitting(true);
+    setSubmitError(null);
     setVideoError(null);
     try {
       const answers = {
-        presentationVideoUrl: presentationVideoUrl.trim(),
+        presentationVideoUrl: presentationVideoUrl.trim() || undefined,
         improvements,
         validation,
         impact,
-      };
+      } as Record<string, string>;
       const evidenceMeta = toEvidenceMeta(evidence);
       await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
       const result = await completeMission(MISSION_ID, answers, evidenceMeta);
       if (result.foundationComplete) {
         await refresh();
       }
-      router.push(ROUTES.foundationComplete);
+      setShowVerificationPopup(true);
+      setRedirectSeconds(5);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
       );
-    } finally {
       setIsSubmitting(false);
     }
   }
+
+  useEffect(() => {
+    if (!showVerificationPopup) return;
+    setRedirectSeconds(5);
+    const tick = window.setInterval(() => {
+      setRedirectSeconds((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    const redirect = window.setTimeout(() => {
+      router.push(ROUTES.foundationComplete);
+    }, 5000);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(redirect);
+    };
+  }, [showVerificationPopup, router]);
 
   if (!hydrated || !journeyReady) {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
@@ -137,6 +160,41 @@ export function Mission5Yield() {
     );
 
   return (
+    <>
+    {showVerificationPopup ? (
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0b1c30]/55 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="foundation-verification-title"
+      >
+        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#153a75]">
+            Foundation submitted
+          </p>
+          <h2
+            id="foundation-verification-title"
+            className="mt-2 text-xl font-bold tracking-tight text-[#0b1c30]"
+          >
+            You have completed the Foundation stage
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-[#42474f]">
+            Your submission has been sent to ImReady admins for review. Please wait{" "}
+            <span className="font-semibold text-[#153a75]">24–48 hours</span> for verification.
+            You will be notified whether you passed this stage properly or not.
+          </p>
+          <p className="mt-4 text-xs font-medium text-[#737780]">
+            Redirecting to Stage 2 Industry Experience in {redirectSeconds}s…
+          </p>
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5eeff]">
+            <div
+              className="h-full rounded-full bg-[#153a75] transition-all duration-1000 ease-linear"
+              style={{ width: `${((5 - redirectSeconds) / 5) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    ) : null}
     <MissionLayout
       breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Mission 5: Your Proof" />}
       badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Mission 5 of 5`} />}
@@ -233,5 +291,6 @@ export function Mission5Yield() {
         </>
       }
     />
+    </>
   );
 }

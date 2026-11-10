@@ -59,7 +59,7 @@ export const FOUNDATION_STEPS = [
   {
     id: "feedback",
     step: 4,
-    label: ". Complete all 5 missions and upload your evidence in each mission",
+    label: ". Complete all 5 missions (upload proof on Mission 5 only)",
     note: null,
     icon: "chart" as FoundationStepIcon,
   },

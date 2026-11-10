@@ -28,6 +28,8 @@ type StudentSessionContextValue = {
   student: StudentProfile | null;
   foundationComplete: boolean;
   unpaidProjectsUnlocked: boolean;
+  unpaidProjectsVisible: boolean;
+  foundationVerificationStatus: "NONE" | "PENDING" | "PASSED" | "FAILED";
   paidProjectsUnlocked: boolean;
   /** Paid industry projects route access (legacy name). */
   projectsUnlocked: boolean;
@@ -125,6 +127,12 @@ function StudentSessionProvider({
   const [unpaidProjectsUnlocked, setUnpaidProjectsUnlocked] = useState(
     () => cached?.unpaidProjectsUnlocked ?? false,
   );
+  const [unpaidProjectsVisible, setUnpaidProjectsVisible] = useState(
+    () => cached?.unpaidProjectsVisible ?? false,
+  );
+  const [foundationVerificationStatus, setFoundationVerificationStatus] = useState<
+    "NONE" | "PENDING" | "PASSED" | "FAILED"
+  >(() => cached?.foundationVerificationStatus ?? "NONE");
   const [paidProjectsUnlocked, setPaidProjectsUnlocked] = useState(
     () => cached?.paidProjectsUnlocked ?? cached?.projectsUnlocked ?? false,
   );
@@ -134,6 +142,8 @@ function StudentSessionProvider({
     setStudent(session.student);
     setFoundationComplete(session.foundationComplete);
     setUnpaidProjectsUnlocked(session.unpaidProjectsUnlocked);
+    setUnpaidProjectsVisible(session.unpaidProjectsVisible);
+    setFoundationVerificationStatus(session.foundationVerificationStatus);
     setPaidProjectsUnlocked(session.paidProjectsUnlocked);
     setReady(true);
   }, []);
@@ -188,6 +198,8 @@ function StudentSessionProvider({
       student,
       foundationComplete,
       unpaidProjectsUnlocked,
+      unpaidProjectsVisible,
+      foundationVerificationStatus,
       paidProjectsUnlocked,
       projectsUnlocked: paidProjectsUnlocked,
       ready,
@@ -197,6 +209,8 @@ function StudentSessionProvider({
       student,
       foundationComplete,
       unpaidProjectsUnlocked,
+      unpaidProjectsVisible,
+      foundationVerificationStatus,
       paidProjectsUnlocked,
       ready,
       refresh,
@@ -221,6 +235,8 @@ export function useStudentProfile() {
       student: null as StudentProfile | null,
       foundationComplete: false,
       unpaidProjectsUnlocked: false,
+      unpaidProjectsVisible: false,
+      foundationVerificationStatus: "NONE" as const,
       paidProjectsUnlocked: false,
       projectsUnlocked: false,
       loading: true,
@@ -232,6 +248,8 @@ export function useStudentProfile() {
     student: session.student,
     foundationComplete: session.foundationComplete,
     unpaidProjectsUnlocked: session.unpaidProjectsUnlocked,
+    unpaidProjectsVisible: session.unpaidProjectsVisible,
+    foundationVerificationStatus: session.foundationVerificationStatus,
     paidProjectsUnlocked: session.paidProjectsUnlocked,
     projectsUnlocked: session.paidProjectsUnlocked,
     loading: !session.ready,

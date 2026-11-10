@@ -16,6 +16,14 @@ router.use(requireAdmin);
 
 router.get('/progress', foundationController.listAdminProgress);
 router.get('/progress/:studentId', foundationController.getAdminStudentProgress);
+router.get(
+  '/verification-requests',
+  foundationController.listAdminVerificationRequests,
+);
+router.post(
+  '/verification-requests/:studentId/review',
+  foundationController.reviewFoundationVerification,
+);
 
 router.get('/step/problems', foundationController.listAdminProblemStatements);
 router.post(

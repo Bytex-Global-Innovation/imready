@@ -122,6 +122,51 @@ const IndustryProject = sequelize.define(
       defaultValue: '',
       field: 'mentor_name',
     },
+    companyName: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      defaultValue: '',
+      field: 'company_name',
+    },
+    whatYouGain: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
+      field: 'what_you_gain',
+    },
+    cohortStarts: {
+      type: DataTypes.STRING(120),
+      allowNull: false,
+      defaultValue: '',
+      field: 'cohort_starts',
+    },
+    mentorshipLabel: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      defaultValue: 'Verified Industry Partner',
+      field: 'mentorship_label',
+    },
+    teamFormationNote: {
+      type: DataTypes.STRING(500),
+      allowNull: false,
+      defaultValue: '',
+      field: 'team_formation_note',
+    },
+    applyOpensAt: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'apply_opens_at',
+    },
+    applyClosesAt: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'apply_closes_at',
+    },
+    applyWindowDays: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      field: 'apply_window_days',
+    },
     teamSize: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,

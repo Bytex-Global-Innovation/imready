@@ -10,25 +10,6 @@ type SectionField = {
 };
 
 const FIELDS_BY_MISSION: Record<number, SectionField[]> = {
-  1: [
-    { key: "sectionTitle", label: "Evidence section title" },
-    {
-      key: "sectionDescription",
-      label: "Evidence section description",
-      multiline: true,
-    },
-    { key: "uploadHelper", label: "Upload helper text", multiline: true },
-  ],
-  2: [
-    { key: "sectionTitle", label: "Evidence section title" },
-    {
-      key: "sectionDescription",
-      label: "Evidence section description",
-      multiline: true,
-    },
-    { key: "uploadHelper", label: "Upload helper text", multiline: true },
-  ],
-  3: [{ key: "uploadHelper", label: "Upload helper text", multiline: true }],
   4: [
     {
       key: "pageSubtitle",
@@ -36,13 +17,6 @@ const FIELDS_BY_MISSION: Record<number, SectionField[]> = {
       multiline: true,
       placeholder: "Shown under the mission title on the student form",
     },
-    { key: "sectionTitle", label: "Step 1 — section title" },
-    {
-      key: "sectionDescription",
-      label: "Step 1 — section description",
-      multiline: true,
-    },
-    { key: "videoLinkHelper", label: "Video link helper text", multiline: true },
     { key: "reflectionSectionTitle", label: "Step 2 — section title" },
     {
       key: "reflectionSectionDescription",
@@ -57,13 +31,14 @@ const FIELDS_BY_MISSION: Record<number, SectionField[]> = {
     },
   ],
   5: [
-    { key: "sectionTitle", label: "Evidence section title" },
+    { key: "sectionTitle", label: "Final proof section title" },
     {
       key: "sectionDescription",
-      label: "Evidence section description",
+      label: "Final proof section description",
       multiline: true,
     },
     { key: "uploadHelper", label: "Upload helper text", multiline: true },
+    { key: "videoLinkHelper", label: "Video link helper text", multiline: true },
   ],
 };
 
@@ -74,7 +49,14 @@ interface MissionSectionFieldsProps {
 
 export default function MissionSectionFields({ draft, onDraftChange }: MissionSectionFieldsProps) {
   const fields = FIELDS_BY_MISSION[draft.missionId] ?? [];
-  if (fields.length === 0) return null;
+  if (fields.length === 0) {
+    return (
+      <p className="text-xs text-gray-500">
+        Missions 1–3 have no file or video upload. Evidence upload and video links are configured
+        on Mission 5 only.
+      </p>
+    );
+  }
 
   const evidenceConfig = draft.evidenceConfig ?? {};
 
@@ -90,7 +72,7 @@ export default function MissionSectionFields({ draft, onDraftChange }: MissionSe
       <div>
         <h3 className="text-sm font-semibold text-gray-900">Section titles &amp; descriptions</h3>
         <p className="text-xs text-gray-500">
-          Headings and intro copy students see above each step on the mission page.
+          Headings and intro copy students see on the mission page.
         </p>
       </div>
       <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50/60 p-4">

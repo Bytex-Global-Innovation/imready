@@ -20,11 +20,18 @@ export const ROUTES = {
   assessmentSubmitted: "/assessment/submitted",
   mission: (id: number) => `/assessment/mission/${id}`,
   missionComplete: (id: number) => `/assessment/mission/${id}/complete`,
+  /** Post–Mission 5 — Stage 2 Industry Experience UI (same as stage2IndustryExperience) */
   foundationComplete: "/assessment/complete",
   projects: "/projects",
   freeProjects: "/free-projects",
+  notifications: "/notifications",
   projectDetail: (id: string) => `/projects/${id}`,
   freeProjectDetail: (id: string) => `/free-projects/${id}`,
+  /** Stage 2 — Industry Experience (celebration / transition after Foundation) */
+  stage2IndustryExperience: "/stage-2/industry-experience",
+  stage2ProjectDetail: (projectId: string) => `/stage-2/projects/${projectId}`,
+  stage2ProjectApply: (projectId: string) => `/stage-2/projects/${projectId}/apply`,
+  stage2ProjectTeam: (projectId: string) => `/stage-2/projects/${projectId}/team`,
 } as const;
 
 /** Routes that use the authenticated app shell (no marketing navbar). */
@@ -33,7 +40,9 @@ export const APP_ROUTE_PREFIXES = [
   ROUTES.assessment,
   ROUTES.projects,
   ROUTES.freeProjects,
+  ROUTES.notifications,
   ROUTES.details,
+  "/stage-2",
 ] as const;
 
 export function isAppRoute(pathname: string): boolean {

@@ -319,10 +319,13 @@ export interface DashboardSummary {
   recentApplications: {
     id: string;
     studentName: string;
+    studentEmail?: string;
     projectId: string;
     projectTitle?: string;
     submittedAt: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
+    motivation?: string;
+    contributions?: string[];
   }[];
 }
 
@@ -1162,6 +1165,14 @@ export interface Project {
   deliverables?: { id?: string; label: string }[];
   evaluationCriteria?: { label: string; percent: number }[];
   resources?: { label: string; type: "pdf" | "zip"; href: string }[];
+  companyName?: string;
+  whatYouGain?: string[];
+  cohortStarts?: string;
+  mentorshipLabel?: string;
+  teamFormationNote?: string;
+  applyOpensAt?: string | null;
+  applyClosesAt?: string | null;
+  applyWindowDays?: number | null;
   teamSize: number;
   status: ProjectStatus;
 }
@@ -1185,6 +1196,14 @@ export interface ProjectInput {
   deliverables: { id?: string; label: string }[];
   evaluationCriteria: { label: string; percent: number }[];
   resources?: { label: string; type: "pdf" | "zip"; href: string }[];
+  companyName?: string;
+  whatYouGain?: string[];
+  cohortStarts?: string;
+  mentorshipLabel?: string;
+  teamFormationNote?: string;
+  applyOpensAt?: string | null;
+  applyClosesAt?: string | null;
+  applyWindowDays?: number | null;
   teamSize: number;
   status: ProjectStatus;
 }
@@ -1294,7 +1313,94 @@ export const projectsApi = {
       },
     );
   },
+
+  getApplications: async (
+    page = 1,
+    status: ApplicationStatusFilter = "ALL",
+    projectId?: string,
+  ): Promise<ProjectApplicationsResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        applications: MOCK_APPLICATIONS,
+        total: MOCK_APPLICATIONS.length,
+        page,
+        totalPages: 1,
+      };
+    }
+    const params = new URLSearchParams({ page: String(page) });
+    if (status !== "ALL") params.set("status", status);
+    if (projectId) params.set("projectId", projectId);
+    return request<ProjectApplicationsResponse>(
+      `/admin/projects/applications?${params.toString()}`,
+    );
+  },
+
+  getApplication: async (id: string): Promise<ProjectApplicationDetail> => {
+    if (USE_MOCK) {
+      await delay(300);
+      const found = MOCK_APPLICATIONS.find((item) => item.id === id);
+      if (!found) throw new Error("Application not found");
+      return found;
+    }
+    return request<ProjectApplicationDetail>(
+      `/admin/projects/applications/${id}`,
+    );
+  },
 };
+
+export type ApplicationStatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
+
+export interface ProjectApplicationDetail {
+  id: string;
+  uuid?: string;
+  studentId: string | null;
+  studentName: string;
+  studentEmail: string;
+  motivation: string;
+  contributions: string[];
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  projectId: string;
+  projectSlug: string;
+  projectTitle: string;
+  projectCompanyName: string;
+  projectTeamSize: number;
+  projectTeamSizeLabel: string;
+  teamSizeMin?: number;
+  teamSizeMax?: number;
+  submittedAt: string | null;
+  submittedAtLabel: string;
+}
+
+export interface ProjectApplicationsResponse {
+  applications: ProjectApplicationDetail[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+const MOCK_APPLICATIONS: ProjectApplicationDetail[] = [
+  {
+    id: "1",
+    studentId: "101",
+    studentName: "Alexander Vance",
+    studentEmail: "alexander@college.edu",
+    motivation:
+      "I'm interested in this challenge and want to contribute through research, product thinking, and teamwork.",
+    contributions: ["Research", "Product"],
+    status: "PENDING",
+    projectId: "1",
+    projectSlug: "neural-sync-core",
+    projectTitle: "Neural_Sync_Core",
+    projectCompanyName: "Acme Labs",
+    projectTeamSize: 5,
+    projectTeamSizeLabel: "2–5 students",
+    teamSizeMin: 2,
+    teamSizeMax: 5,
+    submittedAt: "2023-10-25T10:00:00.000Z",
+    submittedAtLabel: "Oct 25, 2023, 10:00 AM",
+  },
+];
 
 export type FoundationStatusFilter =
   | "ALL"
@@ -1486,4 +1592,74 @@ export const foundationApi = {
       `/admin/foundation/progress/${studentId}`,
     );
   },
+
+  getVerificationRequests: async (
+    page = 1,
+    status: FoundationVerificationFilter = "PENDING",
+  ): Promise<FoundationVerificationListResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        notifications: [],
+        pendingCount: 0,
+        total: 0,
+        page: 1,
+        totalPages: 1,
+      };
+    }
+    const params = new URLSearchParams({
+      page: String(page),
+      status,
+    });
+    return request<FoundationVerificationListResponse>(
+      `/admin/foundation/verification-requests?${params.toString()}`,
+    );
+  },
+
+  reviewVerification: async (
+    studentId: string,
+    decision: "PASSED" | "FAILED",
+    note?: string,
+  ): Promise<FoundationVerificationRequest> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Not available in mock mode");
+    }
+    return request<FoundationVerificationRequest>(
+      `/admin/foundation/verification-requests/${studentId}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify({ decision, note }),
+      },
+    );
+  },
 };
+
+export type FoundationVerificationFilter =
+  | "ALL"
+  | "PENDING"
+  | "PASSED"
+  | "FAILED";
+
+export interface FoundationVerificationRequest {
+  id: string;
+  studentId: string;
+  studentUuid?: string | null;
+  studentName: string;
+  email: string;
+  collegeName: string;
+  foundationCompletedAt: string | null;
+  foundationVerificationStatus: "PENDING" | "PASSED" | "FAILED" | "NONE";
+  foundationVerificationRequestedAt: string | null;
+  foundationVerificationReviewedAt: string | null;
+  foundationVerificationNote: string | null;
+  requestedAtLabel: string;
+}
+
+export interface FoundationVerificationListResponse {
+  notifications: FoundationVerificationRequest[];
+  pendingCount: number;
+  total: number;
+  page: number;
+  totalPages: number;
+}

@@ -26,8 +26,8 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
     <div className="admin-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900">Recent Applications</h2>
-        <Link href="/projects" className="text-xs font-medium text-violet-600 hover:underline">
-          View projects
+        <Link href="/applications" className="text-xs font-medium text-violet-600 hover:underline">
+          View all
         </Link>
       </div>
 
@@ -36,9 +36,10 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
           <thead>
             <tr className="admin-table-header">
               <th className="pb-2 font-medium">Student Name</th>
-              <th className="pb-2 font-medium">Project ID</th>
+              <th className="pb-2 font-medium">Project</th>
               <th className="pb-2 font-medium">Submitted</th>
               <th className="pb-2 font-medium">Status</th>
+              <th className="pb-2 font-medium text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -48,7 +49,12 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600 text-[10px] font-semibold text-white">
                     {app.studentName.charAt(0)}
                   </span>
-                  <span className="text-gray-800">{app.studentName}</span>
+                  <div>
+                    <span className="text-gray-800">{app.studentName}</span>
+                    {app.studentEmail ? (
+                      <p className="text-xs text-gray-400">{app.studentEmail}</p>
+                    ) : null}
+                  </div>
                 </td>
                 <td className="text-gray-500">{app.projectTitle || app.projectId}</td>
                 <td className="text-gray-500">{app.submittedAt}</td>
@@ -58,6 +64,14 @@ export default function ApplicationsTable({ applications }: ApplicationsTablePro
                   >
                     {app.status.charAt(0) + app.status.slice(1).toLowerCase()}
                   </span>
+                </td>
+                <td className="text-right">
+                  <Link
+                    href={`/applications/${app.id}`}
+                    className="text-xs font-medium text-[#153a75] hover:underline"
+                  >
+                    View
+                  </Link>
                 </td>
               </tr>
             ))}

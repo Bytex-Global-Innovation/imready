@@ -27,7 +27,7 @@ export const MISSIONS: MissionMeta[] = [
     activeBadgeLabel: "Active Mission: Reality",
     frameworkPhaseLabel: null,
     estTime: "~15 minutes",
-    target: "1 friction observation + evidence doc",
+    target: "1 friction observation",
     location: "Anywhere on campus (or nearby)",
     xpReward: 50,
     tip: {
@@ -37,8 +37,7 @@ export const MISSIONS: MissionMeta[] = [
     },
     whatYoullDo: [
       "Spot one real moment of friction on campus.",
-      "Upload an evidence document with Google Drive links.",
-      "Write 2–3 lines on what surprised you.",
+      "Write a short caption and reflection on what surprised you.",
     ],
   },
   {
@@ -60,7 +59,7 @@ export const MISSIONS: MissionMeta[] = [
     whatYoullDo: [
       "Talk directly with 2–3 students or staff experiencing the delay.",
       'Ask open exploratory questions (e.g. "How does this wait alter your routine?").',
-      "Upload a document with conversation notes and Google Drive links.",
+      "Capture key insights and patterns from your conversations.",
     ],
   },
   {
@@ -127,8 +126,8 @@ export const MISSIONS: MissionMeta[] = [
         "Numbers convince more than adjectives. Say how many people you checked back with and what changed for them.",
     },
     whatYoullDo: [
-      "Package your strongest evidence into one proof.",
-      "Get 2–3 people to confirm the fix worked for them.",
+      "Upload final proof (document and/or video link).",
+      "Describe validation and impact of your fix.",
       "Submit your final write-up for your Foundation Profile.",
     ],
   },

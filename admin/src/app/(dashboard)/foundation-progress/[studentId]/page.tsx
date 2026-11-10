@@ -101,12 +101,12 @@ export default function FoundationStudentProgressPage() {
               </span>
             </div>
 
-            {mission.missionId === 4 &&
+            {mission.missionId === 5 &&
             typeof mission.answers.presentationVideoUrl === "string" &&
             mission.answers.presentationVideoUrl.trim() ? (
               <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 py-3">
                 <p className="text-sm text-muted">
-                  Presentation video:{" "}
+                  Impact video:{" "}
                   <span className="font-medium text-foreground break-all">
                     {mission.answers.presentationVideoUrl}
                   </span>

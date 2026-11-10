@@ -24,11 +24,9 @@ export default function HomePage() {
         <SectionDivider />
         <FaqSection />
 
-                
-
         <CtaSection />
       </main>
-      
+
       <Footer variant="hero" />
     </>
   );

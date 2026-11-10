@@ -183,18 +183,35 @@ export interface ApiProjectItem {
   /** Premium (paid) project value in INR when set by admin. */
   projectPriceAmount?: number | null;
   title: string;
+  companyName?: string;
   description: string;
   imageSrc: string;
   imageAlt: string;
   requirements: string[];
   techStack: { label: string }[];
+  tags?: string[];
   estimatedTime?: string;
+  teamSize?: number;
+  teamSizeLabel?: string;
+  teamSizeMin?: number;
+  teamSizeMax?: number;
   level?: string;
   overview?: string;
   briefRequirements?: string[];
   deliverables?: { id: string; label: string }[];
   evaluationCriteria?: { label: string; percent: number }[];
   resources?: { label: string; type: "pdf" | "zip"; href: string }[];
+  whatYouGain?: string[];
+  cohortStarts?: string;
+  mentorshipLabel?: string;
+  teamFormationNote?: string;
+  applyOpensAt?: string | null;
+  applyClosesAt?: string | null;
+  applyWindowDays?: number | null;
+  remainingDays?: number | null;
+  applicationsOpen?: boolean;
+  applicationsClosed?: boolean;
+  applicationsNotYetOpen?: boolean;
 }
 
 export const projectsApi = {
@@ -219,15 +236,184 @@ export const projectsApi = {
     return request<ApiProjectItem>(`/projects/${slug}${query}`);
   },
 
-  apply: (slug: string) =>
+  apply: (
+    slug: string,
+    payload?: { motivation?: string; contributions?: string[] },
+  ) =>
     request<{ id: string; status: string; projectSlug: string }>(
       `/projects/${slug}/apply`,
       {
         method: "POST",
-        body: JSON.stringify({}),
+        body: JSON.stringify(payload ?? {}),
       },
       true,
     ),
+
+  getTeam: (slug: string) =>
+    request<{ team: ProjectTeam | null; project: ProjectTeamProjectMeta }>(
+      `/projects/${slug}/team`,
+      {},
+      true,
+    ),
+
+  upsertTeam: (
+    slug: string,
+    payload: {
+      name?: string;
+      leadStudentId?: string | number;
+      faculty?: ProjectTeamFaculty[];
+    },
+  ) =>
+    request<{ team: ProjectTeam }>(
+      `/projects/${slug}/team`,
+      { method: "PUT", body: JSON.stringify(payload) },
+      true,
+    ),
+
+  finalizeTeam: (
+    slug: string,
+    payload?: {
+      name?: string;
+      leadStudentId?: string | number;
+      faculty?: ProjectTeamFaculty[];
+    },
+  ) =>
+    request<{ team: ProjectTeam }>(
+      `/projects/${slug}/team/finalize`,
+      { method: "POST", body: JSON.stringify(payload ?? {}) },
+      true,
+    ),
+
+  inviteToTeam: (slug: string, studentId: string | number) =>
+    request<{ team: ProjectTeam }>(
+      `/projects/${slug}/team/invites`,
+      { method: "POST", body: JSON.stringify({ studentId }) },
+      true,
+    ),
+
+  cancelTeamInvite: (slug: string, memberId: string) =>
+    request<{ team: ProjectTeam }>(
+      `/projects/${slug}/team/members/${memberId}`,
+      { method: "DELETE" },
+      true,
+    ),
+
+  searchStudents: (query: string, limit = 12) => {
+    const params = new URLSearchParams({
+      q: query,
+      limit: String(limit),
+    });
+    return request<{ students: TeamStudentSearchHit[] }>(
+      `/projects/students/search?${params.toString()}`,
+      {},
+      true,
+    );
+  },
+};
+
+export interface ProjectTeamFaculty {
+  name: string;
+  email?: string;
+}
+
+export interface ProjectTeamMember {
+  id: string;
+  uuid?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  collegeName?: string;
+  domain?: string;
+  role: "CREATOR" | "MEMBER";
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  isLead: boolean;
+  isCreator: boolean;
+  invitedByStudentId?: string | null;
+  respondedAt?: string | null;
+  createdAt?: string | null;
+}
+
+export interface ProjectTeam {
+  id: string;
+  uuid?: string;
+  projectId: string;
+  projectSlug: string;
+  projectTitle: string;
+  projectCompanyName?: string;
+  name: string;
+  status: "FORMING" | "ACTIVE";
+  creatorStudentId: string;
+  leadStudentId: string;
+  faculty: ProjectTeamFaculty[];
+  members: ProjectTeamMember[];
+  acceptedCount: number;
+  pendingCount: number;
+  reservedCount: number;
+  teamSizeMin: number;
+  teamSizeMax: number;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface ProjectTeamProjectMeta {
+  id: string;
+  slug: string;
+  title: string;
+  companyName?: string;
+  teamSizeMin: number;
+  teamSizeMax: number;
+}
+
+export interface TeamStudentSearchHit {
+  id: string;
+  studentName: string;
+  email: string;
+  collegeName?: string;
+  domain?: string;
+  streamMajor?: string;
+  skills: string;
+}
+
+export interface TeamInviteNotification {
+  id: string;
+  type: "TEAM_INVITE";
+  status: "PENDING";
+  teamId: string;
+  teamName: string;
+  projectId: string | null;
+  projectSlug: string;
+  projectTitle: string;
+  projectCompanyName?: string;
+  fromStudentId: string | null;
+  fromStudentName: string;
+  fromStudentEmail?: string;
+  createdAt: string | null;
+  createdAtLabel: string;
+}
+
+export const notificationsApi = {
+  list: () =>
+    request<{ notifications: TeamInviteNotification[] }>(
+      "/notifications",
+      {},
+      true,
+    ),
+
+  accept: (memberId: string) =>
+    request<{
+      id: string;
+      status: string;
+      teamId: string;
+      projectSlug: string;
+    }>(`/notifications/${memberId}/accept`, { method: "POST" }, true),
+
+  reject: (memberId: string) =>
+    request<{
+      id: string;
+      status: string;
+      teamId: string;
+      projectSlug: string;
+    }>(`/notifications/${memberId}/reject`, { method: "POST" }, true),
 };
 
 export interface TargetDomainItem {
@@ -277,12 +463,21 @@ export interface StudentProfile {
   premiumPaymentSubmittedAt?: string | null;
   foundationCompletedAt?: string | null;
   foundationComplete?: boolean;
+  foundationVerificationStatus?: "NONE" | "PENDING" | "PASSED" | "FAILED";
+  foundationVerificationRequestedAt?: string | null;
+  foundationVerificationReviewedAt?: string | null;
+  foundationVerificationNote?: string | null;
   projectsUnlocked?: boolean;
 }
 
 export interface ProjectAccessSession {
   foundationComplete?: boolean;
   unpaidProjectsUnlocked?: boolean;
+  unpaidProjectsVisible?: boolean;
+  foundationVerificationStatus?: "NONE" | "PENDING" | "PASSED" | "FAILED";
+  foundationVerificationRequestedAt?: string | null;
+  foundationVerificationReviewedAt?: string | null;
+  foundationVerificationNote?: string | null;
   paidProjectsUnlocked?: boolean;
   projectsUnlocked?: boolean;
 }
@@ -301,6 +496,15 @@ function cacheStudentAuthSession(
       result.foundationComplete ?? result.student.foundationComplete,
     ),
     unpaidProjectsUnlocked: Boolean(result.unpaidProjectsUnlocked),
+    unpaidProjectsVisible: Boolean(
+      result.unpaidProjectsVisible ??
+        result.foundationComplete ??
+        result.student.foundationComplete,
+    ),
+    foundationVerificationStatus:
+      result.foundationVerificationStatus ||
+      result.student.foundationVerificationStatus ||
+      "NONE",
     paidProjectsUnlocked: Boolean(
       result.paidProjectsUnlocked ?? result.projectsUnlocked,
     ),

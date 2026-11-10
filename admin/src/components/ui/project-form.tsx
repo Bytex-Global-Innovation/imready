@@ -51,7 +51,9 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [isFree, setIsFree] = useState(false);
+  const [badge, setBadge] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [isFree, setIsFree] = useState(true);
   const [projectPriceAmount, setProjectPriceAmount] = useState("");
   const [description, setDescription] = useState("");
   const [imageSrc, setImageSrc] = useState("");
@@ -69,6 +71,15 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [resourcesText, setResourcesText] = useState("");
   const [resourceLabel, setResourceLabel] = useState("");
   const [teamSize, setTeamSize] = useState(1);
+  const [whatYouGainText, setWhatYouGainText] = useState(
+    "Work on a real product problem\nBuild industry-relevant skills\nGet verified proof of work\nPotential opportunity for paid continuation (Stage 3)",
+  );
+  const [cohortStarts, setCohortStarts] = useState("");
+  const [mentorshipLabel, setMentorshipLabel] = useState("Verified Industry Partner");
+  const [teamFormationNote, setTeamFormationNote] = useState("");
+  const [applyOpensAt, setApplyOpensAt] = useState("");
+  const [applyClosesAt, setApplyClosesAt] = useState("");
+  const [applyWindowDays, setApplyWindowDays] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("ACTIVE");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,6 +109,8 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           if (cancelled) return;
           setTitle(project.title || project.name);
           setCategory(project.category || activeCategories[0]?.slug || "");
+          setBadge(project.badge || "");
+          setCompanyName(project.companyName || "");
           setIsFree(Boolean(project.isFree));
           setProjectPriceAmount(
             project.projectPriceAmount != null && project.projectPriceAmount > 0
@@ -127,9 +140,31 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
               .join("\n"),
           );
           setTeamSize(project.teamSize || 1);
+          setWhatYouGainText(
+            listToLines(
+              project.whatYouGain?.length
+                ? project.whatYouGain
+                : [
+                    "Work on a real product problem",
+                    "Build industry-relevant skills",
+                    "Get verified proof of work",
+                    "Potential opportunity for paid continuation (Stage 3)",
+                  ],
+            ),
+          );
+          setCohortStarts(project.cohortStarts || "");
+          setMentorshipLabel(project.mentorshipLabel || "Verified Industry Partner");
+          setTeamFormationNote(project.teamFormationNote || "");
+          setApplyOpensAt(project.applyOpensAt || "");
+          setApplyClosesAt(project.applyClosesAt || "");
+          setApplyWindowDays(
+            project.applyWindowDays != null ? String(project.applyWindowDays) : "",
+          );
           setStatus(project.status);
         } else if (activeCategories.length > 0) {
           setCategory(activeCategories[0].slug);
+          const today = new Date().toISOString().slice(0, 10);
+          setApplyOpensAt(today);
         }
       } catch (err) {
         if (!cancelled) {
@@ -167,6 +202,8 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
     return {
       title: title.trim(),
       category,
+      badge: badge.trim(),
+      companyName: companyName.trim(),
       isFree,
       projectPriceAmount: isFree
         ? null
@@ -188,6 +225,15 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
       })),
       evaluationCriteria,
       resources,
+      whatYouGain: linesToList(whatYouGainText),
+      cohortStarts: cohortStarts.trim(),
+      mentorshipLabel: mentorshipLabel.trim() || "Verified Industry Partner",
+      teamFormationNote: teamFormationNote.trim(),
+      applyOpensAt: applyOpensAt.trim() || null,
+      applyClosesAt: applyClosesAt.trim() || null,
+      applyWindowDays: applyWindowDays.trim()
+        ? Number(applyWindowDays)
+        : null,
       teamSize: teamSize || 1,
       status,
     };
@@ -305,6 +351,30 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Company / partner name
+              </span>
+              <input
+                className="admin-input w-full"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. ABC Technologies"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Card badge (optional)
+              </span>
+              <input
+                className="admin-input w-full"
+                value={badge}
+                onChange={(e) => setBadge(e.target.value)}
+                placeholder="e.g. Featured, AI / Data"
+              />
+            </label>
+
+            <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">Category</span>
               <Select
                 value={category}
@@ -405,6 +475,96 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 className="admin-input w-full"
                 value={teamSize}
                 onChange={(e) => setTeamSize(Number(e.target.value) || 1)}
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Cohort starts
+              </span>
+              <input
+                className="admin-input w-full"
+                value={cohortStarts}
+                onChange={(e) => setCohortStarts(e.target.value)}
+                placeholder="e.g. Next Monday or 2026-04-01"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Mentorship label
+              </span>
+              <input
+                className="admin-input w-full"
+                value={mentorshipLabel}
+                onChange={(e) => setMentorshipLabel(e.target.value)}
+                placeholder="Verified Industry Partner"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Apply opens on
+              </span>
+              <input
+                type="date"
+                className="admin-input w-full"
+                value={applyOpensAt}
+                onChange={(e) => setApplyOpensAt(e.target.value)}
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Apply closes on
+              </span>
+              <input
+                type="date"
+                className="admin-input w-full"
+                value={applyClosesAt}
+                onChange={(e) => setApplyClosesAt(e.target.value)}
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-gray-700">
+                Or apply window (days)
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                className="admin-input w-full"
+                value={applyWindowDays}
+                onChange={(e) => setApplyWindowDays(e.target.value)}
+                placeholder="e.g. 14"
+              />
+              <span className="mt-1 block text-xs text-gray-500">
+                Used when close date is empty. Counts from open date.
+              </span>
+            </label>
+
+            <label className="block text-sm sm:col-span-2">
+              <span className="mb-1 block font-medium text-gray-700">
+                What you&apos;ll gain (one per line)
+              </span>
+              <textarea
+                className="admin-input w-full"
+                rows={4}
+                value={whatYouGainText}
+                onChange={(e) => setWhatYouGainText(e.target.value)}
+              />
+            </label>
+
+            <label className="block text-sm sm:col-span-2">
+              <span className="mb-1 block font-medium text-gray-700">
+                Team formation note (optional)
+              </span>
+              <input
+                className="admin-input w-full"
+                value={teamFormationNote}
+                onChange={(e) => setTeamFormationNote(e.target.value)}
+                placeholder="e.g. 3 students applied in the last 24 hours…"
               />
             </label>
 

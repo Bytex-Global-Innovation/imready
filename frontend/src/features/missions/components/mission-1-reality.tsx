@@ -4,19 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
   AutosaveStatus,
-  EvidenceCapture,
-  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
   MissionProgressPanel,
   SelectedProblemBanner,
   TipFromReady,
-  type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
 import {
@@ -29,7 +28,6 @@ import {
 
 const MISSION_ID = 1;
 const mission = getMission(MISSION_ID);
-
 
 const MISSION_1_OBJECTIVE =
   "OBJECTIVE OF THIS MISSION\n" +
@@ -44,7 +42,6 @@ export function Mission1Reality() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [caption, setCaption] = useState("");
   const [reflection, setReflection] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,13 +53,6 @@ export function Mission1Reality() {
       const record = getMissionRecord(MISSION_ID);
       setCaption((record.answers.caption as string) ?? "");
       setReflection((record.answers.reflection as string) ?? "");
-      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
-        setEvidence({
-          fileName: record.evidence!.fileName,
-          filePath: record.evidence?.filePath ?? null,
-          previewUrl: null,
-        });
-      }
       setHydrated(true);
     });
   }, []);
@@ -75,9 +65,8 @@ export function Mission1Reality() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const evidenceMeta = toEvidenceMeta(evidence);
-      await saveMissionDraft(MISSION_ID, { caption, reflection }, evidenceMeta);
-      await completeMission(MISSION_ID, { caption, reflection }, evidenceMeta);
+      await saveMissionDraft(MISSION_ID, { caption, reflection }, null);
+      await completeMission(MISSION_ID, { caption, reflection }, null);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
@@ -92,12 +81,8 @@ export function Mission1Reality() {
     return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
   }
 
-  const evidenceSectionTitle =
-    journeyConfig?.evidenceConfig?.sectionTitle ?? "Add evidence from your observation";
-  const evidenceSectionDescription =
-    journeyConfig?.evidenceConfig?.sectionDescription ??
-    MISSION_1_OBJECTIVE ??
-    "Upload a document describing what you saw. Include Google Drive links to any photos or recordings.";
+  const sectionTitle = "Mission objective";
+  const sectionDescription = MISSION_1_OBJECTIVE;
   const captionLabel = questionText(journeyConfig, "caption", "Short title / caption");
   const captionHelper = questionHelper(
     journeyConfig,
@@ -128,26 +113,24 @@ export function Mission1Reality() {
       }
       main={
         <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="font-display text-lg font-bold text-foreground">{evidenceSectionTitle}</h2>
-<p className="mt-1 text-sm whitespace-pre-line text-muted">{evidenceSectionDescription}</p>
+          <h2 className="font-display text-lg font-bold text-foreground">{sectionTitle}</h2>
+          <p className="mt-1 text-sm whitespace-pre-line text-muted">{sectionDescription}</p>
 
-
-          <div className="mt-5">
-            <EvidenceCapture
-              missionId={MISSION_ID}
-              value={evidence}
-              onChange={setEvidence}
-              caption={caption}
-              captionLabel={captionLabel}
-              captionHelper={captionHelper}
-              uploadHelper={journeyConfig?.evidenceConfig?.uploadHelper}
-              onCaptionChange={setCaption}
+          <div className="mt-5 space-y-1.5">
+            <Label htmlFor="caption" required>
+              {captionLabel}
+            </Label>
+            {captionHelper ? <p className="text-sm text-muted">{captionHelper}</p> : null}
+            <Input
+              id="caption"
+              value={caption}
+              onChange={(event) => setCaption(event.target.value)}
+              placeholder="e.g. Long lunch queue at the canteen"
             />
           </div>
 
           <label className="mt-6 mb-2 flex items-center justify-between text-xs font-semibold tracking-wider text-muted uppercase">
             <span>Reflect on what you noticed</span>
-           
           </label>
           <p className="mb-2 text-sm text-muted">{reflectionHelper}</p>
           <textarea

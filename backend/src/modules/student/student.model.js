@@ -187,6 +187,30 @@ const StudentAccount = sequelize.define(
       defaultValue: null,
       field: 'foundation_problem_statement_id',
     },
+    foundationVerificationStatus: {
+      type: DataTypes.ENUM('NONE', 'PENDING', 'PASSED', 'FAILED'),
+      allowNull: false,
+      defaultValue: 'NONE',
+      field: 'foundation_verification_status',
+    },
+    foundationVerificationRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_verification_requested_at',
+    },
+    foundationVerificationReviewedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_verification_reviewed_at',
+    },
+    foundationVerificationNote: {
+      type: DataTypes.STRING(1000),
+      allowNull: true,
+      defaultValue: null,
+      field: 'foundation_verification_note',
+    },
   },
   {
     tableName: 'student_accounts',

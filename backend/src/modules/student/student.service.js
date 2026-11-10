@@ -178,7 +178,17 @@ async function resolvePaidProjectsUnlocked(student) {
 
 async function resolveUnpaidProjectsUnlocked(student) {
   if (!student) return false;
-  return isFoundationCompleteForStudent(student);
+  // Detail pages + apply require admin PASS after Mission 5 verification.
+  return String(student.foundationVerificationStatus || 'NONE') === 'PASSED';
+}
+
+/** Catalogue list is visible once Foundation is submitted (pending/failed/passed). */
+async function resolveUnpaidProjectsVisible(student) {
+  if (!student) return false;
+  const foundationComplete = await isFoundationCompleteForStudent(student);
+  if (!foundationComplete) return false;
+  const status = String(student.foundationVerificationStatus || 'NONE');
+  return status === 'PENDING' || status === 'PASSED' || status === 'FAILED';
 }
 
 /** Paid industry projects (legacy field name on session responses). */
@@ -188,11 +198,19 @@ async function resolveProjectsUnlocked(student) {
 
 async function buildProjectAccess(student) {
   const foundationComplete = await isFoundationCompleteForStudent(student);
-  const unpaidProjectsUnlocked = foundationComplete;
+  const unpaidProjectsUnlocked = await resolveUnpaidProjectsUnlocked(student);
+  const unpaidProjectsVisible = await resolveUnpaidProjectsVisible(student);
   const paidProjectsUnlocked = await resolvePaidProjectsUnlocked(student);
   return {
     foundationComplete,
     unpaidProjectsUnlocked,
+    unpaidProjectsVisible,
+    foundationVerificationStatus: student?.foundationVerificationStatus || 'NONE',
+    foundationVerificationRequestedAt:
+      student?.foundationVerificationRequestedAt || null,
+    foundationVerificationReviewedAt:
+      student?.foundationVerificationReviewedAt || null,
+    foundationVerificationNote: student?.foundationVerificationNote || null,
     paidProjectsUnlocked,
     projectsUnlocked: paidProjectsUnlocked,
   };
@@ -223,7 +241,13 @@ async function hasUnpaidProjectsUnlocked(email) {
   const normalized = String(email).trim().toLowerCase();
   const student = await StudentAccount.findOne({
     where: { email: normalized },
-    attributes: ['id', 'email', 'subscriptionStatus', 'foundationCompletedAt'],
+    attributes: [
+      'id',
+      'email',
+      'subscriptionStatus',
+      'foundationCompletedAt',
+      'foundationVerificationStatus',
+    ],
   });
   return await resolveUnpaidProjectsUnlocked(student);
 }
@@ -250,6 +274,12 @@ function serializeStudent(student, extras = {}) {
     premiumPaymentSubmittedAt: student.premiumPaymentSubmittedAt || null,
     foundationCompletedAt: student.foundationCompletedAt || null,
     foundationComplete: Boolean(student.foundationCompletedAt),
+    foundationVerificationStatus: student.foundationVerificationStatus || 'NONE',
+    foundationVerificationRequestedAt:
+      student.foundationVerificationRequestedAt || null,
+    foundationVerificationReviewedAt:
+      student.foundationVerificationReviewedAt || null,
+    foundationVerificationNote: student.foundationVerificationNote || null,
     createdAt: student.createdAt,
     ...extras,
   };

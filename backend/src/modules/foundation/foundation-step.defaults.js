@@ -112,13 +112,6 @@ function missionQuestions(missionId) {
     case 4:
       return [
         {
-          answerKey: 'presentationVideoUrl',
-          label: 'Presentation video link',
-          helper:
-            'Paste a public YouTube link or a Google Drive link to your prototype/demo video.',
-          placeholder: 'https://www.youtube.com/watch?v=... or https://drive.google.com/file/d/.../view',
-        },
-        {
           answerKey: 'description',
           label: 'Describe your prototype',
           helper: 'What did you build or test?',
@@ -195,33 +188,15 @@ function missionQuestions(missionId) {
 
 function evidenceConfigForMission(missionId) {
   const uploadHelper =
-    'Upload a PDF or Word document (.pdf, .doc, .docx) that describes your evidence. Include Google Drive links to any photos, videos, or recordings.';
+    'Upload a PDF or Word document (.pdf, .doc, .docx). You can also add a YouTube or Google Drive video link below.';
   switch (missionId) {
     case 1:
-      return {
-        sectionTitle: 'Add evidence from your observation',
-        sectionDescription:
-          'Upload a document describing what you saw. Include Google Drive links to any photos or recordings.',
-        uploadHelper,
-      };
     case 2:
-      return {
-        sectionTitle: 'Add evidence from your conversation',
-        sectionDescription:
-          'Upload a document with your notes and Google Drive links to any recordings or photos.',
-        uploadHelper,
-      };
     case 3:
-      return { uploadHelper };
     case 4:
       return {
         pageSubtitle:
           'Create a simple prototype and test it in the real world. Keep it small, fast, and testable.',
-        sectionTitle: 'Share your prototype presentation video',
-        sectionDescription:
-          'Add a YouTube or Google Drive link to a short video showcasing what you built and tested.',
-        videoLinkHelper:
-          'Use an unlisted/public YouTube URL or a Google Drive file link with view access for reviewers.',
         reflectionSectionTitle: 'Tell Us What Happened: Test Reflection',
         reflectionSectionDescription: 'Document your real-world test results',
         improvementSectionTitle: 'Improvement Phase',
@@ -232,13 +207,13 @@ function evidenceConfigForMission(missionId) {
       return {
         sectionTitle: 'Show your final proof',
         sectionDescription:
-          'Upload a document with your final proof, add a video link, and include Google Drive links to photos or recordings where helpful.',
+          'Upload your evidence document and/or add a video link. Include Google Drive links in your document when helpful.',
         videoLinkHelper:
           'Use an unlisted/public YouTube URL or a Google Drive file link with view access for reviewers.',
         uploadHelper,
       };
     default:
-      return { uploadHelper };
+      return null;
   }
 }
 

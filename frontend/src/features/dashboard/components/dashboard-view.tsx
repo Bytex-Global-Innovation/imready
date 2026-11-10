@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FoundationCompleteCard } from "./foundation-complete-card";
 import {
   ArrowRight,
   BarChart3,
@@ -29,6 +28,7 @@ import {
   hasFoundationProblemSelected,
   isFoundationComplete,
 } from "@/features/missions/lib/mission-progress";
+import { IndustryExperienceView } from "@/features/stage2/components/industry-experience-view";
 import { JourneyPath } from "./journey-path";
 
 const STEP_ICONS: Record<FoundationStepIcon, typeof CalendarDays> = {
@@ -99,10 +99,11 @@ export function DashboardView() {
   const localFoundationComplete = foundationCta.mode === "complete";
   const foundationComplete =
     localFoundationComplete || serverFoundationComplete || unpaidProjectsUnlocked;
-  const showFoundationOnboarding =
-    progressChecked && !foundationComplete;
-  const showFoundationCompleteCard =
-    progressChecked && foundationComplete && !unpaidProjectsUnlocked;
+
+  // After Mission 5 / Foundation: show Stage 2 Industry Experience directly on Dashboard.
+  if (progressChecked && foundationComplete) {
+    return <IndustryExperienceView />;
+  }
 
   return (
     <>
@@ -119,9 +120,7 @@ export function DashboardView() {
 
       {!progressChecked ? (
         <div className="py-10 text-center text-sm text-muted">Loading your progress…</div>
-      ) : showFoundationCompleteCard ? (
-        <FoundationCompleteCard />
-      ) : showFoundationOnboarding ? (
+      ) : (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
           <section className="rounded-[var(--radius-card)] border border-border bg-gradient-to-br from-surface to-white p-5 sm:p-7 xl:col-span-3">
             <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
@@ -178,21 +177,7 @@ export function DashboardView() {
             <p className="mt-3 text-sm text-muted">{INTRO_VIDEO.caption}</p>
           </section>
         </div>
-      ) : unpaidProjectsUnlocked ? (
-        <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
-            Industry projects are unlocked
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted sm:text-base">
-            You&apos;ve finished Foundation. Browse hands-on projects in your domain and apply
-            when you&apos;re ready.
-          </p>
-          <Button href={ROUTES.projects} className="mt-6">
-            Explore Industry Projects
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </section>
-      ) : null}
+      )}
 
       <AssessmentInstructionsModal
         isOpen={instructionsOpen}

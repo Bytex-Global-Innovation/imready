@@ -50,6 +50,10 @@ export default function ProjectsTable({ projects, onDelete }: ProjectsTableProps
               </div>
 
               <p className={`mt-1 text-xs font-semibold ${domainColor}`}>{p.domain}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {p.companyName ? `${p.companyName} · ` : ""}
+                {p.isFree ? "UNPAID" : "PREMIUM"}
+              </p>
 
               <div className="mt-3 flex items-center justify-between">
                 <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -82,7 +86,9 @@ export default function ProjectsTable({ projects, onDelete }: ProjectsTableProps
           <thead>
             <tr className="border-b border-gray-200 admin-table-header">
               <th className="px-4 py-3">Project Name</th>
+              <th className="px-4 py-3">Company</th>
               <th className="px-4 py-3">Domain</th>
+              <th className="px-4 py-3">Access</th>
               <th className="px-4 py-3">Team Size</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -98,9 +104,19 @@ export default function ProjectsTable({ projects, onDelete }: ProjectsTableProps
                     <p className="font-mono font-semibold text-gray-900">{p.name}</p>
                   </td>
                   <td className="px-4 py-4">
+                    <p className="text-xs font-medium text-gray-700">
+                      {p.companyName || "—"}
+                    </p>
+                  </td>
+                  <td className="px-4 py-4">
                     <p className={`text-xs font-semibold tracking-wide ${domainColor}`}>
                       {p.domain}
                     </p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                      {p.isFree ? "UNPAID" : "PREMIUM"}
+                    </span>
                   </td>
                   <td className="px-4 py-4">
                     <p className="font-semibold text-gray-800">

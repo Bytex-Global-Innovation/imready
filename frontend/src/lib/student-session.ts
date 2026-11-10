@@ -1,9 +1,17 @@
 import { authApi, type StudentProfile } from "@/lib/api";
 
+export type FoundationVerificationStatus =
+  | "NONE"
+  | "PENDING"
+  | "PASSED"
+  | "FAILED";
+
 export type StudentSession = {
   student: StudentProfile;
   foundationComplete: boolean;
   unpaidProjectsUnlocked: boolean;
+  unpaidProjectsVisible: boolean;
+  foundationVerificationStatus: FoundationVerificationStatus;
   paidProjectsUnlocked: boolean;
   /** @deprecated Use paidProjectsUnlocked */
   projectsUnlocked: boolean;
@@ -39,6 +47,13 @@ export async function loadStudentSession(
         student: data.student,
         foundationComplete: Boolean(data.foundationComplete),
         unpaidProjectsUnlocked: Boolean(data.unpaidProjectsUnlocked),
+        unpaidProjectsVisible: Boolean(
+          data.unpaidProjectsVisible ?? data.foundationComplete,
+        ),
+        foundationVerificationStatus:
+          (data.foundationVerificationStatus as FoundationVerificationStatus) ||
+          (data.student.foundationVerificationStatus as FoundationVerificationStatus) ||
+          "NONE",
         paidProjectsUnlocked: Boolean(data.paidProjectsUnlocked),
         projectsUnlocked: Boolean(data.paidProjectsUnlocked ?? data.projectsUnlocked),
       };

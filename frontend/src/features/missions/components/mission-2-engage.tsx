@@ -4,18 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
-import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft, toEvidenceMeta } from "../lib/mission-progress";
+import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
 import {
   ActiveMissionBadge,
-  EvidenceCapture,
-  isAllowedEvidenceFileName,
   MissionBreadcrumb,
   MissionFooterNav,
   MissionLayout,
   QuestionField,
   SelectedProblemBanner,
   TipFromReady,
-  type EvidenceValue,
 } from "./mission-ui";
 import { ReadyQuestMap } from "./ready-quest-map";
 import {
@@ -34,7 +31,6 @@ export function Mission2Engage() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
   const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
-  const [evidence, setEvidence] = useState<EvidenceValue>({ fileName: null, filePath: null, previewUrl: null });
   const [observation, setObservation] = useState("");
   const [surprise, setSurprise] = useState("");
   const [quotes, setQuotes] = useState("");
@@ -50,13 +46,6 @@ export function Mission2Engage() {
       setSurprise((record.answers.surprise as string) ?? "");
       setQuotes((record.answers.quotes as string) ?? "");
       setPatterns((record.answers.patterns as string) ?? "");
-      if (isAllowedEvidenceFileName(record.evidence?.fileName)) {
-        setEvidence({
-          fileName: record.evidence!.fileName,
-          filePath: record.evidence?.filePath ?? null,
-          previewUrl: null,
-        });
-      }
       setHydrated(true);
     });
   }, []);
@@ -66,7 +55,7 @@ export function Mission2Engage() {
     { label: "Talk to at least 2–3 people", done: observation.trim().length > 0 },
     { label: "Ask open questions", done: surprise.trim().length > 0 },
     { label: "Listen without interrupting", done: quotes.trim().length > 0 },
-    { label: "Capture what you heard", done: Boolean(evidence.filePath) && patterns.trim().length > 0 },
+    { label: "Capture what you heard", done: patterns.trim().length > 0 },
   ];
   const canComplete = checklist.every((item) => item.done);
 
@@ -76,9 +65,8 @@ export function Mission2Engage() {
     setSubmitError(null);
     try {
       const answers = { observation, surprise, quotes, patterns };
-      const evidenceMeta = toEvidenceMeta(evidence);
-      await saveMissionDraft(MISSION_ID, answers, evidenceMeta);
-      await completeMission(MISSION_ID, answers, evidenceMeta);
+      await saveMissionDraft(MISSION_ID, answers, null);
+      await completeMission(MISSION_ID, answers, null);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
@@ -123,13 +111,6 @@ export function Mission2Engage() {
   </p>
 </div>
 
-<h2 className="mt-6 font-display text-lg font-bold text-foreground">
-  Add evidence from your conversation
-</h2>
-
-<div className="mt-3">
-  <EvidenceCapture missionId={MISSION_ID} value={evidence} onChange={setEvidence} />
-</div>
             <label className="mt-6 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
               {questionText(journeyConfig, "observation", "Field observation")}
             </label>

@@ -36,6 +36,15 @@ const ProjectApplication = sequelize.define(
       allowNull: false,
       field: 'student_email',
     },
+    motivation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    contributions: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
+    },
     status: {
       type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
       allowNull: false,

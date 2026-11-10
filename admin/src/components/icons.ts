@@ -3,6 +3,7 @@
  * Import icons from "@/components/icons".
  */
 export {
+  Bell,
   Building2,
   CheckCircle2,
   ChevronDown,

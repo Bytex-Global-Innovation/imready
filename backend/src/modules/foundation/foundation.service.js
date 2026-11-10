@@ -196,31 +196,32 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
   const wasAlreadyComplete = Boolean(existing?.completed);
   const xpEarned = MISSION_XP_REWARDS[missionId] || 0;
 
-  if (missionId === 4) {
-    const videoRaw = answers.presentationVideoUrl;
-    if (complete || (videoRaw && String(videoRaw).trim())) {
-      const check = validatePresentationVideoUrl(videoRaw);
-      if (!check.ok) {
-        throw badRequest(check.message, 'INVALID_VIDEO_URL');
-      }
-      answers.presentationVideoUrl = check.normalized;
-    } else if (complete) {
-      throw badRequest('Presentation video link is required', 'INVALID_VIDEO_URL');
-    }
+  if (missionId >= 1 && missionId <= 4) {
+    delete answers.presentationVideoUrl;
     if (existing?.evidenceFilePath) {
       deleteEvidenceFile(existing.evidenceFilePath);
     }
     evidence = { fileName: null, fileType: null, filePath: null };
   } else if (missionId === 5) {
     const videoRaw = answers.presentationVideoUrl;
-    if (complete || (videoRaw && String(videoRaw).trim())) {
+    if (videoRaw && String(videoRaw).trim()) {
       const check = validatePresentationVideoUrl(videoRaw);
       if (!check.ok) {
         throw badRequest(check.message, 'INVALID_VIDEO_URL');
       }
       answers.presentationVideoUrl = check.normalized;
-    } else if (complete) {
-      throw badRequest('Impact video link is required', 'INVALID_VIDEO_URL');
+    } else {
+      delete answers.presentationVideoUrl;
+    }
+    if (complete) {
+      const hasFile = Boolean(evidence.filePath && evidence.fileName);
+      const hasVideo = Boolean(answers.presentationVideoUrl);
+      if (!hasFile && !hasVideo) {
+        throw badRequest(
+          'Upload an evidence document or add a YouTube / Google Drive video link',
+          'EVIDENCE_REQUIRED',
+        );
+      }
     }
   } else if (existing?.evidenceFilePath && existing.evidenceFilePath !== evidence.filePath) {
     deleteEvidenceFile(existing.evidenceFilePath);
@@ -253,14 +254,37 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
     });
   }
 
-  if (complete && missionId === TOTAL_MISSIONS && !student.foundationCompletedAt) {
-    student.foundationCompletedAt = new Date();
+  if (complete && missionId === TOTAL_MISSIONS) {
+    const now = new Date();
+    if (!student.foundationCompletedAt) {
+      student.foundationCompletedAt = now;
+    }
+    // Submit for admin verification (24–48h review window).
+    if (
+      !student.foundationVerificationStatus ||
+      student.foundationVerificationStatus === 'NONE' ||
+      student.foundationVerificationStatus === 'FAILED'
+    ) {
+      student.foundationVerificationStatus = 'PENDING';
+      student.foundationVerificationRequestedAt = now;
+      student.foundationVerificationReviewedAt = null;
+      student.foundationVerificationNote = null;
+    }
     await student.save();
   }
 
   const updatedRecords = await loadStudentRecords(studentId);
   const refreshedStudent = await StudentAccount.findByPk(studentId, {
-    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus', 'foundationProblemStatementId'],
+    attributes: [
+      'id',
+      'foundationCompletedAt',
+      'subscriptionStatus',
+      'foundationProblemStatementId',
+      'foundationVerificationStatus',
+      'foundationVerificationRequestedAt',
+      'foundationVerificationReviewedAt',
+      'foundationVerificationNote',
+    ],
   });
   const selectedProblem = await loadSelectedProblem(refreshedStudent);
 
@@ -273,6 +297,8 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
     mission: serializeMissionRecord(record),
     progress,
     projectsUnlocked,
+    foundationVerificationStatus:
+      refreshedStudent.foundationVerificationStatus || 'NONE',
     xpAwarded: complete && !wasAlreadyComplete ? xpEarned : 0,
   };
 }
@@ -282,13 +308,13 @@ async function uploadMissionEvidence(studentId, missionId, file) {
   if (!Number.isInteger(missionId) || missionId < 1 || missionId > TOTAL_MISSIONS) {
     throw badRequest('Invalid mission id');
   }
-  if (missionId === 4) {
+  if (missionId !== 5) {
     if (file?.filename) {
       deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
     }
     throw badRequest(
-      'Mission 4 requires a YouTube or Google Drive video link instead of a file upload',
-      'VIDEO_LINK_REQUIRED',
+      'Evidence file upload is only available on Mission 5 (Your Proof)',
+      'EVIDENCE_UPLOAD_MISSION_ONLY',
     );
   }
 
@@ -586,6 +612,133 @@ async function isFoundationCompleteForStudent(student) {
   return completedCount >= TOTAL_MISSIONS;
 }
 
+function isFoundationVerificationPassed(student) {
+  if (!student) return false;
+  return String(student.foundationVerificationStatus || 'NONE') === 'PASSED';
+}
+
+function serializeVerificationRequest(student) {
+  return {
+    id: String(student.id),
+    studentId: String(student.id),
+    studentUuid: student.uuid || null,
+    studentName: student.fullName,
+    email: student.email,
+    collegeName: student.collegeName || '',
+    foundationCompletedAt: student.foundationCompletedAt
+      ? new Date(student.foundationCompletedAt).toISOString()
+      : null,
+    foundationVerificationStatus: student.foundationVerificationStatus || 'NONE',
+    foundationVerificationRequestedAt: student.foundationVerificationRequestedAt
+      ? new Date(student.foundationVerificationRequestedAt).toISOString()
+      : null,
+    foundationVerificationReviewedAt: student.foundationVerificationReviewedAt
+      ? new Date(student.foundationVerificationReviewedAt).toISOString()
+      : null,
+    foundationVerificationNote: student.foundationVerificationNote || null,
+    requestedAtLabel: student.foundationVerificationRequestedAt
+      ? new Date(student.foundationVerificationRequestedAt).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : '',
+  };
+}
+
+async function listAdminVerificationRequests({
+  page = 1,
+  pageSize = 20,
+  status = 'PENDING',
+} = {}) {
+  const safePage = Math.max(1, Number(page) || 1);
+  const safePageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
+  const where = {
+    foundationCompletedAt: { [Op.ne]: null },
+  };
+
+  const normalized = String(status || 'PENDING').toUpperCase();
+  if (['PENDING', 'PASSED', 'FAILED'].includes(normalized)) {
+    where.foundationVerificationStatus = normalized;
+  } else if (normalized !== 'ALL') {
+    where.foundationVerificationStatus = 'PENDING';
+  } else {
+    where.foundationVerificationStatus = {
+      [Op.in]: ['PENDING', 'PASSED', 'FAILED'],
+    };
+  }
+
+  const { rows, count } = await StudentAccount.findAndCountAll({
+    where,
+    attributes: [
+      'id',
+      'uuid',
+      'fullName',
+      'email',
+      'collegeName',
+      'foundationCompletedAt',
+      'foundationVerificationStatus',
+      'foundationVerificationRequestedAt',
+      'foundationVerificationReviewedAt',
+      'foundationVerificationNote',
+    ],
+    order: [
+      ['foundationVerificationRequestedAt', 'DESC'],
+      ['id', 'DESC'],
+    ],
+    limit: safePageSize,
+    offset: (safePage - 1) * safePageSize,
+  });
+
+  const pendingCount = await StudentAccount.count({
+    where: {
+      foundationVerificationStatus: 'PENDING',
+      foundationCompletedAt: { [Op.ne]: null },
+    },
+  });
+
+  return {
+    notifications: rows.map(serializeVerificationRequest),
+    pendingCount,
+    total: count,
+    page: safePage,
+    totalPages: Math.max(1, Math.ceil(count / safePageSize)),
+  };
+}
+
+async function reviewFoundationVerification(studentId, { decision, note } = {}) {
+  const normalized = String(decision || '').toUpperCase();
+  if (!['PASSED', 'FAILED'].includes(normalized)) {
+    throw badRequest('Decision must be PASSED or FAILED', 'INVALID_DECISION');
+  }
+
+  const student = await StudentAccount.findByPk(studentId);
+  if (!student) throw notFound('Student not found');
+  if (!student.foundationCompletedAt) {
+    throw badRequest(
+      'Student has not completed the Foundation stage yet',
+      'FOUNDATION_INCOMPLETE',
+    );
+  }
+  if (student.foundationVerificationStatus !== 'PENDING') {
+    throw badRequest(
+      'This verification request is not pending review',
+      'NOT_PENDING',
+    );
+  }
+
+  student.foundationVerificationStatus = normalized;
+  student.foundationVerificationReviewedAt = new Date();
+  student.foundationVerificationNote = note
+    ? String(note).trim().slice(0, 1000)
+    : null;
+  await student.save();
+
+  return serializeVerificationRequest(student);
+}
+
 module.exports = {
   getStudentProgress,
   uploadMissionEvidence,
@@ -594,5 +747,8 @@ module.exports = {
   listAdminProgress,
   getAdminStudentProgress,
   isFoundationCompleteForStudent,
+  isFoundationVerificationPassed,
+  listAdminVerificationRequests,
+  reviewFoundationVerification,
   TOTAL_MISSIONS,
 };

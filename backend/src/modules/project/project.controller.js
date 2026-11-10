@@ -63,6 +63,30 @@ async function listPublicProjects(req, res, next) {
 async function getPublicProject(req, res, next) {
   try {
     const access = req.query.access ? String(req.query.access) : undefined;
+    // Free project detail pages require admin-passed foundation verification.
+    if (access === 'free') {
+      const student = req.studentRecord;
+      if (!student) {
+        return res.status(401).json({
+          message: 'Sign in to view unpaid project details',
+          code: 'UNAUTHORIZED',
+        });
+      }
+      if (String(student.foundationVerificationStatus || 'NONE') !== 'PASSED') {
+        const status = student.foundationVerificationStatus || 'NONE';
+        const message =
+          status === 'PENDING'
+            ? 'Your Foundation submission is under review. Unpaid project details unlock after admin verification (usually 24–48 hours).'
+            : status === 'FAILED'
+              ? 'Your Foundation submission was not approved. You can browse unpaid projects but cannot open project details yet.'
+              : 'Complete Foundation and wait for admin verification to view unpaid project details.';
+        return res.status(403).json({
+          message,
+          code: 'FOUNDATION_VERIFICATION_REQUIRED',
+          foundationVerificationStatus: status,
+        });
+      }
+    }
     const result = await projectService.getPublicProjectBySlug(req.params.slug, access);
     return res.status(200).json(result);
   } catch (err) {
@@ -77,6 +101,8 @@ async function applyToProject(req, res, next) {
       studentId: student.id,
       studentName: student.fullName,
       studentEmail: student.email,
+      motivation: req.body?.motivation,
+      contributions: req.body?.contributions,
     });
     return res.status(201).json(result);
   } catch (err) {
@@ -93,6 +119,27 @@ async function getDashboardSummary(req, res, next) {
   }
 }
 
+async function listAdminApplications(req, res, next) {
+  try {
+    const page = Number(req.query.page) || 1;
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const projectId = req.query.projectId ? String(req.query.projectId) : undefined;
+    const result = await projectService.listAdminApplications({ page, status, projectId });
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getAdminApplication(req, res, next) {
+  try {
+    const result = await projectService.getAdminApplication(req.params.applicationId);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   listAdminProjects,
   createProject,
@@ -103,4 +150,6 @@ module.exports = {
   getPublicProject,
   applyToProject,
   getDashboardSummary,
+  listAdminApplications,
+  getAdminApplication,
 };

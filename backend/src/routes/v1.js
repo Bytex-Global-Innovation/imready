@@ -12,6 +12,7 @@ const studentAuthRoutes = require('@modules/student/student.auth.routes');
 const studentAdminRoutes = require('@modules/student/student.admin.routes');
 const projectAdminRoutes = require('@modules/project/project.admin.routes');
 const projectStudentRoutes = require('@modules/project/project.student.routes');
+const notificationStudentRoutes = require('@modules/notification/notification.student.routes');
 const dashboardAdminRoutes = require('@modules/dashboard/dashboard.admin.routes');
 const foundationStudentRoutes = require('@modules/foundation/foundation.student.routes');
 const foundationAdminRoutes = require('@modules/foundation/foundation.admin.routes');
@@ -31,6 +32,7 @@ router.use('/admin/foundation', foundationAdminRoutes);
 router.use('/admin/target-domains', targetDomainAdminRoutes);
 router.use('/assessments', assessmentStudentRoutes);
 router.use('/foundation', foundationStudentRoutes);
+router.use('/notifications', notificationStudentRoutes);
 router.use('/projects', projectStudentRoutes);
 
 module.exports = router;

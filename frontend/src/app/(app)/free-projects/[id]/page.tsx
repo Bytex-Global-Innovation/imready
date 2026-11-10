@@ -1,4 +1,5 @@
-import { ProjectBriefView } from "@/features/projects/components/project-brief-view";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 export default async function FreeProjectBriefPage({
   params,
@@ -6,5 +7,5 @@ export default async function FreeProjectBriefPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ProjectBriefView projectId={id} access="free" />;
+  redirect(ROUTES.stage2ProjectDetail(id));
 }
