@@ -93,11 +93,61 @@ const inviteTeamMemberSchema = Joi.object({
 }).unknown(false);
 
 const finalizeTeamSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(120).optional(),
+  name: Joi.string().trim().min(2).max(120).required(),
   leadStudentId: Joi.alternatives()
     .try(Joi.number().integer().positive(), Joi.string().trim().pattern(/^\d+$/))
     .optional(),
   faculty: Joi.array().items(facultyMemberSchema).max(2).optional(),
+}).unknown(false);
+
+const updateStageProgressSchema = Joi.object({
+  currentStage: Joi.string()
+    .valid(
+      'WORKSPACE',
+      'READY',
+      'DO',
+      'SUBMIT',
+      'REVIEW',
+      'OWNER_FEEDBACK',
+      'OUTCOME',
+      'PROFILE',
+    )
+    .optional(),
+  checkpoints: Joi.object({
+    ready: Joi.object().pattern(Joi.string(), Joi.boolean()).optional(),
+    doProof: Joi.object().pattern(Joi.string(), Joi.boolean()).optional(),
+  })
+    .unknown(true)
+    .optional(),
+}).unknown(false);
+
+const submitProjectSchema = Joi.object({
+  summary: Joi.string().trim().max(5000).allow('').optional(),
+  demoVideoUrl: Joi.string().trim().max(1000).allow('').optional(),
+  payload: Joi.object().unknown(true).optional(),
+}).unknown(false);
+
+const ownerFeedbackSchema = Joi.object({
+  workedWell: Joi.string().trim().max(5000).allow('').optional(),
+  improved: Joi.string().trim().max(5000).allow('').optional(),
+  valuable: Joi.string().trim().max(5000).allow('').optional(),
+  overall: Joi.string().trim().max(5000).allow('').optional(),
+  studentQuote: Joi.string().trim().max(2000).allow('', null).optional(),
+  rating: Joi.number().integer().min(1).max(5).optional(),
+  continuation: Joi.string()
+    .valid('entire_team', 'selected_students', 'no_continuation')
+    .optional(),
+  valuedPoints: Joi.array().items(Joi.string().trim().max(255)).max(20).optional(),
+  improvePoints: Joi.array().items(Joi.string().trim().max(255)).max(20).optional(),
+  selectedStudentIds: Joi.array()
+    .items(
+      Joi.alternatives().try(
+        Joi.number().integer().positive(),
+        Joi.string().trim().min(1).max(64),
+      ),
+    )
+    .max(50)
+    .optional(),
 }).unknown(false);
 
 function validateBody(schema) {
@@ -122,5 +172,8 @@ module.exports = {
   upsertTeamSchema,
   inviteTeamMemberSchema,
   finalizeTeamSchema,
+  updateStageProgressSchema,
+  submitProjectSchema,
+  ownerFeedbackSchema,
   validateBody,
 };

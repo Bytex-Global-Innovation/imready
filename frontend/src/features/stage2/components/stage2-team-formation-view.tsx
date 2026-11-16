@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStudentProfile } from "@/components/auth/student-auth-gate";
 import { type Stage2ProjectDetail } from "@/constants/stage2-project-detail";
@@ -24,9 +25,8 @@ function initials(name: string) {
 }
 
 export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetail }) {
+  const router = useRouter();
   const { student } = useStudentProfile();
-  const teamMax = Math.max(1, detail.teamSizeMax || 1);
-  const teamMin = Math.min(Math.max(1, detail.teamSizeMin || 1), teamMax);
 
   const [team, setTeam] = useState<ProjectTeam | null>(null);
   const [teamName, setTeamName] = useState("");
@@ -40,6 +40,15 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  const teamMax = Math.max(
+    1,
+    team?.teamSizeMax || detail.teamSizeMax || 1,
+  );
+  const teamMin = Math.min(
+    Math.max(1, team?.teamSizeMin || detail.teamSizeMin || 1),
+    teamMax,
+  );
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -87,8 +96,17 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
       try {
         const result = await projectsApi.searchStudents(q);
         if (cancelled) return;
-        const memberIds = new Set((team?.members || []).map((m) => m.studentId));
-        setCandidates(result.students.filter((s) => !memberIds.has(s.id)));
+        const memberIds = new Set(
+          (team?.members || []).map((m) => String(m.studentId)),
+        );
+        const selfId = student?.id != null ? String(student.id) : null;
+        setCandidates(
+          result.students.filter((s) => {
+            const id = String(s.id);
+            if (selfId && id === selfId) return false;
+            return !memberIds.has(id);
+          }),
+        );
       } catch {
         if (!cancelled) setCandidates([]);
       } finally {
@@ -99,7 +117,7 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [search, team?.members]);
+  }, [search, student?.id, team?.members]);
 
   const roster = useMemo(
     () =>
@@ -133,7 +151,19 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
   };
 
   const inviteStudent = async (candidate: TeamStudentSearchHit) => {
-    if (!canEdit || reservedCount >= teamMax || busy) return;
+    if (busy) return;
+    if (!canEdit) {
+      setError("Only the team creator can invite members while the team is forming.");
+      return;
+    }
+    if (reservedCount >= teamMax) {
+      setError(
+        teamMax <= 1
+          ? "This is a solo project — teammates cannot be added."
+          : `This project allows a maximum of ${teamMax} students on a team.`,
+      );
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -143,7 +173,9 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
       const result = await projectsApi.inviteToTeam(detail.id, candidate.id);
       syncFromTeam(result.team);
       setSearch("");
-      setCandidates((prev) => prev.filter((c) => c.id !== candidate.id));
+      setCandidates((prev) =>
+        prev.filter((c) => String(c.id) !== String(candidate.id)),
+      );
       showToast(`Invite sent to ${candidate.studentName}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send invite");
@@ -221,19 +253,33 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
     }
   };
 
+  const nameReady = teamName.trim().length >= 2;
+  const canFinalize =
+    canEdit &&
+    nameReady &&
+    accepted.length >= teamMin &&
+    accepted.length <= teamMax &&
+    (team?.pendingCount || 0) === 0;
+
   const createTeam = async () => {
-    if (!canEdit || busy) return;
+    if (!canFinalize || busy) return;
     setBusy(true);
     setError(null);
     try {
+      // Persist name/lead first so finalize always sees a valid draft.
+      await saveMeta({
+        name: teamName.trim(),
+        leadStudentId: team?.leadStudentId,
+        faculty,
+      });
       const result = await projectsApi.finalizeTeam(detail.id, {
         name: teamName.trim(),
         leadStudentId: team?.leadStudentId,
         faculty,
       });
       syncFromTeam(result.team);
-      showToast("Team created successfully");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast("Team created — opening workspace…");
+      router.push(ROUTES.stage2ProjectWorkspace(detail.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create team");
     } finally {
@@ -355,7 +401,7 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
                   </span>
                   {roster.length === 0 ? (
                     <p className="rounded-xl bg-[#eff4ff]/60 p-4 text-sm text-[#42474f]">
-                      You will be added as creator when you send the first invite or save the team name.
+                      Loading your roster…
                     </p>
                   ) : null}
                   {roster.map((member) => (
@@ -464,12 +510,7 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
                     <button
                       type="button"
                       onClick={() => void createTeam()}
-                      disabled={
-                        busy ||
-                        accepted.length < teamMin ||
-                        !teamName.trim() ||
-                        (team?.pendingCount || 0) > 0
-                      }
+                      disabled={busy || !canFinalize}
                       className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#153a75] py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#102b55] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {busy ? "Working…" : "Create Team"}
@@ -479,11 +520,18 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
                       />
                     </button>
                     <p className="mt-1 text-center text-xs text-[#42474f]">
-                      Invites must be accepted before you can create the team. Pending invites appear in{" "}
-                      <Link href={ROUTES.notifications} className="font-semibold text-[#153a75] underline">
-                        Notifications
-                      </Link>
-                      .
+                      {!nameReady
+                        ? "Enter a team name with at least 2 characters."
+                        : accepted.length < teamMin
+                          ? `Invite and get acceptance from at least ${teamMin - accepted.length} more student${teamMin - accepted.length === 1 ? "" : "s"} (team size ${detail.teamSize}).`
+                          : (team?.pendingCount || 0) > 0
+                            ? "Cancel or wait for pending invites. Invitees accept from Notifications."
+                            : "Ready to create your team."}{" "}
+                      {(team?.pendingCount || 0) > 0 ? (
+                        <Link href={ROUTES.notifications} className="font-semibold text-[#153a75] underline">
+                          Open Notifications
+                        </Link>
+                      ) : null}
                     </p>
                   </div>
                 ) : (
@@ -497,14 +545,18 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
 
             <div className="flex flex-col gap-6 lg:col-span-5">
               <div className="flex h-full flex-col rounded-xl bg-white p-4 shadow-sm lg:p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex flex-col">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-col">
                     <h3 className="text-lg font-semibold text-[#002546]">Find Team Members</h3>
                     <span className="text-xs text-[#42474f]">
-                      Search students already on ImReady
+                      {teamMax <= 1
+                        ? "This is a solo project — no teammates to invite."
+                        : openSlots <= 0
+                          ? "Your team is full. Cancel a pending invite to free a slot."
+                          : "Search students already on ImReady"}
                     </span>
                   </div>
-                  <span className="rounded bg-[#b8d4ff]/30 px-1 py-0.5 text-[11px] font-semibold text-[#153a75]">
+                  <span className="shrink-0 rounded bg-[#b8d4ff]/30 px-1 py-0.5 text-[11px] font-semibold text-[#153a75]">
                     {candidates.length} Matches
                   </span>
                 </div>
@@ -516,50 +568,76 @@ export function Stage2TeamFormationView({ detail }: { detail: Stage2ProjectDetai
                   <input
                     type="text"
                     value={search}
-                    disabled={!canEdit}
+                    disabled={!canEdit || teamMax <= 1 || openSlots <= 0}
                     onChange={(e) => onSearchChangeSafe(e.target.value)}
-                    placeholder="Search students by name or email..."
+                    placeholder={
+                      teamMax <= 1
+                        ? "Solo project — invites disabled"
+                        : "Search students by name or email..."
+                    }
                     className="w-full rounded-lg bg-[#eff4ff] py-2 pl-10 pr-3 text-xs text-[#0b1c30] shadow-sm transition-all placeholder:text-[#737780] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#002546] disabled:opacity-60"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  {searching ? (
+                  {teamMax <= 1 ? (
+                    <p className="rounded-xl bg-[#eff4ff]/60 p-3 text-xs text-[#42474f]">
+                      Use a multi-student project (team size 2+) to invite classmates.
+                    </p>
+                  ) : searching ? (
                     <p className="p-3 text-xs text-[#737780]">Searching…</p>
                   ) : search.trim().length > 0 && search.trim().length < 2 ? (
                     <p className="p-3 text-xs text-[#737780]">Type at least 2 characters</p>
                   ) : candidates.length === 0 && search.trim().length >= 2 ? (
                     <p className="p-3 text-xs text-[#737780]">No students found on the platform</p>
                   ) : null}
-                  {candidates.map((candidate) => (
-                    <div
-                      key={candidate.id}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-[#eff4ff]/60 p-3 transition-all hover:bg-[#eff4ff]"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#002546] text-xs font-bold text-white shadow-sm">
-                          {initials(candidate.studentName)}
-                        </div>
-                        <div className="min-w-0 flex-col">
-                          <span className="truncate text-sm font-semibold text-[#0b1c30]">
-                            {candidate.studentName}
-                          </span>
-                          <span className="truncate text-xs text-[#42474f]">{candidate.email}</span>
-                          <span className="mt-1 inline-block truncate text-[10px] font-semibold text-[#42474f]">
-                            {candidate.skills}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        disabled={!canEdit || reservedCount >= teamMax || busy}
-                        onClick={() => void inviteStudent(candidate)}
-                        className="group inline-flex shrink-0 items-center gap-1 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-[#002546] shadow-sm transition-all hover:bg-[#153a75] hover:text-white disabled:opacity-40"
-                      >
-                        <MaterialSymbol name="add" className="text-[16px]" />
-                        + Add
-                      </button>
-                    </div>
-                  ))}
+                  {teamMax > 1
+                    ? candidates.map((candidate) => {
+                        const teamFull = reservedCount >= teamMax;
+                        const addDisabled = !canEdit || teamFull || busy;
+                        return (
+                          <div
+                            key={candidate.id}
+                            className="flex items-center gap-3 rounded-xl bg-[#eff4ff]/60 p-3 transition-all hover:bg-[#eff4ff]"
+                          >
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#002546] text-xs font-bold text-white shadow-sm">
+                                {initials(candidate.studentName)}
+                              </div>
+                              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <span className="block truncate text-sm font-semibold text-[#0b1c30]">
+                                  {candidate.studentName}
+                                </span>
+                                <span className="block truncate text-xs text-[#42474f]">
+                                  {candidate.email}
+                                </span>
+                                <span className="block truncate text-[10px] font-semibold text-[#42474f]">
+                                  {candidate.skills}
+                                </span>
+                              </div>
+                            </div>
+                            {teamFull ? (
+                              <span className="shrink-0 text-[11px] font-semibold text-[#737780]">
+                                Team full
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={addDisabled}
+                                title={
+                                  !canEdit
+                                    ? "Only the team creator can invite"
+                                    : "Send team invite"
+                                }
+                                onClick={() => void inviteStudent(candidate)}
+                                className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-[#002546] shadow-sm transition-all hover:bg-[#153a75] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                Add
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    : null}
                 </div>
               </div>
             </div>
@@ -716,13 +794,21 @@ function ReadyView({
         </div>
       ) : null}
 
-      <Link
-        href={ROUTES.freeProjects}
-        className="inline-flex items-center gap-1 text-sm font-semibold text-[#153a75] hover:underline"
-      >
-        Browse more unpaid projects
-        <MaterialSymbol name="arrow_forward" className="text-[16px]" />
-      </Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Link
+          href={ROUTES.stage2ProjectWorkspace(detail.id)}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#153a75] px-5 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#102b55]"
+        >
+          Continue to Project Workspace
+          <MaterialSymbol name="arrow_forward" className="text-[18px]" />
+        </Link>
+        <Link
+          href={ROUTES.freeProjects}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-[#153a75] hover:underline"
+        >
+          Browse more unpaid projects
+        </Link>
+      </div>
     </div>
   );
 }

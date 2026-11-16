@@ -62,6 +62,9 @@ export type Stage2ProjectDetail = {
   applicationsOpen: boolean;
   applicationsClosed: boolean;
   applicationsNotYetOpen: boolean;
+  hasApplied?: boolean;
+  teamStatus?: "FORMING" | "ACTIVE" | null;
+  nextStep?: "APPLY" | "FORM_TEAM" | "TEAM_READY";
 };
 
 const ABC_ONBOARDING_DETAIL: Stage2ProjectDetail = {

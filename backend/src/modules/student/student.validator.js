@@ -11,7 +11,7 @@ const DOMAIN_LABELS = {
 
 const signupSchema = Joi.object({
   fullName: Joi.string().trim().min(2).max(255).required(),
-  email: Joi.string().trim().email().max(255).required(),
+  email: Joi.string().trim().email({ tlds: { allow: false } }).max(255).required(),
   countryCode: Joi.string().trim().max(8).default('+91'),
   phone: Joi.string().trim().min(10).max(32).required(),
   password: Joi.string().min(6).max(128).required(),
@@ -36,13 +36,13 @@ const signupSchema = Joi.object({
 }).unknown(false);
 
 const loginSchema = Joi.object({
-  email: Joi.string().trim().email().max(255).required(),
+  email: Joi.string().trim().email({ tlds: { allow: false } }).max(255).required(),
   password: Joi.string().min(1).max(128).required(),
   rememberMe: Joi.boolean().default(false),
 }).unknown(false);
 
 const emailOnlySchema = Joi.object({
-  email: Joi.string().trim().email().max(255).required(),
+  email: Joi.string().trim().email({ tlds: { allow: false } }).max(255).required(),
 }).unknown(false);
 
 const verifyEmailSchema = Joi.object({
@@ -59,7 +59,7 @@ const SUBSCRIPTION_STATUSES = ['FREE', 'PREMIUM_PENDING', 'PREMIUM'];
 
 const updateStudentSchema = Joi.object({
   studentName: Joi.string().trim().min(2).max(255).required(),
-  email: Joi.string().trim().email().max(255).required(),
+  email: Joi.string().trim().email({ tlds: { allow: false } }).max(255).required(),
   college: Joi.string().trim().min(2).max(255).required(),
   domain: Joi.string().trim().min(1).max(120).required(),
   level: Joi.string().trim().min(1).max(64).required(),

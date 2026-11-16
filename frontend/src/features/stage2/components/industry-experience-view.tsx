@@ -1,12 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   STAGE2_HERO_IMAGE,
   STAGE2_VALUE_PILLARS,
 } from "@/constants/stage2-industry-experience";
-import { ROUTES } from "@/constants/routes";
 import { Stage2ProjectCard } from "@/features/stage2/components/stage2-project-card";
 import { MaterialSymbol } from "@/features/stage2/components/material-symbol";
 import { useStudentProfile } from "@/components/auth/student-auth-gate";
@@ -297,26 +295,6 @@ export function IndustryExperienceView() {
             No unpaid projects match this filter yet. Check back soon.
           </p>
         ) : null}
-
-        <div className="mt-2 flex flex-col items-center justify-between gap-4 rounded-xl bg-[#dce9ff]/60 p-4 sm:flex-row sm:p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#b8d4ff] text-[#001c38]">
-              <MaterialSymbol name="tune" className="text-[20px]" />
-            </div>
-            <p className="text-sm text-[#0b1c30]">
-              Looking for something specific? Apply filters for{" "}
-              <span className="font-semibold text-[#002546]">team duration</span>,{" "}
-              <span className="font-semibold text-[#002546]">industry domain</span>, or{" "}
-              <span className="font-semibold text-[#002546]">skill matches</span>.
-            </p>
-          </div>
-          <Link
-            href={ROUTES.freeProjects}
-            className="shrink-0 rounded-lg bg-white px-4 py-1.5 text-xs font-semibold text-[#002546] shadow-sm transition-all hover:bg-[#002546] hover:text-white"
-          >
-            Open Advanced Filter Rail
-          </Link>
-        </div>
       </div>
     </div>
   );

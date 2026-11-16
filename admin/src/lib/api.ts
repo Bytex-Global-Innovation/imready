@@ -1347,9 +1347,148 @@ export const projectsApi = {
       `/admin/projects/applications/${id}`,
     );
   },
+
+  getReviews: async (
+    page = 1,
+    status: Stage2ReviewStatusFilter = "ALL",
+  ): Promise<Stage2ReviewsResponse> => {
+    const params = new URLSearchParams({ page: String(page) });
+    if (status !== "ALL") params.set("status", status);
+    return request<Stage2ReviewsResponse>(
+      `/admin/projects/reviews?${params.toString()}`,
+    );
+  },
+
+  getReview: async (teamId: string): Promise<Stage2ReviewPacket> =>
+    request<Stage2ReviewPacket>(`/admin/projects/reviews/${teamId}`),
+
+  saveOwnerFeedback: async (
+    teamId: string,
+    payload: OwnerFeedbackInput,
+  ): Promise<Stage2ReviewPacket> =>
+    request<Stage2ReviewPacket>(`/admin/projects/reviews/${teamId}/owner-feedback`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+
+  submitOwnerFeedback: async (
+    teamId: string,
+    payload: OwnerFeedbackInput,
+  ): Promise<Stage2ReviewPacket> =>
+    request<Stage2ReviewPacket>(
+      `/admin/projects/reviews/${teamId}/owner-feedback/submit`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
 };
 
 export type ApplicationStatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
+
+export type Stage2ReviewStatusFilter =
+  | "ALL"
+  | "SUBMITTED"
+  | "AWAITING_FEEDBACK"
+  | "FEEDBACK_READY";
+
+export type OwnerContinuation =
+  | "entire_team"
+  | "selected_students"
+  | "no_continuation";
+
+export interface Stage2OwnerFeedback {
+  id: string;
+  teamId: string;
+  projectId: string;
+  submissionId: string | null;
+  workedWell: string;
+  improved: string;
+  valuable: string;
+  overall: string;
+  studentQuote: string;
+  rating: number;
+  continuation: OwnerContinuation;
+  valuedPoints: string[];
+  improvePoints: string[];
+  selectedStudentIds: string[];
+  status: "DRAFT" | "SUBMITTED";
+  submittedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface Stage2Submission {
+  id: string;
+  teamId: string;
+  projectId: string;
+  submissionCode: string | null;
+  summary: string;
+  demoVideoUrl: string;
+  payload: Record<string, unknown>;
+  status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "FEEDBACK_READY" | "CLOSED";
+  submittedByStudentId: string | null;
+  submittedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface Stage2ReviewMember {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  collegeName: string;
+  domain: string;
+  status: string;
+  isLead: boolean;
+}
+
+export interface Stage2ReviewPacket {
+  teamId: string;
+  teamName: string;
+  teamStatus: string;
+  projectId: string;
+  projectSlug: string;
+  projectTitle: string;
+  projectCompanyName: string;
+  projectOverview?: string;
+  leadStudentId: string;
+  memberCount: number;
+  members: Stage2ReviewMember[];
+  submission: Stage2Submission | null;
+  ownerFeedback: Stage2OwnerFeedback | null;
+  progress: {
+    id: string;
+    teamId: string;
+    projectId: string;
+    currentStage: string;
+    checkpoints: Record<string, unknown>;
+    updatedByStudentId: string | null;
+    updatedAt: string | null;
+  } | null;
+  feedbackStatus: string;
+  submissionStatus: string;
+  updatedAt: string | null;
+}
+
+export interface Stage2ReviewsResponse {
+  reviews: Stage2ReviewPacket[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface OwnerFeedbackInput {
+  workedWell?: string;
+  improved?: string;
+  valuable?: string;
+  overall?: string;
+  studentQuote?: string;
+  rating?: number;
+  continuation?: OwnerContinuation;
+  valuedPoints?: string[];
+  improvePoints?: string[];
+  selectedStudentIds?: string[];
+}
 
 export interface ProjectApplicationDetail {
   id: string;

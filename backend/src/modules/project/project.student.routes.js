@@ -3,6 +3,7 @@
 const express = require('express');
 const projectController = require('@modules/project/project.controller');
 const teamController = require('@modules/project/project-team.controller');
+const stageController = require('@modules/project/project-stage.controller');
 const categoryService = require('@modules/project/project-category.service');
 const {
   validateBody,
@@ -10,6 +11,8 @@ const {
   upsertTeamSchema,
   inviteTeamMemberSchema,
   finalizeTeamSchema,
+  updateStageProgressSchema,
+  submitProjectSchema,
 } = require('@modules/project/project.validator');
 const {
   requireVerifiedStudent,
@@ -65,6 +68,38 @@ router.get(
 
 router.get('/', projectController.listPublicProjects);
 
+router.get(
+  '/:slug/my-status',
+  requireVerifiedStudent,
+  projectController.getMyProjectStatus,
+);
+router.get(
+  '/:slug/stage',
+  requireVerifiedStudent,
+  stageController.getStudentStageBundle,
+);
+router.put(
+  '/:slug/stage/progress',
+  requireVerifiedStudent,
+  validateBody(updateStageProgressSchema),
+  stageController.updateStudentProgress,
+);
+router.post(
+  '/:slug/stage/submit',
+  requireVerifiedStudent,
+  validateBody(submitProjectSchema),
+  stageController.submitStudentProject,
+);
+router.get(
+  '/:slug/stage/owner-feedback',
+  requireVerifiedStudent,
+  stageController.getStudentOwnerFeedback,
+);
+router.get(
+  '/:slug/stage/outcome',
+  requireVerifiedStudent,
+  stageController.getStudentOutcome,
+);
 router.get(
   '/:slug/team',
   requireVerifiedStudent,

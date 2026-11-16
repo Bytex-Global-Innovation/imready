@@ -4,9 +4,11 @@ const express = require('express');
 const path = require('path');
 const projectController = require('@modules/project/project.controller');
 const categoryController = require('@modules/project/project-category.controller');
+const stageController = require('@modules/project/project-stage.controller');
 const {
   validateBody,
   createProjectSchema,
+  ownerFeedbackSchema,
 } = require('@modules/project/project.validator');
 const {
   validateBody: validateCategoryBody,
@@ -50,6 +52,19 @@ router.post('/uploads', uploadProjectFile('file'), (req, res) => {
 
 router.get('/applications', projectController.listAdminApplications);
 router.get('/applications/:applicationId', projectController.getAdminApplication);
+
+router.get('/reviews', stageController.listAdminReviews);
+router.get('/reviews/:teamId', stageController.getAdminReviewPacket);
+router.put(
+  '/reviews/:teamId/owner-feedback',
+  validateBody(ownerFeedbackSchema),
+  stageController.saveAdminOwnerFeedback,
+);
+router.post(
+  '/reviews/:teamId/owner-feedback/submit',
+  validateBody(ownerFeedbackSchema),
+  stageController.submitAdminOwnerFeedback,
+);
 
 router.get('/', projectController.listAdminProjects);
 router.post('/', validateBody(createProjectSchema), projectController.createProject);

@@ -65,14 +65,19 @@ export function Stage2ProjectApplyView({ detail }: { detail: Stage2ProjectDetail
         setInterestConfirmed(true);
         window.scrollTo({ top: 120, behavior: "smooth" });
       } catch (err) {
-        setSubmitError(
-          err instanceof Error ? err.message : "Could not submit application. Try again.",
-        );
+        const message =
+          err instanceof Error ? err.message : "Could not submit application. Try again.";
+        // Already applied → take them to team formation instead of leaving them on the form.
+        if (/already applied/i.test(message)) {
+          window.location.assign(teamHref);
+          return;
+        }
+        setSubmitError(message);
       } finally {
         setSubmitting(false);
       }
     },
-    [contributions, detail.id, motivation, submitting],
+    [contributions, detail.id, motivation, submitting, teamHref],
   );
 
   const domainLabel = `${detail.categoryPill} Domain`;

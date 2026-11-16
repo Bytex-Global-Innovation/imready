@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Stage2ProjectApplyView } from "@/features/stage2/components/stage2-project-apply-view";
 import { mapApiProjectToStage2Detail } from "@/features/stage2/lib/map-api-project";
 import type { Stage2ProjectDetail } from "@/constants/stage2-project-detail";
@@ -9,6 +10,7 @@ import { ROUTES } from "@/constants/routes";
 import { projectsApi } from "@/lib/api";
 
 export function Stage2ProjectApplyLoader({ projectId }: { projectId: string }) {
+  const router = useRouter();
   const [detail, setDetail] = useState<Stage2ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,15 +19,30 @@ export function Stage2ProjectApplyLoader({ projectId }: { projectId: string }) {
     let cancelled = false;
     async function load() {
       try {
-        const [project, categoriesResult] = await Promise.all([
+        const [project, status, categoriesResult] = await Promise.all([
           projectsApi.getBySlug(projectId, "free"),
+          projectsApi.getMyStatus(projectId).catch(() => null),
           projectsApi.listCategories().catch(() => ({ categories: [] })),
         ]);
         if (cancelled) return;
+
+        if (status?.hasApplied) {
+          router.replace(ROUTES.stage2ProjectTeam(projectId));
+          return;
+        }
+
         const categoryNameBySlug = Object.fromEntries(
           (categoriesResult.categories || []).map((c) => [c.slug, c.name]),
         );
-        setDetail(mapApiProjectToStage2Detail(project, categoryNameBySlug));
+        setDetail(
+          mapApiProjectToStage2Detail(
+            {
+              ...project,
+              viewer: status || project.viewer,
+            },
+            categoryNameBySlug,
+          ),
+        );
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Project not found");
@@ -38,7 +55,7 @@ export function Stage2ProjectApplyLoader({ projectId }: { projectId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectId, router]);
 
   if (loading) {
     return <div className="mx-auto h-96 w-full max-w-7xl animate-pulse rounded-xl bg-white shadow-sm" />;

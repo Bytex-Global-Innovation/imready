@@ -134,7 +134,10 @@ async function loadTeamWithMembers(teamId) {
 
 async function findProjectBySlug(slug) {
   const project = await IndustryProject.findOne({
-    where: { slug, deletedAt: null },
+    where: {
+      deletedAt: null,
+      [Op.or]: [{ slug: String(slug) }, { id: Number(slug) || 0 }],
+    },
   });
   if (!project) throw notFound('Project not found');
   return project;
@@ -185,6 +188,27 @@ async function getTeamForStudent(slug, studentId) {
   };
 }
 
+async function assertStudentApplied(project, student) {
+  const ProjectApplication = require('@modules/project/project-application.model');
+  const email = String(student.email || '').trim().toLowerCase();
+  const application = await ProjectApplication.findOne({
+    where: {
+      projectId: project.id,
+      [Op.or]: [
+        { studentId: student.id },
+        ...(email ? [{ studentEmail: email }] : []),
+      ],
+    },
+  });
+  if (!application) {
+    throw forbidden(
+      'Apply to this project before forming a team',
+      'APPLICATION_REQUIRED',
+    );
+  }
+  return application;
+}
+
 async function ensureCreatorTeam(project, student) {
   const existing = await findMembershipForStudent(student.id, project.id);
   if (existing) {
@@ -197,6 +221,8 @@ async function ensureCreatorTeam(project, student) {
     }
     return team;
   }
+
+  await assertStudentApplied(project, student);
 
   const team = await ProjectTeam.create({
     uuid: crypto.randomUUID(),

@@ -440,6 +440,56 @@ async function getPublicProjectBySlug(slug, access) {
   return serializeStudentProject(project);
 }
 
+async function getStudentParticipation(slug, student) {
+  const project = await IndustryProject.findOne({
+    where: {
+      [Op.or]: [{ slug }, { id: Number(slug) || 0 }],
+      deletedAt: null,
+    },
+  });
+  if (!project) throw notFound('Project not found');
+
+  const email = String(student.email || '').trim().toLowerCase();
+  const application = await ProjectApplication.findOne({
+    where: {
+      projectId: project.id,
+      [Op.or]: [
+        ...(student.id ? [{ studentId: student.id }] : []),
+        ...(email ? [{ studentEmail: email }] : []),
+      ],
+    },
+    order: [['id', 'DESC']],
+  });
+
+  const teamService = require('@modules/project/project-team.service');
+  const teamPayload = await teamService.getTeamForStudent(project.slug, student.id);
+  const team = teamPayload.team || null;
+
+  let nextStep = 'APPLY';
+  if (application) {
+    nextStep =
+      !team || team.status === 'FORMING' ? 'FORM_TEAM' : 'TEAM_READY';
+  }
+
+  return {
+    projectSlug: project.slug,
+    projectId: String(project.id),
+    hasApplied: Boolean(application),
+    application: application
+      ? {
+          id: String(application.id),
+          status: application.status,
+          submittedAt: application.createdAt
+            ? new Date(application.createdAt).toISOString()
+            : null,
+        }
+      : null,
+    team,
+    teamStatus: team?.status || null,
+    nextStep,
+  };
+}
+
 async function applyToProject(slugOrId, payload) {
   let project = await IndustryProject.findOne({
     where: {
@@ -669,6 +719,7 @@ module.exports = {
   deleteProject,
   listPublicProjects,
   getPublicProjectBySlug,
+  getStudentParticipation,
   applyToProject,
   getDashboardSummary,
   listAdminApplications,

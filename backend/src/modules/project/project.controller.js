@@ -88,6 +88,25 @@ async function getPublicProject(req, res, next) {
       }
     }
     const result = await projectService.getPublicProjectBySlug(req.params.slug, access);
+    if (req.studentRecord) {
+      const viewer = await projectService.getStudentParticipation(
+        req.params.slug,
+        req.studentRecord,
+      );
+      return res.status(200).json({ ...result, viewer });
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getMyProjectStatus(req, res, next) {
+  try {
+    const result = await projectService.getStudentParticipation(
+      req.params.slug,
+      req.studentRecord,
+    );
     return res.status(200).json(result);
   } catch (err) {
     return next(err);
@@ -148,6 +167,7 @@ module.exports = {
   deleteProject,
   listPublicProjects,
   getPublicProject,
+  getMyProjectStatus,
   applyToProject,
   getDashboardSummary,
   listAdminApplications,

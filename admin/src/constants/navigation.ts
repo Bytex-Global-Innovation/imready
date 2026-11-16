@@ -24,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Students",            href: "/students",            icon: Users           },
   { label: "Projects",            href: "/projects",            icon: FolderKanban    },
   { label: "Applications",        href: "/applications",        icon: Mail            },
+  { label: "Stage 2 Reviews",     href: "/project-reviews",     icon: ClipboardCheck  },
   { label: "Notifications",       href: "/notifications",       icon: Bell            },
   { label: "Project Categories",  href: "/project-categories",  icon: Tags            },
   { label: "Target Domains",      href: "/target-domains",      icon: LayoutGrid      },

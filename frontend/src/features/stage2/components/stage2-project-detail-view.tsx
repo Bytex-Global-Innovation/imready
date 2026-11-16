@@ -65,11 +65,20 @@ function formatApplyDate(value: string | null): string | null {
 
 export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetail }) {
   const applyHref = ROUTES.stage2ProjectApply(detail.id);
+  const teamHref = ROUTES.stage2ProjectTeam(detail.id);
+  const workspaceHref = ROUTES.stage2ProjectWorkspace(detail.id);
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
-  const canApply = detail.applicationsOpen && !detail.applicationsClosed;
+  const hasApplied = Boolean(detail.hasApplied);
+  const canApply = !hasApplied && detail.applicationsOpen && !detail.applicationsClosed;
+  const teamReady = detail.teamStatus === "ACTIVE";
+  const appliedHref = teamReady ? workspaceHref : teamHref;
 
   const applyLinkClass =
     "inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#153a75] px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#102b55] active:translate-y-0 sm:w-auto";
+  const appliedLinkClass =
+    "inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#153a75] px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#102b55] sm:w-auto";
+  const disabledCtaClass =
+    "inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#c3c6d0] px-6 py-3 text-sm font-semibold text-white sm:w-auto";
 
   const teamBadge = useMemo(() => ACTIVE_TEAMS.length, []);
   const applyOpensLabel = formatApplyDate(detail.applyOpensAt);
@@ -199,17 +208,28 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
               </div>
             </div>
             <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-auto lg:items-end">
-              {canApply ? (
+              {hasApplied ? (
+                <Link href={appliedHref} className={appliedLinkClass}>
+                  <MaterialSymbol name="check_circle" className="text-[18px]" filled />
+                  {teamReady ? "Applied · Open workspace" : "Applied · Create team"}
+                </Link>
+              ) : canApply ? (
                 <Link href={applyHref} className={applyLinkClass}>
                   Apply to this project
                   <MaterialSymbol name="arrow_forward" className="text-[18px]" />
                 </Link>
               ) : (
-                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#c3c6d0] px-6 py-3 text-sm font-semibold text-white sm:w-auto">
+                <span className={disabledCtaClass}>
                   {detail.applicationsClosed ? "Applications closed" : "Applications not open"}
                 </span>
               )}
-              {applyWindowMessage ? (
+              {hasApplied ? (
+                <span className="text-center text-[11px] font-semibold text-[#153a75] lg:text-right">
+                  {teamReady
+                    ? "Your application is in. Open your project workspace."
+                    : "Your application is in. Form your team next."}
+                </span>
+              ) : applyWindowMessage ? (
                 <span className="text-center text-[11px] font-semibold text-[#153a75] lg:text-right">
                   {applyWindowMessage}
                 </span>
@@ -515,7 +535,15 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
                 <p className="text-xs font-semibold text-[#153a75]">{applyWindowMessage}</p>
               ) : null}
             </div>
-            {canApply ? (
+            {hasApplied ? (
+              <Link
+                href={appliedHref}
+                className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#153a75] py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#102b55]"
+              >
+                <MaterialSymbol name="check_circle" className="text-[18px]" filled />
+                {teamReady ? "Applied · Open workspace" : "Applied · Create team"}
+              </Link>
+            ) : canApply ? (
               <Link
                 href={applyHref}
                 className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#153a75] py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#102b55]"
@@ -528,20 +556,6 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
                 {detail.applicationsClosed ? "Applications closed" : "Applications not open"}
               </span>
             )}
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl bg-[#eff4ff] p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#002546] text-white">
-              <MaterialSymbol name="support_agent" className="text-[20px]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-[#002546]">
-                Need advice before applying?
-              </span>
-              <a href="#" className="text-[11px] font-semibold text-[#153a75] hover:underline">
-                Speak with an Industry Mentor →
-              </a>
-            </div>
           </div>
         </aside>
       </div>

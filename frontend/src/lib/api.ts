@@ -212,6 +212,21 @@ export interface ApiProjectItem {
   applicationsOpen?: boolean;
   applicationsClosed?: boolean;
   applicationsNotYetOpen?: boolean;
+  viewer?: ProjectViewerStatus;
+}
+
+export interface ProjectViewerStatus {
+  projectSlug: string;
+  projectId: string;
+  hasApplied: boolean;
+  application: {
+    id: string;
+    status: string;
+    submittedAt: string | null;
+  } | null;
+  team: ProjectTeam | null;
+  teamStatus: "FORMING" | "ACTIVE" | null;
+  nextStep: "APPLY" | "FORM_TEAM" | "TEAM_READY";
 }
 
 export const projectsApi = {
@@ -233,8 +248,11 @@ export const projectsApi = {
 
   getBySlug: (slug: string, access?: "free" | "premium"): Promise<ApiProjectItem> => {
     const query = access ? `?access=${access}` : "";
-    return request<ApiProjectItem>(`/projects/${slug}${query}`);
+    return request<ApiProjectItem>(`/projects/${slug}${query}`, {}, true);
   },
+
+  getMyStatus: (slug: string) =>
+    request<ProjectViewerStatus>(`/projects/${slug}/my-status`, {}, true),
 
   apply: (
     slug: string,
@@ -309,7 +327,154 @@ export const projectsApi = {
       true,
     );
   },
+
+  getStageBundle: (slug: string) =>
+    request<Stage2StageBundle>(`/projects/${slug}/stage`, {}, true),
+
+  updateStageProgress: (
+    slug: string,
+    payload: {
+      currentStage?: Stage2CurrentStage;
+      checkpoints?: {
+        ready?: Record<string, boolean>;
+        doProof?: Record<string, boolean>;
+      };
+    },
+  ) =>
+    request<{ progress: Stage2Progress }>(
+      `/projects/${slug}/stage/progress`,
+      { method: "PUT", body: JSON.stringify(payload) },
+      true,
+    ),
+
+  submitStageProject: (
+    slug: string,
+    payload?: {
+      summary?: string;
+      demoVideoUrl?: string;
+      payload?: Record<string, unknown>;
+    },
+  ) =>
+    request<{ progress: Stage2Progress; submission: Stage2Submission }>(
+      `/projects/${slug}/stage/submit`,
+      { method: "POST", body: JSON.stringify(payload ?? {}) },
+      true,
+    ),
+
+  getOwnerFeedback: (slug: string) =>
+    request<Stage2OwnerFeedbackResponse>(
+      `/projects/${slug}/stage/owner-feedback`,
+      {},
+      true,
+    ),
+
+  getStageOutcome: (slug: string) =>
+    request<Stage2OwnerFeedbackResponse>(
+      `/projects/${slug}/stage/outcome`,
+      {},
+      true,
+    ),
 };
+
+export type Stage2CurrentStage =
+  | "WORKSPACE"
+  | "READY"
+  | "DO"
+  | "SUBMIT"
+  | "REVIEW"
+  | "OWNER_FEEDBACK"
+  | "OUTCOME"
+  | "PROFILE";
+
+export type OwnerContinuation =
+  | "entire_team"
+  | "selected_students"
+  | "no_continuation";
+
+export interface Stage2Progress {
+  id: string;
+  teamId: string;
+  projectId: string;
+  currentStage: Stage2CurrentStage;
+  checkpoints: {
+    ready?: Record<string, boolean>;
+    doProof?: Record<string, boolean>;
+    [key: string]: unknown;
+  };
+  updatedByStudentId: string | null;
+  updatedAt: string | null;
+}
+
+export interface Stage2Submission {
+  id: string;
+  teamId: string;
+  projectId: string;
+  submissionCode: string | null;
+  summary: string;
+  demoVideoUrl: string;
+  payload: Record<string, unknown>;
+  status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "FEEDBACK_READY" | "CLOSED";
+  submittedByStudentId: string | null;
+  submittedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface Stage2OwnerFeedback {
+  id: string;
+  teamId: string;
+  projectId: string;
+  submissionId: string | null;
+  workedWell: string;
+  improved: string;
+  valuable: string;
+  overall: string;
+  studentQuote: string;
+  rating: number;
+  continuation: OwnerContinuation;
+  valuedPoints: string[];
+  improvePoints: string[];
+  selectedStudentIds: string[];
+  status: "DRAFT" | "SUBMITTED";
+  submittedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface Stage2Outcome {
+  available: boolean;
+  outcomeType: "SELECTED_TEAM" | "SELECTED_INDIVIDUAL" | "COMPLETE_NO_CONTINUE" | null;
+  continuation: OwnerContinuation | null;
+  selectedStudentIds: string[];
+  paidContinuation: boolean;
+  stage3Eligible: boolean;
+  overall?: string;
+  rating?: number;
+}
+
+export interface Stage2StageBundle {
+  project: {
+    id: string;
+    slug: string;
+    title: string;
+    companyName: string;
+  };
+  teamId: string;
+  progress: Stage2Progress | null;
+  submission: Stage2Submission | null;
+  ownerFeedback: Stage2OwnerFeedback | null;
+  outcome: Stage2Outcome;
+}
+
+export interface Stage2OwnerFeedbackResponse {
+  project: {
+    id: string;
+    slug: string;
+    title: string;
+    companyName: string;
+  };
+  teamId: string;
+  ownerFeedback: Stage2OwnerFeedback | null;
+  outcome: Stage2Outcome;
+}
 
 export interface ProjectTeamFaculty {
   name: string;

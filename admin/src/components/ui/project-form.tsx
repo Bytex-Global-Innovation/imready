@@ -364,14 +364,18 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-gray-700">
-                Card badge (optional)
+                Card label overlay
               </span>
               <input
                 className="admin-input w-full"
                 value={badge}
                 onChange={(e) => setBadge(e.target.value)}
-                placeholder="e.g. Featured, AI / Data"
+                placeholder="e.g. HEALTH-TECH, SMART CITIES, Sustainability"
               />
+              <span className="mt-1 block text-xs text-gray-500">
+                Shown on the project card image (and detail hero). Leave blank to use the
+                category name.
+              </span>
             </label>
 
             <label className="block text-sm">

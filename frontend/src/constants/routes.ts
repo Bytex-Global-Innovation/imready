@@ -32,6 +32,22 @@ export const ROUTES = {
   stage2ProjectDetail: (projectId: string) => `/stage-2/projects/${projectId}`,
   stage2ProjectApply: (projectId: string) => `/stage-2/projects/${projectId}/apply`,
   stage2ProjectTeam: (projectId: string) => `/stage-2/projects/${projectId}/team`,
+  stage2ProjectWorkspace: (projectId: string) =>
+    `/stage-2/projects/${projectId}/workspace`,
+  stage2ProjectReady: (projectId: string) =>
+    `/stage-2/projects/${projectId}/ready`,
+  stage2ProjectDoProof: (projectId: string) =>
+    `/stage-2/projects/${projectId}/ready/do`,
+  stage2ProjectSubmit: (projectId: string) =>
+    `/stage-2/projects/${projectId}/submit`,
+  stage2ProjectReview: (projectId: string) =>
+    `/stage-2/projects/${projectId}/review`,
+  stage2ProjectOwnerFeedback: (projectId: string) =>
+    `/stage-2/projects/${projectId}/owner-feedback`,
+  stage2ProjectOutcome: (projectId: string) =>
+    `/stage-2/projects/${projectId}/outcome`,
+  stage2ProjectProfile: (projectId: string) =>
+    `/stage-2/projects/${projectId}/profile`,
 } as const;
 
 /** Routes that use the authenticated app shell (no marketing navbar). */

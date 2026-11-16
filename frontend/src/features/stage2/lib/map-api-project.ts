@@ -52,7 +52,9 @@ export function mapApiProjectToStage2Card(
   const categoryLabel =
     (project.category && categoryNameBySlug?.[project.category]) ||
     (project.category ? humanizeSlug(project.category) : "Project");
-  const badgeLabel = project.badge?.trim() || categoryLabel;
+  // Admin "Card label overlay" (badge) drives SMART CITIES / HEALTH-TECH style chips.
+  const rawBadge = project.badge?.trim() || categoryLabel;
+  const badgeLabel = rawBadge.toUpperCase();
   const tags =
     project.tags?.length
       ? project.tags
@@ -140,5 +142,8 @@ export function mapApiProjectToStage2Detail(
     applicationsOpen: project.applicationsOpen !== false,
     applicationsClosed: Boolean(project.applicationsClosed),
     applicationsNotYetOpen: Boolean(project.applicationsNotYetOpen),
+    hasApplied: Boolean(project.viewer?.hasApplied),
+    teamStatus: project.viewer?.teamStatus ?? null,
+    nextStep: project.viewer?.nextStep,
   };
 }
