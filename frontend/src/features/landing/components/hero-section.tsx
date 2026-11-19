@@ -18,7 +18,7 @@ export function HeroSection() {
               Graduate With experience, not Just a degree.
             </h1>
 
-            <p className="mt-5 text-base leading-[1.7] text-hero-body sm:text-lg">
+            <p className="mt-5 text-base leading-[1.7] text-hero-accent sm:text-lg">
               Bridge the gap between what you learn and what the industry expects.
               ImReady connects students with practical projects, industry mentors, and
               portfolio-building experiences that transform academic knowledge into

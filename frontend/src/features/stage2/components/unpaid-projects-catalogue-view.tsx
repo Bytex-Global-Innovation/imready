@@ -44,7 +44,7 @@ export function UnpaidProjectsCatalogueView({
   if (!sessionLoading && !canBrowseList) {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 rounded-xl bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-[#002546]">Unpaid Projects</h1>
+        <h1 className="text-2xl font-bold text-[#002546]">Industry Projects</h1>
         <p className="text-sm text-[#42474f]">{UNPAID_PROJECTS_LOCKED_MESSAGE}</p>
         <Button href={ROUTES.dashboard}>Back to Dashboard</Button>
       </div>
@@ -67,10 +67,10 @@ export function UnpaidProjectsCatalogueView({
             Live Project Inventory
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#002546]">
-            Unpaid Projects
+            Industry Projects
           </h1>
           <p className="text-sm leading-5 text-[#42474f]">
-            Explore verified unpaid industry challenges and join a student team.
+            Explore verified industry challenges and join a student team.
           </p>
         </div>
       ) : null}

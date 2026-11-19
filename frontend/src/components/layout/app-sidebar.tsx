@@ -59,7 +59,7 @@ function getNavItems(paidProjectsUnlocked: boolean) {
       match: (pathname: string) => pathname === ROUTES.dashboard,
     },
     {
-      label: "Unpaid Projects",
+      label: "Industry Projects",
       href: ROUTES.freeProjects,
       icon: Gift,
       locked: false,

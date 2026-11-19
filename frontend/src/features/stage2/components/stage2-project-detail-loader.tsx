@@ -90,7 +90,7 @@ export function Stage2ProjectDetailLoader({ projectId }: { projectId: string }) 
           {error || FOUNDATION_VERIFICATION_DETAIL_LOCKED_MESSAGE}
         </p>
         <Link href={ROUTES.freeProjects} className="text-sm font-semibold text-[#153a75] hover:underline">
-          ← Back to Unpaid Projects
+          ← Back to Industry Projects
         </Link>
       </div>
     );

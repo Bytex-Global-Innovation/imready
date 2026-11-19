@@ -164,7 +164,7 @@ export function ProjectBriefView({
           href={access === "free" ? ROUTES.freeProjects : ROUTES.projects}
           className="cursor-pointer hover:text-foreground"
         >
-          {access === "free" ? "Unpaid Projects" : "Projects"}
+          {access === "free" ? "Industry Projects" : "Projects"}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground">{project.title}</span>

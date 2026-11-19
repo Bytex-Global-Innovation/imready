@@ -19,7 +19,7 @@ export function Footer({ variant = "default" }: FooterProps) {
       )}
     >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-4">
             <Link href={ROUTES.home} className="font-display text-xl font-bold text-brand-700">
               {SITE_CONFIG.name}
@@ -35,23 +35,7 @@ export function Footer({ variant = "default" }: FooterProps) {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Programs</h3>
-            <ul className="space-y-3">
-              {FOOTER_LINKS.programs.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-foreground"
+                    className="text-sm text-black transition-colors hover:text-foreground"
                   >
                     {link.label}
                   </Link>
@@ -66,7 +50,7 @@ export function Footer({ variant = "default" }: FooterProps) {
               <li>
                 <a
                   href={`mailto:${SITE_CONFIG.email}`}
-                  className="text-sm text-muted transition-colors hover:text-foreground"
+                  className="text-sm text-black transition-colors hover:text-foreground"
                 >
                   {SITE_CONFIG.email}
                 </a>
@@ -76,7 +60,7 @@ export function Footer({ variant = "default" }: FooterProps) {
                   href="https://linkedin.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-foreground"
+                  className="inline-flex items-center gap-2 text-sm text-black transition-colors hover:text-foreground"
                   aria-label={`${SITE_CONFIG.name} on LinkedIn`}
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -95,7 +79,7 @@ export function Footer({ variant = "default" }: FooterProps) {
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-muted transition-colors hover:text-foreground"
+                className="text-sm text-black transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>

@@ -806,7 +806,7 @@ function ReadyView({
           href={ROUTES.freeProjects}
           className="inline-flex items-center gap-1 text-sm font-semibold text-[#153a75] hover:underline"
         >
-          Browse more unpaid projects
+          Browse more industry projects
         </Link>
       </div>
     </div>

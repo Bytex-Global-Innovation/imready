@@ -13,11 +13,6 @@ export const FOOTER_LINKS = {
     { label: "Cookie Policy", href: "/cookies" },
     // { label: "FAQ", href: "/faq" },
   ],
-  programs: [
-    { label: "Software Engineering", href: "#" },
-    { label: "Data Science", href: "#" },
-    { label: "Product Design", href: "#" },
-  ],
 } as const;
 
 export const SITE_CONFIG = {

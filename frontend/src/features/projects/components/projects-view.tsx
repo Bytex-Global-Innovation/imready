@@ -275,11 +275,11 @@ export function ProjectsView({ access = "premium" }: { access?: "free" | "premiu
     <div className="mx-auto max-w-5xl">
       <header className="mb-6 sm:mb-8">
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          {access === "free" ? "Unpaid Projects" : "Available Projects – Stage 1"}
+          {access === "free" ? "Industry Projects" : "Available Projects – Stage 1"}
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-muted sm:text-base">
           {access === "free"
-            ? "Explore unpaid projects available to verified students."
+            ? "Explore industry projects available to verified students."
             : "Select a premium project that aligns with your career goals."}
         </p>
       </header>

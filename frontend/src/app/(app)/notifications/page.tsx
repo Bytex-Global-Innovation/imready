@@ -83,7 +83,7 @@ export default function NotificationsPage() {
             href={ROUTES.freeProjects}
             className="mt-3 inline-block text-sm font-semibold text-[#153a75] hover:underline"
           >
-            Browse unpaid projects
+            Browse industry projects
           </Link>
         </div>
       ) : (

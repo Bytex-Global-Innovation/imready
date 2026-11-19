@@ -66,7 +66,7 @@ export function Stage2ProjectApplyLoader({ projectId }: { projectId: string }) {
         <h1 className="text-xl font-bold text-[#002546]">Project not found</h1>
         <p className="text-sm text-[#42474f]">{error}</p>
         <Link href={ROUTES.freeProjects} className="text-sm font-semibold text-[#153a75] hover:underline">
-          ← Back to Unpaid Projects
+          ← Back to Industry Projects
         </Link>
       </div>
     );
