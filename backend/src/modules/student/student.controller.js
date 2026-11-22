@@ -30,6 +30,15 @@ function attachSessionCookies(res, session) {
   };
 }
 
+async function checkEmail(req, res, next) {
+  try {
+    const result = await studentService.checkEmailAvailability(req.body.email);
+    return res.status(200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function signup(req, res, next) {
   try {
     const result = await studentService.signup(req.body);
@@ -208,6 +217,7 @@ async function rejectPremium(req, res, next) {
 }
 
 module.exports = {
+  checkEmail,
   signup,
   login,
   verifyEmail,

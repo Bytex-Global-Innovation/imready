@@ -683,6 +683,17 @@ export const authApi = {
   listTargetDomains: (): Promise<{ domains: TargetDomainItem[] }> =>
     request<{ domains: TargetDomainItem[] }>("/auth/students/target-domains"),
 
+  checkEmail: (email: string) =>
+    request<{
+      available: boolean;
+      email: string;
+      message?: string;
+      code?: string;
+    }>("/auth/students/check-email", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
   signup: (payload: SignupPayload) =>
     request<{
       message: string;

@@ -296,7 +296,7 @@ async function resolveFrameworkProblemId(studentId) {
 
 function frameworkPartFromConfig(missionId, config) {
   const letter = MISSION_FRAMEWORK_LETTERS[missionId - 1] || '?';
-  const title = MISSION_LABELS[missionId] || `Mission ${missionId}`;
+  const title = MISSION_LABELS[missionId] || `Objective ${missionId}`;
   const questions = Array.isArray(config.questions) ? config.questions : [];
   const primary = questions[0];
   const subtitle =

@@ -25,7 +25,11 @@ function scrollToCatalogue() {
 
 /** Stage 2 celebration + value prop + unpaid projects peek (HTML mock main, no header/footer). */
 export function IndustryExperienceView() {
-  const { unpaidProjectsUnlocked, foundationVerificationStatus } = useStudentProfile();
+  const {
+    foundationComplete,
+    unpaidProjectsUnlocked,
+    foundationVerificationStatus,
+  } = useStudentProfile();
   const {
     activeFilter,
     setActiveFilter,
@@ -36,6 +40,7 @@ export function IndustryExperienceView() {
     error,
   } = useUnpaidProjects();
 
+  const featuredProjectId = projects[0]?.id ?? null;
   const peekProjects = filtered.slice(0, PEEK_LIMIT);
   const verificationBanner =
     foundationVerificationStatus === "PENDING"
@@ -280,13 +285,21 @@ export function IndustryExperienceView() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {peekProjects.map((project) => (
-              <Stage2ProjectCard
-                key={project.id}
-                project={project}
-                detailsLocked={!unpaidProjectsUnlocked}
-              />
-            ))}
+            {peekProjects.map((project) => {
+              const access = foundationComplete
+                ? ("open" as const)
+                : featuredProjectId && project.id === featuredProjectId
+                  ? ("preview" as const)
+                  : ("locked" as const);
+              return (
+                <Stage2ProjectCard
+                  key={project.id}
+                  project={project}
+                  access={access}
+                  detailsLocked={!unpaidProjectsUnlocked && access !== "preview"}
+                />
+              );
+            })}
           </div>
         )}
 

@@ -10,31 +10,28 @@ import {
   getMissionRecord,
   saveMissionDraft,
 } from "../lib/mission-progress";
-import {
-  ActiveMissionBadge,
-  MissionBreadcrumb,
-  MissionFooterNav,
-  MissionLayout,
-  QuestionField,
-  SelectedProblemBanner,
-  TipFromReady,
-} from "./mission-ui";
-import { ReadyQuestMap } from "./ready-quest-map";
+import { MissionFooterNav, QuestionField } from "./mission-ui";
+import { FoundationMissionShell } from "./foundation-mission-shell";
 import {
   evidenceConfigText,
-  questionHelper,
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
-  useSelectedProblemText,
 } from "../lib/foundation-journey";
 
 const MISSION_ID = 4;
 const mission = getMission(MISSION_ID);
 
+const OBJECTIVE_STEPS = [
+  "Build a small, fast, testable prototype.",
+  "Test it with 2–3 real users on location.",
+  "Observe what worked and what didn't.",
+  "Decide one improvement to make next.",
+  "Plan how you will implement that improvement.",
+];
+
 export function Mission4Do() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
-  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [respond, setRespond] = useState("");
@@ -43,6 +40,7 @@ export function Mission4Do() {
   const [improve, setImprove] = useState("");
   const [implementation, setImplementation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -55,6 +53,7 @@ export function Mission4Do() {
       setDidntWork((record.answers.didntWork as string) ?? "");
       setImprove((record.answers.improve as string) ?? "");
       setImplementation((record.answers.implementation as string) ?? "");
+      setIsSubmitted(Boolean(record.completed));
       setHydrated(true);
     });
   }, []);
@@ -70,27 +69,28 @@ export function Mission4Do() {
     };
   }
 
-  const checklist = [
-    { label: "Describe your prototype", done: description.trim().length > 0 },
-    { label: "Test it with real users", done: respond.trim().length > 0 },
-    { label: "Observe what happens", done: worked.trim().length > 0 && didntWork.trim().length > 0 },
-    { label: "Make one improvement", done: improve.trim().length > 0 },
-    { label: "Plan how to implement the improvements", done: implementation.trim().length > 0 },
-  ];
-  const canComplete = checklist.every((item) => item.done);
+  const canComplete =
+    description.trim().length > 0 &&
+    respond.trim().length > 0 &&
+    worked.trim().length > 0 &&
+    didntWork.trim().length > 0 &&
+    improve.trim().length > 0 &&
+    implementation.trim().length > 0;
+  const locked = isSubmitted;
 
-  async function handleComplete() {
-    if (!canComplete || isSubmitting) return;
+  async function handleSubmit() {
+    if (!canComplete || isSubmitting || locked) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       const answers = buildAnswers();
       await saveMissionDraft(MISSION_ID, answers, null);
       await completeMission(MISSION_ID, answers, null);
+      setIsSubmitted(true);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+        err instanceof Error ? err.message : "Could not submit this objective. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -98,59 +98,30 @@ export function Mission4Do() {
   }
 
   if (!hydrated || !journeyReady) {
-    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
+    return <div className="py-12 text-center text-sm text-muted">Loading objective…</div>;
   }
 
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
   const pageSubtitle =
     evidenceConfigText(journeyConfig, "pageSubtitle", mission.subtitle) ?? mission.subtitle;
-  const reflectionSectionTitle =
-    evidenceConfigText(
-      journeyConfig,
-      "reflectionSectionTitle",
-      "Tell Us What Happened: Test Reflection",
-    ) ?? "Tell Us What Happened: Test Reflection";
-  const reflectionSectionDescription =
-    evidenceConfigText(
-      journeyConfig,
-      "reflectionSectionDescription",
-      "Document your real-world test results",
-    ) ?? "Document your real-world test results";
-  const improvementSectionTitle =
-    evidenceConfigText(journeyConfig, "improvementSectionTitle", "Improvement Phase") ??
-    "Improvement Phase";
-  const improvementSectionDescription =
-    evidenceConfigText(
-      journeyConfig,
-      "improvementSectionDescription",
-      "Decide what to change and how you will make it happen",
-    ) ?? "Decide what to change and how you will make it happen";
 
   return (
-    <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel=" Foundation" current="Active Mission" />}
-      badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Mission 4 of 5`} />}
+    <FoundationMissionShell
+      current="Do"
+      missionId={MISSION_ID}
       title={mission.title}
       subtitle={pageSubtitle}
-      headerRight={
-        mission.frameworkPhaseLabel ? (
-          <span className="shrink-0 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-primary">
-            {mission.frameworkPhaseLabel}
-          </span>
-        ) : undefined
-      }
+      mainTitle="Build, test, and improve"
+      mainSubtitle="Keep it small, fast, and testable — then capture what happened."
+      howToSubtitle="Don't build a full app. Test one small idea quickly."
+      howToSteps={OBJECTIVE_STEPS}
+      tipAdvisor={tipAdvisor}
+      tipQuote={tipQuote}
       main={
         <>
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">Describe your prototype</h2>
-              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 1 of 3</span>
-            </div>
-            <p className="mt-1 text-sm text-muted">
-              What did you build or test? Keep it small, fast, and testable.
-            </p>
-            <label className="mt-4 mb-1.5 block text-xs font-semibold tracking-wider text-muted uppercase">
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold tracking-wider text-muted uppercase">
               {questionText(journeyConfig, "description", "Describe your prototype")}
             </label>
             <textarea
@@ -162,39 +133,32 @@ export function Mission4Do() {
                 "description",
                 "We tried a simple token board at the counter...",
               )}
-              className="w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              disabled={locked}
+              readOnly={locked}
+              className="w-full resize-none rounded-[var(--radius-card)] border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-80"
             />
-            {questionHelper(journeyConfig, "description") ? (
-              <p className="mt-1.5 text-xs text-muted">
-                {questionHelper(journeyConfig, "description")}
-              </p>
-            ) : null}
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">{reflectionSectionTitle}</h2>
-              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 2 of 3</span>
-            </div>
-            <p className="mt-1 mb-4 text-sm text-muted">{reflectionSectionDescription}</p>
-
+          <div className="space-y-3 border-t border-border pt-3">
+            <p className="text-xs font-semibold text-foreground">Test reflection</p>
             <QuestionField
               index={1}
+              compact
               question={questionText(
                 journeyConfig,
                 "respond",
                 "How did people respond when you tested it?",
               )}
-              helper={questionHelper(journeyConfig, "respond")}
               placeholder={questionPlaceholder(journeyConfig, "respond", "Students said...")}
               value={respond}
               onChange={setRespond}
               done={respond.trim().length > 0}
+              disabled={locked}
             />
             <QuestionField
               index={2}
+              compact
               question={questionText(journeyConfig, "worked", "What worked?")}
-              helper={questionHelper(journeyConfig, "worked")}
               placeholder={questionPlaceholder(
                 journeyConfig,
                 "worked",
@@ -203,79 +167,75 @@ export function Mission4Do() {
               value={worked}
               onChange={setWorked}
               done={worked.trim().length > 0}
+              disabled={locked}
             />
             <QuestionField
               index={3}
+              compact
               question={questionText(journeyConfig, "didntWork", "What didn't work?")}
-              helper={questionHelper(journeyConfig, "didntWork")}
               placeholder={questionPlaceholder(journeyConfig, "didntWork", "Some students still...")}
               value={didntWork}
               onChange={setDidntWork}
               done={didntWork.trim().length > 0}
+              disabled={locked}
             />
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-foreground">{improvementSectionTitle}</h2>
-              <span className="text-xs font-semibold tracking-wider text-muted uppercase">Step 3 of 3</span>
-            </div>
-            <p className="mt-1 mb-4 text-sm text-muted">{improvementSectionDescription}</p>
-
+          <div className="space-y-3 border-t border-border pt-3">
+            <p className="text-xs font-semibold text-foreground">Improvement phase</p>
             <QuestionField
               index={1}
+              compact
               question={questionText(
                 journeyConfig,
                 "improve",
                 "What is one improvement you would make next?",
               )}
-              helper={questionHelper(journeyConfig, "improve")}
               placeholder={questionPlaceholder(journeyConfig, "improve", "Next time I would...")}
               value={improve}
               onChange={setImprove}
               done={improve.trim().length > 0}
+              disabled={locked}
             />
             <QuestionField
               index={2}
+              compact
               question={questionText(
                 journeyConfig,
                 "implementation",
                 "How will you implement these improvements?",
               )}
-              helper={questionHelper(journeyConfig, "implementation")}
               placeholder={questionPlaceholder(
                 journeyConfig,
                 "implementation",
-                "Describe the steps, tools, or changes you will use to put your improvement into action...",
+                "Describe the steps, tools, or changes you will use...",
               )}
               value={implementation}
               onChange={setImplementation}
               done={implementation.trim().length > 0}
-            />
-
-            {submitError ? (
-              <p className="mt-4 text-sm text-red-600" role="alert">
-                {submitError}
-              </p>
-            ) : null}
-
-            <MissionFooterNav
-              onPrevious={() => router.push(ROUTES.mission(3))}
-              previousLabel="Mission 3: Analyze"
-              onNext={handleComplete}
-              nextLabel="Complete Mission 4"
-              nextDisabled={!canComplete}
-              isSubmitting={isSubmitting}
+              disabled={locked}
             />
           </div>
+
+          {submitError ? (
+            <p className="text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          ) : null}
         </>
       }
-      sidebar={
-        <>
-          <SelectedProblemBanner statementText={selectedProblemText} />
-          <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
-          <ReadyQuestMap currentMission={MISSION_ID} />
-        </>
+      footer={
+        <MissionFooterNav
+          flush
+          onPrevious={() => router.push(ROUTES.mission(3))}
+          previousLabel="Back to Analyze"
+          onSubmit={handleSubmit}
+          submitDisabled={!canComplete}
+          isSubmitting={isSubmitting}
+          isSubmitted={locked}
+          onNext={locked ? () => router.push(ROUTES.mission(5)) : undefined}
+          nextLabel="Next: Your Proof"
+        />
       }
     />
   );

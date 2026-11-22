@@ -111,6 +111,8 @@ export function SignupForm() {
     reset,
     getValues,
     setValue,
+    setError,
+    clearErrors,
     control,
     formState: { errors },
   } = useForm<SignupFormValues>({
@@ -118,6 +120,7 @@ export function SignupForm() {
     defaultValues: { ...defaultValues, ...readDraft() },
     mode: "onTouched",
   });
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   useEffect(() => {
     reset(readDraft());
@@ -144,12 +147,46 @@ export function SignupForm() {
     }
   }
 
+  async function assertEmailAvailable(email: string): Promise<boolean> {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return false;
+    setCheckingEmail(true);
+    try {
+      const result = await authApi.checkEmail(normalized);
+      if (!result.available) {
+        setError("email", {
+          type: "validate",
+          message:
+            result.message ||
+            "This email is already registered. Sign in or use a different email.",
+        });
+        return false;
+      }
+      clearErrors("email");
+      return true;
+    } catch (err) {
+      setError("email", {
+        type: "validate",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Could not verify this email. Please try again.",
+      });
+      return false;
+    } finally {
+      setCheckingEmail(false);
+    }
+  }
+
   async function handleContinue() {
     const fields = STEP_FIELDS[currentStep];
     const isValid = await trigger(fields);
-    if (isValid && currentStep < 2) {
-      goToStep(2);
-    }
+    if (!isValid || currentStep >= 2) return;
+
+    const emailOk = await assertEmailAvailable(getValues("email"));
+    if (!emailOk) return;
+
+    goToStep(2);
   }
 
   function handleBack() {
@@ -187,9 +224,13 @@ export function SignupForm() {
           "We've sent a verification email. Please check your inbox and click Verify within 1 hour.",
       );
     } catch (err) {
-      setErrorPopup(
-        err instanceof Error ? err.message : "Failed to create account.",
-      );
+      const message =
+        err instanceof Error ? err.message : "Failed to create account.";
+      if (/already (registered|exists)/i.test(message)) {
+        setError("email", { type: "validate", message });
+        goToStep(1);
+      }
+      setErrorPopup(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -262,7 +303,19 @@ export function SignupForm() {
           )}
 
           {currentStep === 1 && (
-            <PersonalInfoStep register={register} control={control} errors={errors} />
+            <PersonalInfoStep
+              register={register}
+              control={control}
+              errors={errors}
+              onEmailChange={() => clearErrors("email")}
+              onEmailBlur={() => {
+                const email = getValues("email")?.trim();
+                if (!email) return;
+                void trigger("email").then((ok) => {
+                  if (ok) void assertEmailAvailable(email);
+                });
+              }}
+            />
           )}
           {currentStep === 2 && (
             <AcademicDetailsStep
@@ -293,11 +346,12 @@ export function SignupForm() {
             {currentStep === 1 ? (
               <Button
                 type="button"
-                onClick={handleContinue}
+                onClick={() => void handleContinue()}
+                disabled={checkingEmail}
                 className="w-full cursor-pointer bg-[#153a75] hover:bg-[#102b55] sm:ml-auto sm:w-auto"
               >
-                Continue
-                <ArrowForwardIcon />
+                {checkingEmail ? "Checking email…" : "Continue"}
+                {!checkingEmail ? <ArrowForwardIcon /> : null}
               </Button>
             ) : (
               <Button

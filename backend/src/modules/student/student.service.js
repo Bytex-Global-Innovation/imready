@@ -285,13 +285,40 @@ function serializeStudent(student, extras = {}) {
   };
 }
 
+async function checkEmailAvailability(rawEmail) {
+  await purgeExpiredUnverifiedStudents();
+  const email = String(rawEmail || '')
+    .trim()
+    .toLowerCase();
+  if (!email) {
+    throw badRequest('Email address is required');
+  }
+  const existing = await StudentAccount.findOne({
+    where: { email },
+    attributes: ['id'],
+  });
+  if (existing) {
+    return {
+      available: false,
+      email,
+      message:
+        'This email is already registered. Sign in or use a different email.',
+      code: 'EMAIL_EXISTS',
+    };
+  }
+  return { available: true, email };
+}
+
 async function signup(payload) {
   await purgeExpiredUnverifiedStudents();
 
   const email = String(payload.email).trim().toLowerCase();
   const existing = await StudentAccount.findOne({ where: { email } });
   if (existing) {
-    throw badRequest('An account with this email already exists');
+    throw badRequest(
+      'This email is already registered. Sign in or use a different email.',
+      'EMAIL_EXISTS',
+    );
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
@@ -920,6 +947,7 @@ async function listStudents({
 }
 
 module.exports = {
+  checkEmailAvailability,
   signup,
   verifyEmail,
   resendVerification,
@@ -939,6 +967,7 @@ module.exports = {
   serializeStudent,
   hasProjectsUnlocked,
   hasUnpaidProjectsUnlocked,
+  isFoundationCompleteForStudent,
   resolveProjectsUnlocked,
   resolvePaidProjectsUnlocked,
   resolveUnpaidProjectsUnlocked,

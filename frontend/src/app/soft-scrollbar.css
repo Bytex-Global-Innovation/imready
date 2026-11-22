@@ -1,0 +1,47 @@
+/* Dedicated file so scrollbar pseudos survive the Tailwind pipeline. */
+
+.soft-scrollbar,
+[data-soft-scroll] {
+  scrollbar-width: thin;
+  scrollbar-color: #b7c3d3 transparent;
+}
+
+.soft-scrollbar::-webkit-scrollbar,
+[data-soft-scroll]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+.soft-scrollbar::-webkit-scrollbar-button,
+[data-soft-scroll]::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.soft-scrollbar::-webkit-scrollbar-track,
+[data-soft-scroll]::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 12px;
+}
+
+.soft-scrollbar::-webkit-scrollbar-thumb,
+[data-soft-scroll]::-webkit-scrollbar-thumb {
+  background-color: #b7c3d3;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.soft-scrollbar:hover::-webkit-scrollbar-thumb,
+[data-soft-scroll]:hover::-webkit-scrollbar-thumb,
+.soft-scrollbar::-webkit-scrollbar-thumb:active,
+[data-soft-scroll]::-webkit-scrollbar-thumb:active {
+  background-color: #153a75;
+}
+
+.soft-scrollbar::-webkit-scrollbar-corner,
+[data-soft-scroll]::-webkit-scrollbar-corner {
+  background: transparent;
+}

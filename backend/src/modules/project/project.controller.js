@@ -63,7 +63,10 @@ async function listPublicProjects(req, res, next) {
 async function getPublicProject(req, res, next) {
   try {
     const access = req.query.access ? String(req.query.access) : undefined;
-    // Free project detail pages require admin-passed foundation verification.
+    // Free project details:
+    // - Before Foundation: only the featured (newest) unpaid project is readable as preview.
+    // - After Foundation: all unpaid project details are readable.
+    // Applying still requires Foundation completion + admin PASS (enforced in applyToProject).
     if (access === 'free') {
       const student = req.studentRecord;
       if (!student) {
@@ -72,19 +75,24 @@ async function getPublicProject(req, res, next) {
           code: 'UNAUTHORIZED',
         });
       }
-      if (String(student.foundationVerificationStatus || 'NONE') !== 'PASSED') {
-        const status = student.foundationVerificationStatus || 'NONE';
-        const message =
-          status === 'PENDING'
-            ? 'Your Foundation submission is under review. Unpaid project details unlock after admin verification (usually 24–48 hours).'
-            : status === 'FAILED'
-              ? 'Your Foundation submission was not approved. You can browse unpaid projects but cannot open project details yet.'
-              : 'Complete Foundation and wait for admin verification to view unpaid project details.';
-        return res.status(403).json({
-          message,
-          code: 'FOUNDATION_VERIFICATION_REQUIRED',
-          foundationVerificationStatus: status,
-        });
+      const foundationService = require('@modules/foundation/foundation.service');
+      const foundationComplete =
+        await foundationService.isFoundationCompleteForStudent(student);
+      if (!foundationComplete) {
+        const featured = await projectService.getFeaturedFreeProject();
+        const slug = String(req.params.slug || '');
+        const isFeatured =
+          featured &&
+          (featured.slug === slug ||
+            String(featured.id) === slug ||
+            String(featured.id) === String(Number(slug) || ''));
+        if (!isFeatured) {
+          return res.status(403).json({
+            message:
+              'Complete the Foundation stage to unlock all industry projects. A featured preview is available on the Industry Projects tab.',
+            code: 'FOUNDATION_INCOMPLETE',
+          });
+        }
       }
     }
     const result = await projectService.getPublicProjectBySlug(req.params.slug, access);

@@ -96,22 +96,39 @@ export function FoundationProblemSelect() {
         <p className="mt-4 text-sm text-red-600" role="alert">{error}</p>
       ) : null}
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div
+        role="radiogroup"
+        aria-label="Foundation problem statement"
+        className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+      >
         {options.map((option) => {
           const isSelected = selectedId === option.id;
           return (
             <button
               key={option.id}
               type="button"
+              role="radio"
+              aria-checked={isSelected}
               onClick={() => setSelectedId(option.id)}
               className={cn(
-                "rounded-[var(--radius-card)] border p-4 text-left text-sm leading-relaxed transition-colors",
+                "flex items-start gap-3 rounded-[var(--radius-card)] border p-4 text-left transition-colors",
                 isSelected
                   ? "border-primary bg-white shadow-sm"
                   : "border-border bg-surface/60 text-foreground hover:border-primary/40",
               )}
             >
-              {option.statementText}
+              <span
+                className={cn(
+                  "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
+                  isSelected ? "border-primary bg-primary" : "border-[#c3c6d0] bg-white",
+                )}
+                aria-hidden
+              >
+                {isSelected ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                ) : null}
+              </span>
+              <span className="text-sm leading-relaxed">{option.statementText}</span>
             </button>
           );
         })}
@@ -124,7 +141,7 @@ export function FoundationProblemSelect() {
       ) : (
         <div className="mt-8 flex justify-end">
           <Button onClick={handleContinue} disabled={!selectedId || isSaving}>
-            {isSaving ? "Saving…" : "Continue to Mission 1"}
+            {isSaving ? "Saving…" : "Continue to Objective 1"}
           </Button>
         </div>
       )}

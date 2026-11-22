@@ -22,6 +22,10 @@ import { ROUTES } from "@/constants/routes";
 import { PAID_PROJECTS_LOCKED_MESSAGE } from "@/constants/project-access";
 import { SITE_CONFIG } from "@/constants/site";
 import { useStudentProfile } from "@/components/auth/student-auth-gate";
+import {
+  WhatsAppCommunityHeaderLink,
+  WhatsAppCommunitySidebarLink,
+} from "@/components/layout/whatsapp-community";
 import { authApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -384,10 +388,12 @@ export function AppSidebar({
 
         <div
           className={cn(
-            "mt-auto shrink-0 space-y-1 border-t border-border pt-3 pb-5",
+            "mt-auto shrink-0 space-y-2 border-t border-border pt-3 pb-5",
             collapsed ? "px-2" : "px-4",
           )}
         >
+          <WhatsAppCommunitySidebarLink collapsed={collapsed} onNavigate={onClose} />
+
           <div ref={helpTooltip.anchorRef} className="relative">
             <button
               type="button"
@@ -516,6 +522,9 @@ export function AppShell({ children }: AppShellProps) {
           <span className="font-display text-lg font-bold text-primary">
             {SITE_CONFIG.name}
           </span>
+          <div className="ml-auto">
+            <WhatsAppCommunityHeaderLink />
+          </div>
         </header>
         <main
           className={cn(

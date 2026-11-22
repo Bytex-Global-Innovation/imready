@@ -440,6 +440,14 @@ async function getPublicProjectBySlug(slug, access) {
   return serializeStudentProject(project);
 }
 
+/** Newest active unpaid project — used as the pre-Foundation featured preview. */
+async function getFeaturedFreeProject() {
+  return IndustryProject.findOne({
+    where: { status: 'ACTIVE', deletedAt: null, isFree: true },
+    order: [['id', 'DESC']],
+  });
+}
+
 async function getStudentParticipation(slug, student) {
   const project = await IndustryProject.findOne({
     where: {
@@ -719,6 +727,7 @@ module.exports = {
   deleteProject,
   listPublicProjects,
   getPublicProjectBySlug,
+  getFeaturedFreeProject,
   getStudentParticipation,
   applyToProject,
   getDashboardSummary,

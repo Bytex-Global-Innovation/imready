@@ -194,6 +194,12 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
   const answers = payload.answers && typeof payload.answers === 'object' ? { ...payload.answers } : {};
   const existing = records.find((r) => r.missionId === missionId);
   const wasAlreadyComplete = Boolean(existing?.completed);
+  if (wasAlreadyComplete) {
+    throw badRequest(
+      'This stage is already submitted and can no longer be edited.',
+      'MISSION_ALREADY_SUBMITTED',
+    );
+  }
   const xpEarned = MISSION_XP_REWARDS[missionId] || 0;
 
   if (missionId >= 1 && missionId <= 4) {
@@ -203,6 +209,12 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
     }
     evidence = { fileName: null, fileType: null, filePath: null };
   } else if (missionId === 5) {
+    // Mission 5 collects a video/evidence link only (no file upload).
+    if (existing?.evidenceFilePath) {
+      deleteEvidenceFile(existing.evidenceFilePath);
+    }
+    evidence = { fileName: null, fileType: null, filePath: null };
+
     const videoRaw = answers.presentationVideoUrl;
     if (videoRaw && String(videoRaw).trim()) {
       const check = validatePresentationVideoUrl(videoRaw);
@@ -213,15 +225,11 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
     } else {
       delete answers.presentationVideoUrl;
     }
-    if (complete) {
-      const hasFile = Boolean(evidence.filePath && evidence.fileName);
-      const hasVideo = Boolean(answers.presentationVideoUrl);
-      if (!hasFile && !hasVideo) {
-        throw badRequest(
-          'Upload an evidence document or add a YouTube / Google Drive video link',
-          'EVIDENCE_REQUIRED',
-        );
-      }
+    if (complete && !answers.presentationVideoUrl) {
+      throw badRequest(
+        'Add a YouTube or Google Drive video link',
+        'EVIDENCE_LINK_REQUIRED',
+      );
     }
   } else if (existing?.evidenceFilePath && existing.evidenceFilePath !== evidence.filePath) {
     deleteEvidenceFile(existing.evidenceFilePath);
@@ -303,80 +311,14 @@ async function upsertMissionRecord(studentId, missionId, payload, { complete = f
   };
 }
 
-async function uploadMissionEvidence(studentId, missionId, file) {
-  if (!file) throw badRequest('Please upload an evidence document');
-  if (!Number.isInteger(missionId) || missionId < 1 || missionId > TOTAL_MISSIONS) {
-    throw badRequest('Invalid mission id');
-  }
-  if (missionId !== 5) {
-    if (file?.filename) {
-      deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
-    }
-    throw badRequest(
-      'Evidence file upload is only available on Mission 5 (Your Proof)',
-      'EVIDENCE_UPLOAD_MISSION_ONLY',
-    );
-  }
-
-  const student = await StudentAccount.findByPk(studentId, {
-    attributes: ['id', 'foundationCompletedAt', 'subscriptionStatus', 'foundationProblemStatementId'],
-  });
-  if (!student) throw notFound('Student not found');
-  if (!student.foundationProblemStatementId) {
+async function uploadMissionEvidence(_studentId, _missionId, file) {
+  if (file?.filename) {
     deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
-    throw badRequest(
-      'Select a foundation problem statement before working on missions',
-      'PROBLEM_REQUIRED',
-    );
   }
-
-  const records = await loadStudentRecords(studentId);
-  if (!isMissionUnlocked(records, missionId)) {
-    deleteEvidenceFile(`/uploads/foundation-evidence/${file.filename}`);
-    throw badRequest('Complete the previous mission first', 'MISSION_LOCKED');
-  }
-
-  const filePath = `/uploads/foundation-evidence/${file.filename}`;
-  const evidence = {
-    fileName: file.originalname || file.filename,
-    fileType: file.mimetype || null,
-    filePath,
-  };
-
-  const existing = records.find((r) => r.missionId === missionId);
-  if (existing?.evidenceFilePath && existing.evidenceFilePath !== filePath) {
-    deleteEvidenceFile(existing.evidenceFilePath);
-  }
-
-  let record;
-  if (existing) {
-    existing.evidenceFileName = evidence.fileName;
-    existing.evidenceFileType = evidence.fileType;
-    existing.evidenceFilePath = evidence.filePath;
-    await existing.save();
-    record = existing;
-  } else {
-    record = await FoundationMissionRecord.create({
-      studentId,
-      missionId,
-      answers: {},
-      evidenceFileName: evidence.fileName,
-      evidenceFileType: evidence.fileType,
-      evidenceFilePath: evidence.filePath,
-      completed: false,
-      completedAt: null,
-      xpEarned: 0,
-    });
-  }
-
-  const selectedProblem = await loadSelectedProblem(student);
-  const updatedRecords = await loadStudentRecords(studentId);
-  const progress = buildProgressPayload(updatedRecords, student, selectedProblem);
-
-  return {
-    evidence: serializeEvidence(record),
-    progress,
-  };
+  throw badRequest(
+    'Evidence file upload is disabled. Add a YouTube or Google Drive video link instead.',
+    'EVIDENCE_UPLOAD_DISABLED',
+  );
 }
 
 async function saveDraft(studentId, missionId, payload) {
@@ -568,7 +510,7 @@ async function getAdminStudentProgress(studentId) {
 
   const missions = Object.entries(progress.missions).map(([id, record]) => ({
     missionId: Number(id),
-    label: MISSION_LABELS[Number(id)] || `Mission ${id}`,
+    label: MISSION_LABELS[Number(id)] || `Objective ${id}`,
     answers: record.answers,
     evidence: record.evidence,
     completed: record.completed,

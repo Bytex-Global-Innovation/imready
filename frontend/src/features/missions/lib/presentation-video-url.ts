@@ -43,7 +43,9 @@ export function isAllowedPresentationVideoUrl(raw: string): boolean {
   return isYouTubeVideoUrl(url) || isGoogleDriveVideoUrl(url);
 }
 
-export function validatePresentationVideoUrl(raw: string): { ok: true } | { ok: false; message: string } {
+export function validatePresentationVideoUrl(
+  raw: string,
+): { ok: true; normalized: string } | { ok: false; message: string } {
   const trimmed = raw.trim();
   if (!trimmed) {
     return { ok: false, message: "Paste a YouTube or Google Drive video link to continue." };
@@ -59,5 +61,5 @@ export function validatePresentationVideoUrl(raw: string): { ok: true } | { ok: 
         "Use a YouTube watch/shorts link or a Google Drive file link where your presentation video is stored.",
     };
   }
-  return { ok: true };
+  return { ok: true, normalized: url.href };
 }

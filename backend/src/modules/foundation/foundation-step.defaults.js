@@ -187,8 +187,6 @@ function missionQuestions(missionId) {
 }
 
 function evidenceConfigForMission(missionId) {
-  const uploadHelper =
-    'Upload a PDF or Word document (.pdf, .doc, .docx). You can also add a YouTube or Google Drive video link below.';
   switch (missionId) {
     case 1:
     case 2:
@@ -207,10 +205,9 @@ function evidenceConfigForMission(missionId) {
       return {
         sectionTitle: 'Show your final proof',
         sectionDescription:
-          'Upload your evidence document and/or add a video link. Include Google Drive links in your document when helpful.',
+          'Add a YouTube or Google Drive video link showing your final proof and impact.',
         videoLinkHelper:
           'Use an unlisted/public YouTube URL or a Google Drive file link with view access for reviewers.',
-        uploadHelper,
       };
     default:
       return null;

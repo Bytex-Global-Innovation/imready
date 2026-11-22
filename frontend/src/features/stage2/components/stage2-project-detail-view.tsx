@@ -63,13 +63,27 @@ function formatApplyDate(value: string | null): string | null {
   });
 }
 
-export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetail }) {
+export function Stage2ProjectDetailView({
+  detail,
+  applyLocked = false,
+  applyLockedReason = null,
+  isPreview = false,
+}: {
+  detail: Stage2ProjectDetail;
+  applyLocked?: boolean;
+  applyLockedReason?: string | null;
+  isPreview?: boolean;
+}) {
   const applyHref = ROUTES.stage2ProjectApply(detail.id);
   const teamHref = ROUTES.stage2ProjectTeam(detail.id);
   const workspaceHref = ROUTES.stage2ProjectWorkspace(detail.id);
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const hasApplied = Boolean(detail.hasApplied);
-  const canApply = !hasApplied && detail.applicationsOpen && !detail.applicationsClosed;
+  const canApply =
+    !applyLocked &&
+    !hasApplied &&
+    detail.applicationsOpen &&
+    !detail.applicationsClosed;
   const teamReady = detail.teamStatus === "ACTIVE";
   const appliedHref = teamReady ? workspaceHref : teamHref;
 
@@ -112,7 +126,7 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
           </div>
         </div>
 
-        <div className="flex flex-col justify-between gap-3 rounded-xl bg-[#eff4ff] p-4 shadow-sm md:flex-row md:items-center md:p-6">
+        <div className="rounded-xl bg-[#eff4ff] p-4 shadow-sm md:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0d3b66] text-white">
               <MaterialSymbol name="verified" className="text-[24px]" />
@@ -129,19 +143,6 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
               <p className="text-xs text-[#42474f]">
                 From Foundation completion to joining a verified real-world project team.
               </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-8 self-end md:self-center">
-            <div className="hidden flex-col text-right sm:flex">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#737780]">
-                Cohort Progress
-              </span>
-              <span className="text-sm font-bold text-[#153a75]">
-                Step 6 of 10: Evaluation
-              </span>
-            </div>
-            <div className="h-2 w-28 overflow-hidden rounded-full bg-[#d3e4fe]">
-              <div className="h-full w-[60%] rounded-full bg-[#153a75]" />
             </div>
           </div>
         </div>
@@ -220,7 +221,13 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
                 </Link>
               ) : (
                 <span className={disabledCtaClass}>
-                  {detail.applicationsClosed ? "Applications closed" : "Applications not open"}
+                  {applyLocked
+                    ? isPreview
+                      ? "Preview only"
+                      : "Apply locked"
+                    : detail.applicationsClosed
+                      ? "Applications closed"
+                      : "Applications not open"}
                 </span>
               )}
               {hasApplied ? (
@@ -228,6 +235,10 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
                   {teamReady
                     ? "Your application is in. Open your project workspace."
                     : "Your application is in. Form your team next."}
+                </span>
+              ) : applyLocked && applyLockedReason ? (
+                <span className="max-w-sm text-center text-[11px] font-semibold text-[#153a75] lg:text-right">
+                  {applyLockedReason}
                 </span>
               ) : applyWindowMessage ? (
                 <span className="text-center text-[11px] font-semibold text-[#153a75] lg:text-right">
@@ -553,9 +564,18 @@ export function Stage2ProjectDetailView({ detail }: { detail: Stage2ProjectDetai
               </Link>
             ) : (
               <span className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#c3c6d0] py-3 text-sm font-semibold text-white">
-                {detail.applicationsClosed ? "Applications closed" : "Applications not open"}
+                {applyLocked
+                  ? isPreview
+                    ? "Preview only"
+                    : "Apply locked"
+                  : detail.applicationsClosed
+                    ? "Applications closed"
+                    : "Applications not open"}
               </span>
             )}
+            {applyLocked && applyLockedReason ? (
+              <p className="mt-2 text-xs leading-relaxed text-[#42474f]">{applyLockedReason}</p>
+            ) : null}
           </div>
         </aside>
       </div>

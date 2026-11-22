@@ -15,9 +15,18 @@ interface PersonalInfoStepProps {
   register: UseFormRegister<SignupFormValues>;
   control: Control<SignupFormValues>;
   errors: FieldErrors<SignupFormValues>;
+  onEmailBlur?: () => void;
+  onEmailChange?: () => void;
 }
 
-export function PersonalInfoStep({ register, control, errors }: PersonalInfoStepProps) {
+export function PersonalInfoStep({
+  register,
+  control,
+  errors,
+  onEmailBlur,
+  onEmailChange,
+}: PersonalInfoStepProps) {
+  const emailRegister = register("email");
   return (
     <div className="space-y-5">
       <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
@@ -49,7 +58,15 @@ export function PersonalInfoStep({ register, control, errors }: PersonalInfoStep
             placeholder="john@example.com"
             autoComplete="email"
             error={errors.email?.message}
-            {...register("email")}
+            {...emailRegister}
+            onChange={(event) => {
+              emailRegister.onChange(event);
+              onEmailChange?.();
+            }}
+            onBlur={(event) => {
+              emailRegister.onBlur(event);
+              onEmailBlur?.();
+            }}
           />
         </div>
 

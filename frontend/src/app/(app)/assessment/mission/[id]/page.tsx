@@ -45,7 +45,7 @@ export default function MissionPage() {
 
   if (!valid) notFound();
   if (!ready) {
-    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
+    return <div className="py-12 text-center text-sm text-muted">Loading objective…</div>;
   }
 
   switch (id) {

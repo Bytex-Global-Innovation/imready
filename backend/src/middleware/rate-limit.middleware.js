@@ -20,14 +20,14 @@ function createRateLimiter({ windowMs = 15 * 60 * 1000, max = 20, message } = {}
 // Strict: credential guessing (login).
 const loginLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 6,
   message: 'Too many login attempts. Please try again in 15 minutes.',
 });
 
 // Moderate: account creation / email-based flows (signup, forgot-password, resend).
 const sensitiveActionLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 6,
+  max: 10,
   message: 'Too many requests. Please try again in 15 minutes.',
 });
 

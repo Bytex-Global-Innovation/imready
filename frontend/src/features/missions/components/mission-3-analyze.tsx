@@ -6,21 +6,12 @@ import { Check, Flag } from "@/components/icons";
 import { getMission } from "@/constants/missions";
 import { ROUTES } from "@/constants/routes";
 import { completeMission, ensureFoundationProgress, getMissionRecord, saveMissionDraft } from "../lib/mission-progress";
-import {
-  ActiveMissionBadge,
-  MissionBreadcrumb,
-  MissionFooterNav,
-  MissionLayout,
-  MissionProgressPanel,
-  SelectedProblemBanner,
-  TipFromReady,
-} from "./mission-ui";
-import { ReadyQuestMap } from "./ready-quest-map";
+import { MissionFooterNav } from "./mission-ui";
+import { FoundationMissionShell } from "./foundation-mission-shell";
 import {
   questionPlaceholder,
   questionText,
   useFoundationMissionConfig,
-  useSelectedProblemText,
 } from "../lib/foundation-journey";
 
 const MISSION_ID = 3;
@@ -33,21 +24,25 @@ const FALLBACK_WHY_LAYERS = [
   { label: "Why: Fourth Layer", key: "why4" },
 ];
 
-
-
+const OBJECTIVE_STEPS = [
+  "Identify the problem clearly from your earlier observations.",
+  "Ask why to find the immediate reason behind the problem.",
+  "Repeat why on each answer to go deeper.",
+  "Name the actionable root cause.",
+  "Confirm the pattern you see across conversations.",
+];
 
 export function Mission3Analyze() {
   const { config: journeyConfig, ready: journeyReady } = useFoundationMissionConfig(MISSION_ID);
-  const selectedProblemText = useSelectedProblemText();
   const router = useRouter();
   const [whys, setWhys] = useState<Record<string, string>>({});
   const [rootCause, setRootCause] = useState("");
   const [pattern, setPattern] = useState("");
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     ensureFoundationProgress().then(() => {
       const record = getMissionRecord(MISSION_ID);
@@ -59,30 +54,30 @@ export function Mission3Analyze() {
       });
       setRootCause((record.answers.rootCause as string) ?? "");
       setPattern((record.answers.pattern as string) ?? "");
+      setIsSubmitted(Boolean(record.completed));
       setHydrated(true);
     });
   }, []);
 
-  
-
-  const whysFilled = (journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS).every(
-    (layer) => (whys[layer.key] ?? "").trim().length > 0,
-  );
+  const whyLayers = journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS;
+  const whysFilled = whyLayers.every((layer) => (whys[layer.key] ?? "").trim().length > 0);
   const canComplete =
     whysFilled && rootCause.trim().length > 0 && pattern.trim().length > 0;
+  const locked = isSubmitted;
 
-  async function handleComplete() {
-    if (!canComplete || isSubmitting) return;
+  async function handleSubmit() {
+    if (!canComplete || isSubmitting || locked) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       const answers = { ...whys, rootCause, pattern };
       await saveMissionDraft(MISSION_ID, answers, null);
       await completeMission(MISSION_ID, answers, null);
+      setIsSubmitted(true);
       router.push(ROUTES.missionComplete(MISSION_ID));
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : "Could not submit this mission. Please try again.",
+        err instanceof Error ? err.message : "Could not submit this objective. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -90,128 +85,92 @@ export function Mission3Analyze() {
   }
 
   if (!hydrated || !journeyReady) {
-    return <div className="py-12 text-center text-sm text-muted">Loading mission…</div>;
+    return <div className="py-12 text-center text-sm text-muted">Loading objective…</div>;
   }
 
-  const problemStatement =
-    journeyConfig?.analyzeContextText ??
-    '"Students keep crowding the counter and asking canteen staff repeatedly if their order is ready."';
-  const whyLayers = journeyConfig?.whyLayerLabels ?? FALLBACK_WHY_LAYERS;
-  
   const tipAdvisor = journeyConfig?.tipAdvisorLabel ?? mission.tip.advisorLabel;
-   const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
-  
+  const tipQuote = journeyConfig?.tipQuote ?? mission.tip.quote;
 
   return (
-    <MissionLayout
-      breadcrumb={<MissionBreadcrumb stageLabel="Foundation" current="Mission 3: Analyze" />}
-      badge={<ActiveMissionBadge label={`${mission.activeBadgeLabel} · Step 3 of 5`} />}
+    <FoundationMissionShell
+      current="Analyze"
+      missionId={MISSION_ID}
       title={mission.title}
       subtitle={mission.subtitle}
-      headerRight={<MissionProgressPanel label="Stage Progress" stepLabel="60% Complete" percent={60} />}
+      mainTitle="The 5 Whys Framework"
+      mainSubtitle="Look beyond symptoms and discover the actual root cause."
+      howToSubtitle="Connect the dots. The first answer is rarely the real root cause."
+      howToSteps={OBJECTIVE_STEPS}
+      tipAdvisor={tipAdvisor}
+      tipQuote={tipQuote}
       main={
         <>
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-foreground">Analyze with a Tool: The 5 Whys Framework</h2>
-              
-            </div>
-           <div className="mt-1 text-sm text-muted">
-  <p>
-    A simple diagnostic framework to look beyond symptoms and discover the actual root cause.
-  </p>
-
-  <p className="mt-2 font-semibold">Key Steps:</p>
-
-  <ol className="mt-1 list-decimal pl-5 space-y-1">
-    <li>
-      <strong>Identify the Problem:</strong> Clearly define the issue you want to solve.
-    </li>
-    <li>
-      <strong>Ask Why:</strong> Find the immediate reason behind the problem.
-    </li>
-    <li>
-      <strong>Repeat the Question:</strong> Ask “Why?” about each answer to explore deeper causes.
-    </li>
-    <li>
-      <strong>Identify the Root Cause:</strong> Determine the underlying reason for the problem.
-    </li>
-    <li>
-      <strong>Explore Possible Solutions:</strong> Identify and consider all probable solutions to address the problem.
-    </li> 
-  </ol>
-</div>
-
-<p className="mt-4 text-sm font-medium text-muted">
-  Now, write down your “Why?” questions and answers below to identify the root cause of the problem.
-</p>
-            
-
-            
-            <ol className="mt-5">
-              {whyLayers.map((layer) => {
-                const filled = (whys[layer.key] ?? "").trim().length > 0;
-                return (
-                  <li key={layer.key} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          filled ? "bg-primary text-white" : "bg-brand-100 text-muted"
-                        }`}
-                      >
-                        {filled ? <Check className="h-3.5 w-3.5" /> : null}
-                      </span>
-                      <span className="mt-1 w-px flex-1 bg-border" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1 pb-4">
-                      <p className="text-xs font-semibold tracking-wider text-muted uppercase">{layer.label}</p>
-                      <input
-                        type="text"
-                        value={whys[layer.key] ?? ""}
-                        onChange={(event) => setWhys((prev) => ({ ...prev, [layer.key]: event.target.value }))}
-                        placeholder={questionPlaceholder(journeyConfig, layer.key, "Because...")}
-                        className="mt-1 w-full rounded-[var(--radius-card)] border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-              <li className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                    <Flag className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-primary bg-surface p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-primary uppercase">
-                      Root Cause
+          <ol>
+            {whyLayers.map((layer) => {
+              const filled = (whys[layer.key] ?? "").trim().length > 0;
+              return (
+                <li key={layer.key} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                        filled ? "bg-primary text-white" : "bg-brand-100 text-muted"
+                      }`}
+                    >
+                      {filled ? <Check className="h-3 w-3" /> : null}
                     </span>
-                    <span className="text-xs font-medium text-primary">Validated 5th Depth</span>
-                    {rootCause.trim() ? <Check className="ml-auto h-4 w-4 shrink-0 text-primary" /> : null}
+                    <span className="mt-1 w-px flex-1 bg-border" aria-hidden />
                   </div>
-                  <input
-                    type="text"
-                    value={rootCause}
-                    onChange={(event) => setRootCause(event.target.value)}
-                    placeholder={questionPlaceholder(
-                      journeyConfig,
-                      "rootCause",
-                      "State the actionable root cause...",
-                    )}
-                    className="mt-2 w-full rounded-[var(--radius-card)] border border-primary bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                 
+                  <div className="min-w-0 flex-1 pb-3">
+                    <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
+                      {layer.label}
+                    </p>
+                    <input
+                      type="text"
+                      value={whys[layer.key] ?? ""}
+                      onChange={(event) =>
+                        setWhys((prev) => ({ ...prev, [layer.key]: event.target.value }))
+                      }
+                      placeholder={questionPlaceholder(journeyConfig, layer.key, "Because...")}
+                      disabled={locked}
+                      readOnly={locked}
+                      className="mt-1 w-full rounded-[var(--radius-card)] border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-80"
+                    />
+                  </div>
+                </li>
+              );
+            })}
+            <li className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                  <Flag className="h-3 w-3" />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-primary bg-surface p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-primary uppercase">
+                    Root Cause
+                  </span>
+                  <span className="text-[11px] font-medium text-primary">Validated 5th Depth</span>
                 </div>
-              </li>
-            </ol>
-          </div>
+                <input
+                  type="text"
+                  value={rootCause}
+                  onChange={(event) => setRootCause(event.target.value)}
+                  placeholder={questionPlaceholder(
+                    journeyConfig,
+                    "rootCause",
+                    "State the actionable root cause...",
+                  )}
+                  disabled={locked}
+                  readOnly={locked}
+                  className="mt-2 w-full rounded-[var(--radius-card)] border border-primary bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-80"
+                />
+              </div>
+            </li>
+          </ol>
 
-          <div className="rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-foreground">Pattern confirmation</h2>
-            </div>
-            <p className="mt-6 text-sm font-medium text-foreground">
+          <div className="border-t border-border pt-3">
+            <p className="text-xs font-semibold text-foreground">
               {questionText(
                 journeyConfig,
                 "pattern",
@@ -221,35 +180,33 @@ export function Mission3Analyze() {
             <textarea
               value={pattern}
               onChange={(event) => setPattern(event.target.value)}
-              rows={3}
+              rows={2}
               placeholder={questionPlaceholder(journeyConfig, "pattern")}
-              className="mt-2 w-full resize-y rounded-[var(--radius-card)] border border-border bg-white px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-           
-            
-
-            {submitError ? (
-              <p className="mt-4 text-sm text-red-600" role="alert">
-                {submitError}
-              </p>
-            ) : null}
-
-            <MissionFooterNav
-              onPrevious={() => router.push(ROUTES.mission(2))}
-              onNext={handleComplete}
-              nextLabel="Next: Complete Mission 3"
-              nextDisabled={!canComplete}
-              isSubmitting={isSubmitting}
+              disabled={locked}
+              readOnly={locked}
+              className="mt-1.5 w-full resize-none rounded-[var(--radius-card)] border border-border bg-white px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-80"
             />
           </div>
+
+          {submitError ? (
+            <p className="text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          ) : null}
         </>
       }
-      sidebar={
-        <>
-          <SelectedProblemBanner statementText={selectedProblemText} />
-         <TipFromReady advisorLabel={tipAdvisor} quote={tipQuote} />
-          <ReadyQuestMap currentMission={MISSION_ID} />
-        </>
+      footer={
+        <MissionFooterNav
+          flush
+          onPrevious={() => router.push(ROUTES.mission(2))}
+          previousLabel="Back to Engage"
+          onSubmit={handleSubmit}
+          submitDisabled={!canComplete}
+          isSubmitting={isSubmitting}
+          isSubmitted={locked}
+          onNext={locked ? () => router.push(ROUTES.mission(4)) : undefined}
+          nextLabel="Next: Do"
+        />
       }
     />
   );

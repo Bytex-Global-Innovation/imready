@@ -25,6 +25,12 @@ const targetDomainController = require('@modules/target-domain/target-domain.con
 const router = express.Router();
 
 router.get('/target-domains', targetDomainController.listPublic);
+router.post(
+  '/check-email',
+  sensitiveActionLimiter,
+  validateBody(emailOnlySchema),
+  studentController.checkEmail,
+);
 router.post('/signup', sensitiveActionLimiter, validateBody(signupSchema), studentController.signup);
 router.post('/login', loginLimiter, validateBody(loginSchema), studentController.login);
 router.post(

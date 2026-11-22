@@ -59,7 +59,7 @@ export const FOUNDATION_STEPS = [
   {
     id: "feedback",
     step: 4,
-    label: ". Complete all 5 missions (upload proof on Mission 5 only)",
+    label: ". Complete all 5 objectives (upload proof on Objective 5 only)",
     note: null,
     icon: "chart" as FoundationStepIcon,
   },
@@ -75,9 +75,9 @@ export const FOUNDATION_STEPS = [
 export const FOUNDATION_CARD = {
   title: "Your learning journey in 5 simple steps",
   description:
-    "Complete the foundational missions to unlock Stage 01, hands-on projects, and your Foundation Profile.",
+    "Complete the foundational objectives to unlock Stage 01, hands-on projects, and your Foundation Profile.",
   callout: "No exams. No marks. Just real work and real feedback.",
-  cta: "Start Foundation Stage",
+  cta: "Start",
 } as const;
 
 /** Instructions modal — 5 micro-missions. */
@@ -140,7 +140,7 @@ export const FOUNDATION_PROBLEM_STATEMENTS = [
 export const FOUNDATION_INSTRUCTIONS = {
   title: "Foundation Stage Instructions",
   intro:
-    "This foundational stage guides you through 5 real-world micro-missions to build and verify your problem-solving capabilities.",
+    "This foundational stage guides you through 5 real-world objectives to build and verify your problem-solving capabilities.",
 } as const;
 
 export type FoundationNoticeIcon = "wifi" | "star";
@@ -160,7 +160,7 @@ export const FOUNDATION_NOTICES = [
     id: "proof",
     icon: "star" as FoundationNoticeIcon,
     segments: [
-      { text: "Complete all 5 missions to generate your verified ", bold: false },
+      { text: "Complete all 5 objectives to generate your verified ", bold: false },
       { text: "Foundation Profile", bold: true },
       { text: " and ", bold: false },
       { text: "READY Score", bold: true },
@@ -256,11 +256,14 @@ export const ASSESSMENT_QUESTIONS = [
 ] as const;
 
 export const INTRO_VIDEO = {
-  title: "Introduction Video",
+  title: "Watch the introduction",
   caption:
     "Learn how to navigate your explorer journey and maximize your potential.",
   duration: "2:45",
   submittedDuration: "6:42",
+  /** Replace with the official ImReady intro video URL when available. */
+  src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
+  poster: "/imready_logo.jpeg",
 } as const;
 
 /**
