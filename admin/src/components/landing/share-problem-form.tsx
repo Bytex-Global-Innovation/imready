@@ -147,32 +147,33 @@ export default function ShareProblemForm() {
     setSending(true);
 
     try {
-      // Always persist to our API when configured, then hand off to WhatsApp.
+      // Persist every field to the DB first (Clients tab reads from here).
       const apiBase = (
         process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
       ).replace(/\/$/, "");
-      let saved = false;
 
-      if (apiBase) {
-        try {
-          const response = await fetch(`${apiBase}/landing/share-problem`, {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(20000),
-          });
-          if (!response.ok) {
-            setStatus({ status: "error", message });
-            return;
-          }
-          saved = true;
-        } catch {
+      if (!apiBase) {
+        setStatus({ status: "unconfigured", message });
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBase}/landing/share-problem`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!response.ok) {
           setStatus({ status: "error", message });
           return;
         }
+      } catch {
+        setStatus({ status: "error", message });
+        return;
       }
 
       if (isConfigured(externalEndpoint)) {
@@ -212,7 +213,7 @@ export default function ShareProblemForm() {
             signal: AbortSignal.timeout(20000),
           });
         } catch {
-          // DB save already handled above; external endpoint is best-effort.
+          // DB save already succeeded; external endpoint is best-effort.
         }
       }
 
@@ -232,12 +233,7 @@ export default function ShareProblemForm() {
         return;
       }
 
-      if (saved) {
-        setStatus({ status: "sent", message });
-        return;
-      }
-
-      setStatus({ status: "unconfigured", message });
+      setStatus({ status: "sent", message });
     } finally {
       setSending(false);
     }
@@ -294,14 +290,14 @@ export default function ShareProblemForm() {
             </h3>
             <p className="mt-2 text-sm leading-relaxed">
               {status.status === "sent"
-                ? "Sent. We confirm within 24 hours, then arrange the 30-minute kickoff."
+                ? "Saved. We confirm within 24 hours, then arrange the 30-minute kickoff."
                 : status.status === "mailto"
-                  ? "Your email app should open with this message. Send it to finish sharing the problem. If nothing opened, copy the message below."
+                  ? "Saved on our side. Your email app should open with this message. Send it to finish sharing the problem. If nothing opened, copy the message below."
                   : status.status === "whatsapp"
-                    ? "WhatsApp should open with this problem filled in. Send that message to finish sharing it. If nothing opened, use the link below or copy the message."
+                    ? "Saved on our side. WhatsApp should open with this problem filled in. Send that message to finish sharing it. If nothing opened, use the link below or copy the message."
                     : status.status === "error"
-                      ? "Nothing was sent. The form service did not accept it. Copy the message below, or use Have a question first? Talk to us."
-                      : "This page does not have an inbox connected yet, so nothing was sent. Copy the message and use Have a question first? Talk to us. The text below stays on this device."}
+                      ? "Nothing was saved. The form service did not accept it. Copy the message below, or use Have a question first? Talk to us."
+                      : "This page cannot save submissions yet, so nothing was stored. Copy the message and use Have a question first? Talk to us. The text below stays on this device."}
             </p>
             {status.href ? (
               <a

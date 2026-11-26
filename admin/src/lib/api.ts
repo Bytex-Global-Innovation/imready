@@ -1810,3 +1810,75 @@ export interface FoundationVerificationListResponse {
   page: number;
   totalPages: number;
 }
+
+export type ClientIdeaStage = "rough" | "defined";
+
+export interface ClientReadyPlanItem {
+  phase: string;
+  involvement: string;
+  effort?: string | null;
+}
+
+export interface ClientSubmission {
+  id: string;
+  uuid: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  paymentReference: string;
+  ideaStage: ClientIdeaStage | string;
+  problem: string;
+  blocker: string;
+  blockerOther: string;
+  projectTypes: string[];
+  projectTypeOther: string;
+  readyPlan: ClientReadyPlanItem[];
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+  submittedAtLabel: string;
+  messageText?: string;
+}
+
+export interface ClientsResponse {
+  clients: ClientSubmission[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  total: number;
+}
+
+export const clientsApi = {
+  getClients: async (
+    page = 1,
+    options: { search?: string; pageSize?: number } = {},
+  ): Promise<ClientsResponse> => {
+    if (USE_MOCK) {
+      await delay(400);
+      return {
+        clients: [],
+        page: 1,
+        pageSize: options.pageSize ?? 10,
+        totalPages: 1,
+        total: 0,
+      };
+    }
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(options.pageSize ?? 10),
+    });
+    if (options.search?.trim()) params.set("search", options.search.trim());
+    return request<ClientsResponse>(
+      `/admin/landing/clients?${params.toString()}`,
+    );
+  },
+
+  getClient: async (id: string): Promise<ClientSubmission> => {
+    if (USE_MOCK) {
+      await delay(300);
+      throw new Error("Client submission not found");
+    }
+    return request<ClientSubmission>(`/admin/landing/clients/${id}`);
+  },
+};

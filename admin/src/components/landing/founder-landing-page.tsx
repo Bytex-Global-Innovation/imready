@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
   FIT_FOR,
   FIT_NOT,
@@ -53,11 +52,11 @@ function exitShareProblem(setHash: (value: string) => void) {
   };
 
   // history.back() (-1) matches the browser back button. If that lands on
-  // /login or leaves us on the form, fall back to the landing without hash.
+  // /login-admin or leaves us on the form, fall back to the landing without hash.
   const shareHash = `#${SITE.shareProblemHash}`;
   window.history.back();
   window.setTimeout(() => {
-    if (window.location.pathname.includes("/login")) {
+    if (window.location.pathname.includes("/login-admin")) {
       window.history.replaceState(null, "", "/");
       setHash("");
       return;
@@ -158,7 +157,6 @@ export default function FounderLandingPage() {
                 className="mt-6"
                 showReassurance={false}
                 showPendingNote={false}
-                showLogin
               />
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--landing-muted)]">
                 {REFUND_COPY}
@@ -412,7 +410,7 @@ export default function FounderLandingPage() {
                 ))}
               </dl>
             </div>
-            <ReserveCta className="mt-8" showReassurance={false} showLogin />
+            <ReserveCta className="mt-8" showReassurance={false} />
           </div>
         </section>
 
@@ -509,11 +507,6 @@ export default function FounderLandingPage() {
                 </a>
               </li>
             ) : null}
-            <li>
-              <Link href="/login" className="underline underline-offset-4">
-                Login
-              </Link>
-            </li>
           </ul>
           <p className="mt-8 max-w-md text-sm leading-relaxed text-white/90">
             {SITE.privacyNote}

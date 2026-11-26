@@ -30,7 +30,7 @@ export default function DashboardLayout({
       } catch {
         // ignore
       }
-      if (!cancelled) router.replace("/login");
+      if (!cancelled) router.replace("/login-admin");
     }
 
     async function bootstrap() {
@@ -53,7 +53,7 @@ export default function DashboardLayout({
       } catch {
         if (!cancelled) {
           clearAdminSession();
-          router.replace("/login");
+          router.replace("/login-admin");
         }
       }
     }

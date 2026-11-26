@@ -2,6 +2,7 @@ import type { LucideIcon } from "@/components/icons";
 import {
   LayoutDashboard,
   Users,
+  Building2,
   FolderKanban,
   Mail,
   Bell,
@@ -34,6 +35,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "People & work",
     items: [
       { label: "Students", href: "/students", icon: Users },
+      { label: "Clients", href: "/clients", icon: Building2 },
       { label: "Projects", href: "/projects", icon: FolderKanban },
       { label: "Applications", href: "/applications", icon: Mail },
       { label: "Stage 2 Reviews", href: "/project-reviews", icon: ClipboardCheck },

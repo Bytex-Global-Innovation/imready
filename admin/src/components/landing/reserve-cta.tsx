@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import Link from "next/link";
 import { X } from "lucide-react";
 import {
   REFUND_COPY,
@@ -20,14 +19,11 @@ export default function ReserveCta({
   showReassurance = true,
   showPendingNote = true,
   placement = "inline",
-  showLogin = false,
 }: {
   className?: string;
   showReassurance?: boolean;
   showPendingNote?: boolean;
   placement?: Placement;
-  /** Extra Login CTA next to Reserve (does not replace Reserve). */
-  showLogin?: boolean;
 }) {
   const titleId = useId();
   const upiUri = buildUpiUri();
@@ -67,7 +63,6 @@ export default function ReserveCta({
   const btnSize = placement === "header" ? headerBtn : inlineBtn;
 
   const primaryBtnClass = `inline-flex items-center justify-center rounded-lg bg-[var(--landing-primary)] font-medium text-white transition-colors hover:bg-[var(--landing-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50 ${btnSize}`;
-  const loginBtnClass = `inline-flex items-center justify-center rounded-lg border border-[var(--landing-foreground)]/20 bg-white font-medium text-[var(--landing-foreground)] transition-colors hover:bg-[var(--landing-bg)] ${btnSize}`;
 
   return (
     <div className={className}>
@@ -109,15 +104,9 @@ export default function ReserveCta({
           </button>
         )}
 
-        {showLogin ? (
-          <Link href="/login" className={loginBtnClass}>
-            Login
-          </Link>
-        ) : null}
-
         <TalkToUs
           compact={placement === "header"}
-          className={placement === "header" ? "hidden xl:block" : ""}
+          className={placement === "header" ? "hidden lg:block" : ""}
         />
       </div>
 
@@ -168,35 +157,34 @@ export default function ReserveCta({
 
             {upiReady ? (
               <div className="grid gap-4">
-                <a
-                  href={upiUri!}
-                  className="inline-flex h-11 items-center justify-center rounded-lg bg-[var(--landing-primary)] px-5 text-base font-medium text-white transition-colors hover:bg-[var(--landing-primary-hover)]"
-                >
-                  Pay ₹449 via UPI
-                </a>
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <h3 className="font-[family-name:var(--font-landing-display)] text-xl font-bold tracking-tight text-[var(--landing-foreground)]">
+                    Pay ₹449 via UPI
+                  </h3>
 
-                {qrUrl ? (
-                  <div className="flex justify-center rounded-lg bg-white p-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={qrUrl}
-                      alt="UPI QR code for ₹449"
-                      width={180}
-                      height={180}
-                      className="size-[180px]"
-                    />
+                  {qrUrl ? (
+                    <div className="rounded-lg bg-white p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrUrl}
+                        alt="UPI QR code for ₹449"
+                        width={180}
+                        height={180}
+                        className="size-[180px]"
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <p className="font-medium break-all">{SITE.upiId.trim()}</p>
+                    <button
+                      type="button"
+                      className="inline-flex h-11 items-center justify-center rounded-lg border border-[var(--landing-foreground)]/20 bg-white px-4 font-medium transition-colors hover:bg-[var(--landing-bg)]"
+                      onClick={copyUpi}
+                    >
+                      {copied ? "Copied" : "Copy UPI ID"}
+                    </button>
                   </div>
-                ) : null}
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="font-medium break-all">{SITE.upiId.trim()}</p>
-                  <button
-                    type="button"
-                    className="inline-flex h-11 items-center justify-center rounded-lg border border-[var(--landing-foreground)]/20 bg-white px-4 font-medium transition-colors hover:bg-[var(--landing-bg)]"
-                    onClick={copyUpi}
-                  >
-                    {copied ? "Copied" : "Copy UPI ID"}
-                  </button>
                 </div>
 
                 <p className="text-sm leading-relaxed text-[var(--landing-muted)]">

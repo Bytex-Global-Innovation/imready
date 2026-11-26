@@ -18,6 +18,7 @@ const foundationStudentRoutes = require('@modules/foundation/foundation.student.
 const foundationAdminRoutes = require('@modules/foundation/foundation.admin.routes');
 const healthRoutes = require('@modules/health/health.routes');
 const landingRoutes = require('@modules/landing/landing.routes');
+const landingAdminRoutes = require('@modules/landing/landing.admin.routes');
 const targetDomainAdminRoutes = require('@modules/target-domain/target-domain.admin.routes');
 
 const router = express.Router();
@@ -32,6 +33,7 @@ router.use('/admin/dashboard', dashboardAdminRoutes);
 router.use('/admin/assessments', assessmentAdminRoutes);
 router.use('/admin/foundation', foundationAdminRoutes);
 router.use('/admin/target-domains', targetDomainAdminRoutes);
+router.use('/admin/landing', landingAdminRoutes);
 router.use('/assessments', assessmentStudentRoutes);
 router.use('/foundation', foundationStudentRoutes);
 router.use('/notifications', notificationStudentRoutes);
