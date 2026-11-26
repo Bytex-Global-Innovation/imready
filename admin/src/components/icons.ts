@@ -7,6 +7,7 @@ export {
   Building2,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,

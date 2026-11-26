@@ -1619,6 +1619,13 @@ export interface FoundationStudentProgressDetail {
     } | null;
     foundationProblemStatementId?: string | null;
   };
+  verification?: {
+    status: "NONE" | "PENDING" | "PASSED" | "FAILED";
+    requestedAt: string | null;
+    reviewedAt: string | null;
+    note: string | null;
+    requestedAtLabel: string;
+  };
   missions: FoundationMissionDetail[];
 }
 
@@ -1689,6 +1696,7 @@ export const foundationStepApi = {
       tipQuote: string;
       analyzeContextText: string | null;
       patternTagOptions: string[] | null;
+      whyLayerLabels: { key: string; label: string }[] | null;
       questions: FoundationStepQuestion[];
       evidenceConfig: Record<string, string> | null;
     }>,

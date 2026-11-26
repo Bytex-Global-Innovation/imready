@@ -5,15 +5,17 @@ import { Search } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import ConfirmModal from "@/components/ui/confirm-modal";
 import EditStudentModal, { type StudentEditPayload } from "@/components/ui/edit-student-modal";
+import { PanelLoader } from "@/components/ui/line-loader";
 import Pagination from "@/components/ui/pagination";
 import Select from "@/components/ui/select";
 import StudentsTable from "@/components/tables/students-table";
+import { useDataLoader } from "@/hooks/use-data-loader";
 import { studentsApi, type Student } from "@/lib/api";
 import PremiumRequestModal from "@/components/ui/premium-request-modal";
 
 const BREADCRUMBS = [
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Students Registry" },
+  { label: "Students" },
 ];
 
 const PAGE_SIZE = 10;
@@ -84,8 +86,11 @@ export default function StudentsPage() {
     return () => window.clearTimeout(timeoutId);
   }, [searchInput]);
 
+  const { begin, end } = useDataLoader();
+
   const loadData = useCallback(
     async (page: number) => {
+      begin();
       setIsLoading(true);
       setError(null);
       try {
@@ -103,9 +108,10 @@ export default function StudentsPage() {
         setError(err instanceof Error ? err.message : "Failed to load students.");
       } finally {
         setIsLoading(false);
+        end();
       }
     },
-    [search, status, subscriptionStatus],
+    [begin, end, search, status, subscriptionStatus],
   );
 
   useEffect(() => {
@@ -167,34 +173,53 @@ export default function StudentsPage() {
   }
 
   return (
-    <>
+    <div className="space-y-5">
       <Breadcrumb items={BREADCRUMBS} />
-      
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="admin-page-title">Students Registry</h1>
-          <p className="admin-page-subtitle">Manage and monitor student enrollments and verifications.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="admin-btn-outline" type="button">Export CSV</button>
-        </div>
-      </div>
 
-      <div className="admin-card">
-        <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full min-w-0 max-w-sm flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search students..."
-              className="admin-input-icon w-full"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-            />
+      <header className="relative overflow-hidden rounded-2xl border border-[#cfe0f5] bg-[linear-gradient(160deg,#f5f9ff_0%,#eaf3ff_50%,#dcecff_100%)] px-5 py-6 sm:px-6">
+        <div className="pointer-events-none absolute -right-12 -top-10 h-40 w-40 rounded-full bg-[#9ec5f0]/25" />
+        <div className="pointer-events-none absolute -bottom-14 left-16 h-32 w-32 rounded-full bg-[#b7d4f5]/35" />
+        <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5a7aa0]">
+              Directory
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1e4f8c] sm:text-[28px]">
+              Students
+            </h1>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-[#5a7aa0]">
+              Manage and monitor student enrollments and verifications.
+            </p>
+          </div>
+          {!isLoading ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0f5] bg-white/80 px-3 py-1.5 text-xs font-medium text-[#3b6fb0]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#3b6fb0]" />
+              {totalEntries} student{totalEntries === 1 ? "" : "s"}
+            </div>
+          ) : null}
+        </div>
+      </header>
+
+      <section className="overflow-hidden rounded-2xl border border-[#d7e0ef] bg-white shadow-[0_10px_30px_-24px_rgba(15,35,70,0.35)]">
+        <div className="flex flex-col gap-3 border-b border-[#e8eef6] bg-[#f7faff] p-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+          <div className="relative w-full min-w-0 max-w-md flex-1">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] text-[#7a94b3]">
+              Search
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a94b3]" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or college…"
+                className="w-full rounded-xl border border-[#cfe0f5] bg-white py-2.5 pl-9 pr-3 text-sm text-[#0b1c30] shadow-sm outline-none transition-colors placeholder:text-[#9aa3b2] focus:border-[#3b6fb0] focus:ring-2 focus:ring-[#3b6fb0]/15"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+              />
+            </div>
           </div>
           <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:w-auto sm:min-w-[22rem] sm:grid-cols-2">
-            <label className="block min-w-0 text-sm text-gray-500">
-              <span className="mb-1 block">Status</span>
+            <label className="block min-w-0 text-xs font-semibold uppercase tracking-[0.1em] text-[#7a94b3]">
+              <span className="mb-1.5 block">Status</span>
               <Select
                 value={status}
                 onChange={(event) => {
@@ -208,8 +233,8 @@ export default function StudentsPage() {
                 <option value="FLAGGED">Flagged</option>
               </Select>
             </label>
-            <label className="block min-w-0 text-sm text-gray-500">
-              <span className="mb-1 block">Subscription</span>
+            <label className="block min-w-0 text-xs font-semibold uppercase tracking-[0.1em] text-[#7a94b3]">
+              <span className="mb-1.5 block">Subscription</span>
               <Select
                 value={subscriptionStatus}
                 onChange={(event) => {
@@ -226,16 +251,20 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="p-4 text-sm text-red-500">{error}</div>
-        )}
-        {message && (
-          <div className="p-4 text-sm text-emerald-600">{message}</div>
-        )}
+        {error ? (
+          <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        ) : null}
+        {message ? (
+          <div className="border-b border-emerald-100 bg-emerald-50 px-5 py-3 text-sm text-emerald-700">
+            {message}
+          </div>
+        ) : null}
 
         <div className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-gray-400 animate-pulse">Loading students...</div>
+            <PanelLoader label="Loading students…" />
           ) : (
             <StudentsTable
               students={students}
@@ -260,8 +289,8 @@ export default function StudentsPage() {
           )}
         </div>
 
-        {!isLoading && totalEntries > 0 && (
-          <div className="p-4">
+        {!isLoading && totalEntries > 0 ? (
+          <div className="border-t border-[#e8eef6] bg-[#f7faff] px-4 py-3 sm:px-5">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -271,8 +300,8 @@ export default function StudentsPage() {
               entryLabel="students"
             />
           </div>
-        )}
-      </div>
+        ) : null}
+      </section>
 
       <PremiumRequestModal
         open={Boolean(premiumRequestTarget)}
@@ -345,6 +374,6 @@ export default function StudentsPage() {
         }}
         onSave={saveStudent}
       />
-    </>
+    </div>
   );
 }

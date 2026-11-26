@@ -2,9 +2,9 @@ import { CheckCircle2, Eye, Pencil, X } from "@/components/icons";
 import type { Student, SubscriptionStatus } from "@/lib/api";
 
 const STATUS_CONFIG = {
-  VERIFIED: { dot: "bg-emerald-500", text: "text-emerald-600", label: "VERIFIED" },
-  PENDING:  { dot: "bg-amber-400",   text: "text-amber-500",   label: "PENDING"  },
-  FLAGGED:  { dot: "bg-red-500",     text: "text-red-500",     label: "FLAGGED"  },
+  VERIFIED: { dot: "bg-emerald-500", text: "text-emerald-700", label: "Verified" },
+  PENDING: { dot: "bg-amber-400", text: "text-amber-700", label: "Pending" },
+  FLAGGED: { dot: "bg-red-500", text: "text-red-600", label: "Flagged" },
 } as const;
 
 const SUBSCRIPTION_CONFIG: Record<
@@ -12,7 +12,7 @@ const SUBSCRIPTION_CONFIG: Record<
   { className: string; label: string }
 > = {
   FREE: {
-    className: "bg-gray-100 text-gray-700",
+    className: "bg-[#eef3f9] text-[#475569]",
     label: "Free",
   },
   PREMIUM_PENDING: {
@@ -27,6 +27,13 @@ const SUBSCRIPTION_CONFIG: Record<
 
 function subscriptionOf(student: Student): SubscriptionStatus {
   return student.subscriptionStatus || "FREE";
+}
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "S";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
 interface StudentsTableProps {
@@ -48,28 +55,64 @@ export default function StudentsTable({
 }: StudentsTableProps) {
   if (students.length === 0) {
     return (
-      <div className="admin-card p-8 text-center text-sm text-gray-400">
-        No students found.
+      <div className="px-6 py-12 text-center">
+        <p className="text-sm font-medium text-[#0b1c30]">No students found</p>
+        <p className="mt-1 text-xs text-[#6b7280]">
+          Try adjusting search or filters.
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:hidden">
+      {/* Mobile cards */}
+      <div className="flex flex-col gap-3 p-4 sm:hidden">
         {students.map((student) => {
           const statusCfg = STATUS_CONFIG[student.status];
           const subscription = subscriptionOf(student);
           const subCfg = SUBSCRIPTION_CONFIG[subscription];
           return (
-            <div key={student.id} className="admin-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-gray-400">#{student.id}</p>
-                  <p className="font-semibold text-gray-900">{student.studentName}</p>
-                  <p className="mt-0.5 text-sm text-gray-500">{student.email}</p>
-                  <p className="mt-0.5 text-sm text-gray-500">{student.college}</p>
+            <div
+              key={student.id}
+              className="rounded-2xl border border-[#d7e0ef] bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_100%)] p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3b6fb0] text-xs font-semibold text-white">
+                  {initials(student.studentName)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-[#0b1c30]">
+                    {student.studentName}
+                  </p>
+                  <p className="mt-0.5 truncate text-sm text-[#5b6575]">
+                    {student.email}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-[#7a94b3]">
+                    {student.college}
+                  </p>
                 </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#eaf3ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#3b6fb0]">
+                  {student.domain}
+                </span>
+                <span className="rounded-full bg-[#eef3f9] px-2.5 py-0.5 text-[11px] font-semibold text-[#475569]">
+                  {student.level}
+                </span>
+                <span
+                  className={`flex items-center gap-1.5 text-xs font-semibold ${statusCfg.text}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} />
+                  {statusCfg.label}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${subCfg.className}`}
+                >
+                  {subCfg.label}
+                </span>
+              </div>
+              <div className="mt-3 flex justify-end border-t border-[#e8eef6] pt-3">
                 <RowActions
                   student={student}
                   onViewPremiumRequest={onViewPremiumRequest}
@@ -79,60 +122,75 @@ export default function StudentsTable({
                   actingId={actingId}
                 />
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="admin-badge bg-blue-50 text-blue-600">{student.domain}</span>
-                <span className="admin-badge bg-gray-100 text-gray-700">{student.level}</span>
-                <span className={`flex items-center gap-1.5 text-xs font-semibold ${statusCfg.text}`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} />
-                  {statusCfg.label}
-                </span>
-                <span className={`admin-badge ${subCfg.className}`}>{subCfg.label}</span>
-              </div>
             </div>
           );
         })}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-gray-200 sm:block">
-        <table className="w-full min-w-[980px] text-left text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50">
-            <tr className="admin-table-header">
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Student Name</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">College</th>
-              <th className="px-4 py-3">Domain</th>
-              <th className="px-4 py-3">Level</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Subscription</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+      {/* Desktop table */}
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-[#e8eef6] bg-[#f7faff] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a94b3]">
+              <th className="px-5 py-3.5">Student</th>
+              <th className="px-3 py-3.5">College</th>
+              <th className="px-3 py-3.5">Domain</th>
+              <th className="px-3 py-3.5">Level</th>
+              <th className="px-3 py-3.5">Status</th>
+              <th className="px-3 py-3.5">Subscription</th>
+              <th className="px-5 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {students.map((student) => {
               const statusCfg = STATUS_CONFIG[student.status];
               const subscription = subscriptionOf(student);
               const subCfg = SUBSCRIPTION_CONFIG[subscription];
               return (
-                <tr key={student.id} className="admin-table-row">
-                  <td className="px-4 py-3 text-xs text-gray-400">{student.id}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900">{student.studentName}</td>
-                  <td className="px-4 py-3 text-gray-500">{student.email}</td>
-                  <td className="px-4 py-3 text-gray-500">{student.college}</td>
-                  <td className="px-4 py-3">
-                    <span className="admin-badge bg-blue-50 text-blue-600">{student.domain}</span>
+                <tr
+                  key={student.id}
+                  className="border-b border-[#eef2f7] transition-colors last:border-b-0 hover:bg-[#f7faff]"
+                >
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3b6fb0] text-[11px] font-semibold text-white">
+                        {initials(student.studentName)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-[#0b1c30]">
+                          {student.studentName}
+                        </p>
+                        <p className="truncate text-xs text-[#6b7280]">
+                          {student.email}
+                        </p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{student.level}</td>
-                  <td className="px-4 py-3">
-                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${statusCfg.text}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} />
+                  <td className="px-3 py-4 text-[#475569]">{student.college}</td>
+                  <td className="px-3 py-4">
+                    <span className="rounded-full bg-[#eaf3ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#3b6fb0]">
+                      {student.domain}
+                    </span>
+                  </td>
+                  <td className="px-3 py-4 text-[#475569]">{student.level}</td>
+                  <td className="px-3 py-4">
+                    <span
+                      className={`flex items-center gap-1.5 text-xs font-semibold ${statusCfg.text}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`}
+                      />
                       {statusCfg.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`admin-badge ${subCfg.className}`}>{subCfg.label}</span>
+                  <td className="px-3 py-4">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${subCfg.className}`}
+                    >
+                      {subCfg.label}
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <div className="flex items-center justify-end">
                       <RowActions
                         student={student}
@@ -181,7 +239,7 @@ function RowActions({
           type="button"
           aria-label={`View premium request for ${student.studentName}`}
           title="View premium plan request"
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-800 shadow-sm transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-[#cfe0f5] bg-[#eaf3ff] px-2.5 py-1.5 text-xs font-semibold text-[#1e4f8c] transition-colors hover:bg-[#dcecff] focus:outline-none focus:ring-2 focus:ring-[#3b6fb0]/30 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isActing}
           onClick={() => onViewPremiumRequest?.(student)}
         >
@@ -222,7 +280,7 @@ function RowActions({
         type="button"
         aria-label={`Edit ${student.studentName}`}
         title="Edit student"
-        className="admin-icon-btn"
+        className="inline-flex cursor-pointer rounded-md border border-[#d7e0ef] p-1.5 text-[#3b6fb0] transition-colors hover:bg-[#eaf3ff]"
         onClick={() => onEditStudent?.(student)}
       >
         <Pencil className="h-4 w-4" />

@@ -16,6 +16,41 @@
   --admin-border: #e5e7eb; /* gray-200 */
   --admin-text-main: #111827; /* gray-900 */
   --admin-text-muted: #6b7280; /* gray-500 */
+
+  /* Founder landing (matches ImReady marketing page) */
+  --landing-bg: #f9f9ff;
+  --landing-foreground: #1d2144;
+  --landing-primary: #153a75;
+  --landing-primary-hover: #1e4f9c;
+  --landing-muted: #64748b;
+  --landing-border: #e2e8f0;
+  --landing-card: #ffffff;
+  --landing-clay: #153a75;
+}
+
+.landing-root {
+  background-color: var(--landing-bg);
+  color: var(--landing-foreground);
+}
+
+.landing-root section[id],
+.landing-root header[id],
+.landing-root form[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+@media (width >= 768px) {
+  .landing-root section[id],
+  .landing-root header[id],
+  .landing-root form[id] {
+    scroll-margin-top: 8.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root {
+    scroll-behavior: auto;
+  }
 }
 
 @layer utilities {
@@ -98,4 +133,64 @@
 body {
   background-color: var(--admin-bg);
   color: var(--admin-text-main);
+}
+
+/* Sidebar nav scrollbar — thin, fades in on hover */
+.admin-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scroll-behavior: smooth;
+}
+
+.admin-sidebar-scroll:hover,
+.admin-sidebar-scroll:focus-within {
+  scrollbar-color: #9ec5f0 transparent;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 4px;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 999px;
+  transition: background-color 0.25s ease;
+}
+
+.admin-sidebar-scroll:hover::-webkit-scrollbar-thumb,
+.admin-sidebar-scroll:focus-within::-webkit-scrollbar-thumb,
+.admin-sidebar-scroll:active::-webkit-scrollbar-thumb {
+  background-color: #9ec5f0;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #3b6fb0;
+}
+
+@keyframes admin-sidebar-thumb-pulse {
+  0%,
+  100% {
+    background-color: #9ec5f0;
+  }
+  50% {
+    background-color: #6b9fd4;
+  }
+}
+
+.admin-sidebar-scroll.is-scrolling::-webkit-scrollbar-thumb {
+  animation: admin-sidebar-thumb-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes admin-nav-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
 }

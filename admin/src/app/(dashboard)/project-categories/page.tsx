@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Pencil, Plus, Trash2 } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import ConfirmModal from "@/components/ui/confirm-modal";
+import { PanelLoader } from "@/components/ui/line-loader";
 import {
   projectCategoriesApi,
   type ProjectCategoryItem,
@@ -191,9 +192,7 @@ export default function ProjectCategoriesPage() {
           {error && <div className="border-b border-red-100 bg-red-50 p-4 text-sm text-red-600">{error}</div>}
 
           {isLoading ? (
-            <div className="p-10 text-center text-sm text-gray-400 animate-pulse">
-              Loading categories…
-            </div>
+            <PanelLoader label="Loading categories…" />
           ) : categories.length === 0 ? (
             <div className="p-10 text-center text-sm text-gray-500">
               No categories yet. Create your first one.

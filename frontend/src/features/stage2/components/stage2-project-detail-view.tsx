@@ -268,8 +268,8 @@ export function Stage2ProjectDetailView({
                 onClick={() => setActiveTab(tab.id)}
                 className={
                   isActive
-                    ? "relative flex shrink-0 items-center gap-1.5 border-b-2 border-[#002546] px-3 py-3 text-sm font-bold text-[#002546]"
-                    : "relative flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-3 text-sm font-medium text-[#42474f] transition-colors hover:text-[#002546]"
+                    ? "relative flex shrink-0 cursor-pointer items-center gap-1.5 border-b-2 border-[#002546] px-3 py-3 text-sm font-bold text-[#002546]"
+                    : "relative flex shrink-0 cursor-pointer items-center gap-1.5 border-b-2 border-transparent px-3 py-3 text-sm font-medium text-[#42474f] transition-colors hover:text-[#002546]"
                 }
               >
                 {tab.label}

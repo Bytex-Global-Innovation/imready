@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
+import { LoadingBarProvider } from "@/components/layout/loading-bar-context";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -17,16 +18,18 @@ export default function AdminShell({
   onSidebarClose,
 }: AdminShellProps) {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
-      <Topbar onMenuToggle={onMenuToggle} menuOpen={sidebarOpen} />
+    <LoadingBarProvider>
+      <div className="relative flex h-dvh flex-col overflow-hidden bg-[#f4f8fd]">
+        <Topbar onMenuToggle={onMenuToggle} menuOpen={sidebarOpen} />
 
-      <div className="flex min-h-0 flex-1">
-        <Sidebar open={sidebarOpen} onClose={onSidebarClose} />
+        <div className="relative flex min-h-0 flex-1">
+          <Sidebar open={sidebarOpen} onClose={onSidebarClose} />
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          {children}
-        </main>
+          <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </LoadingBarProvider>
   );
 }

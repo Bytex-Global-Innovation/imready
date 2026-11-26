@@ -499,6 +499,10 @@ async function getAdminStudentProgress(studentId) {
       'graduationYear',
       'foundationCompletedAt',
       'foundationProblemStatementId',
+      'foundationVerificationStatus',
+      'foundationVerificationRequestedAt',
+      'foundationVerificationReviewedAt',
+      'foundationVerificationNote',
       'createdAt',
     ],
   });
@@ -539,6 +543,25 @@ async function getAdminStudentProgress(studentId) {
       foundationCompletedAt: progress.foundationCompletedAt,
       selectedProblemStatement: progress.selectedProblemStatement,
       foundationProblemStatementId: progress.foundationProblemStatementId,
+    },
+    verification: {
+      status: student.foundationVerificationStatus || 'NONE',
+      requestedAt: student.foundationVerificationRequestedAt
+        ? new Date(student.foundationVerificationRequestedAt).toISOString()
+        : null,
+      reviewedAt: student.foundationVerificationReviewedAt
+        ? new Date(student.foundationVerificationReviewedAt).toISOString()
+        : null,
+      note: student.foundationVerificationNote || null,
+      requestedAtLabel: student.foundationVerificationRequestedAt
+        ? new Date(student.foundationVerificationRequestedAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          })
+        : '',
     },
     missions,
   };

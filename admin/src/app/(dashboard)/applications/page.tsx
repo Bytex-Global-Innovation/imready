@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PanelLoader } from "@/components/ui/line-loader";
 import Pagination from "@/components/ui/pagination";
+import { useDataLoader } from "@/hooks/use-data-loader";
 import {
   projectsApi,
   type ApplicationStatusFilter,
@@ -16,130 +18,232 @@ const BREADCRUMBS = [
 ];
 
 const STATUS_STYLES = {
-  PENDING: "bg-amber-50 text-amber-700",
-  APPROVED: "bg-emerald-50 text-emerald-700",
-  REJECTED: "bg-red-50 text-red-600",
+  PENDING: "bg-[#fff7ed] text-[#c2410c]",
+  APPROVED: "bg-[#ecfdf5] text-[#047857]",
+  REJECTED: "bg-[#fef2f2] text-[#b91c1c]",
 } as const;
+
+const FILTERS: ApplicationStatusFilter[] = [
+  "ALL",
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+];
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "A";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+}
+
+function filterLabel(value: ApplicationStatusFilter) {
+  if (value === "ALL") return "All";
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
 
 export default function ApplicationsPage() {
   const [data, setData] = useState<ProjectApplicationsResponse | null>(null);
   const [filter, setFilter] = useState<ApplicationStatusFilter>("ALL");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+  const hasLoadedRef = useRef(false);
+  const { begin, end } = useDataLoader();
 
   const loadData = useCallback(async (page: number, status: ApplicationStatusFilter) => {
-    setIsLoading(true);
+    const requestId = ++requestIdRef.current;
+    begin();
+    if (hasLoadedRef.current) {
+      setIsRefreshing(true);
+    } else {
+      setIsInitialLoading(true);
+    }
     setError(null);
     try {
       const response = await projectsApi.getApplications(page, status);
+      if (requestId !== requestIdRef.current) return;
       setData(response);
+      hasLoadedRef.current = true;
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to load applications.");
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsInitialLoading(false);
+        setIsRefreshing(false);
+        end();
+      }
     }
-  }, []);
+  }, [begin, end]);
 
   useEffect(() => {
-    loadData(1, filter);
+    void loadData(1, filter);
   }, [loadData, filter]);
 
+  const applications = data?.applications ?? [];
+  const showEmpty = !isInitialLoading && applications.length === 0;
+
   return (
-    <>
+    <div className="space-y-5">
       <Breadcrumb items={BREADCRUMBS} />
 
-      <div className="mb-6">
-        <h1 className="admin-page-title">Project Applications</h1>
-        <p className="admin-page-subtitle">
-          Review each student&apos;s motivation, contribution areas, and project interest.
-        </p>
-      </div>
+      <header className="relative overflow-hidden rounded-2xl border border-[#cfe0f5] bg-[linear-gradient(160deg,#f5f9ff_0%,#eaf3ff_50%,#dcecff_100%)] px-5 py-6 sm:px-6">
+        <div className="pointer-events-none absolute -right-12 -top-10 h-40 w-40 rounded-full bg-[#9ec5f0]/25" />
+        <div className="pointer-events-none absolute -bottom-14 left-16 h-32 w-32 rounded-full bg-[#b7d4f5]/35" />
+        <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5a7aa0]">
+              Reviews
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1e4f8c] sm:text-[28px]">
+              Project Applications
+            </h1>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-[#5a7aa0]">
+              Review each student&apos;s motivation, contribution areas, and project interest.
+            </p>
+          </div>
+          {data ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0f5] bg-white/80 px-3 py-1.5 text-xs font-medium text-[#3b6fb0]">
+              <span
+                className={`h-1.5 w-1.5 rounded-full bg-[#3b6fb0] ${
+                  isRefreshing ? "animate-pulse" : ""
+                }`}
+              />
+              {data.total} application{data.total === 1 ? "" : "s"}
+            </div>
+          ) : null}
+        </div>
+      </header>
 
-      <div className="admin-card overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-gray-500">
-            {data ? `${data.total} application${data.total === 1 ? "" : "s"}` : "—"}
+      <section className="overflow-hidden rounded-2xl border border-[#d7e0ef] bg-white shadow-[0_10px_30px_-24px_rgba(15,35,70,0.35)]">
+        <div className="flex flex-col gap-3 border-b border-[#e8eef6] bg-[#f7faff] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#7a94b3]">
+            Filter by status
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            {(["ALL", "PENDING", "APPROVED", "REJECTED"] as ApplicationStatusFilter[]).map(
-              (value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setFilter(value)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    filter === value
-                      ? "bg-[#153a75] text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {value === "ALL"
-                    ? "All"
-                    : value.charAt(0) + value.slice(1).toLowerCase()}
-                </button>
-              ),
-            )}
+          <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[#cfe0f5] bg-white p-1">
+            {FILTERS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  filter === value
+                    ? "bg-[#3b6fb0] text-white"
+                    : "text-[#5a7aa0] hover:bg-[#eaf3ff] hover:text-[#1e4f8c]"
+                }`}
+              >
+                {filterLabel(value)}
+              </button>
+            ))}
           </div>
         </div>
 
-        {error && <div className="p-4 text-sm text-red-500">{error}</div>}
+        {error ? (
+          <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        ) : null}
 
-        {isLoading ? (
-          <div className="p-10 text-center text-sm text-gray-400 animate-pulse">
-            Loading applications…
-          </div>
-        ) : (data?.applications.length ?? 0) === 0 ? (
-          <div className="p-10 text-center text-sm text-gray-400">
-            No applications found.
-          </div>
+        {isInitialLoading ? (
+          <PanelLoader label="Loading applications…" />
         ) : (
-          <>
+          <div
+            className={`min-h-[280px] transition-opacity duration-200 ${
+              isRefreshing ? "pointer-events-none opacity-55" : "opacity-100"
+            }`}
+          >
+            {showEmpty ? (
+              <div className="flex min-h-[280px] items-center justify-center px-6 py-12 text-center">
+                <div>
+                  <p className="text-sm font-medium text-[#0b1c30]">
+                    No applications found
+                  </p>
+                  <p className="mt-1 text-xs text-[#6b7280]">
+                    Try another status filter or check back later.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+            {/* Desktop table */}
             <div className="hidden overflow-x-auto sm:block">
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50">
-                  <tr className="admin-table-header">
-                    <th className="px-4 py-3">Student</th>
-                    <th className="px-4 py-3">Project</th>
-                    <th className="px-4 py-3">Team size</th>
-                    <th className="px-4 py-3">Contributions</th>
-                    <th className="px-4 py-3">Submitted</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Action</th>
+              <table className="w-full min-w-[900px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[#e8eef6] bg-[#f7faff] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a94b3]">
+                    <th className="px-5 py-3.5">Student</th>
+                    <th className="px-3 py-3.5">Project</th>
+                    <th className="px-3 py-3.5">Team size</th>
+                    <th className="px-3 py-3.5">Contributions</th>
+                    <th className="px-3 py-3.5">Submitted</th>
+                    <th className="px-3 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {data!.applications.map((item) => (
-                    <tr key={item.id} className="admin-table-row">
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-900">{item.studentName}</p>
-                        <p className="text-xs text-gray-400">{item.studentEmail}</p>
+                <tbody>
+                  {applications.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-[#eef2f7] transition-colors last:border-b-0 hover:bg-[#f7faff]"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3b6fb0] text-[11px] font-semibold text-white">
+                            {initials(item.studentName)}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-[#0b1c30]">
+                              {item.studentName}
+                            </p>
+                            <p className="truncate text-xs text-[#6b7280]">
+                              {item.studentEmail}
+                            </p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-[#153a75]">{item.projectTitle}</p>
-                        <p className="text-xs text-gray-400">
+                      <td className="px-3 py-4">
+                        <p className="font-semibold text-[#1e4f8c]">
+                          {item.projectTitle}
+                        </p>
+                        <p className="text-xs text-[#7a94b3]">
                           {item.projectCompanyName || item.projectSlug}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {item.projectTeamSizeLabel || `${item.projectTeamSize} students`}
+                      <td className="px-3 py-4 text-[#475569]">
+                        {item.projectTeamSizeLabel ||
+                          `${item.projectTeamSize} students`}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {item.contributions.length > 0
-                          ? item.contributions.join(", ")
-                          : "—"}
+                      <td className="px-3 py-4">
+                        {item.contributions.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {item.contributions.map((contribution) => (
+                              <span
+                                key={contribution}
+                                className="rounded-full bg-[#eaf3ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#3b6fb0]"
+                              >
+                                {contribution}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[#9aa3b2]">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="whitespace-nowrap px-3 py-4 text-[#64748b]">
                         {item.submittedAtLabel || "—"}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`admin-badge ${STATUS_STYLES[item.status]}`}>
+                      <td className="px-3 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[item.status]}`}
+                        >
                           {item.status.charAt(0) + item.status.slice(1).toLowerCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-5 py-4 text-right">
                         <Link
                           href={`/applications/${item.id}`}
-                          className="text-sm font-medium text-[#153a75] hover:underline"
+                          className="inline-flex cursor-pointer items-center rounded-md border border-[#d7e0ef] px-2.5 py-1.5 text-xs font-semibold text-[#3b6fb0] transition-colors hover:border-[#3b6fb0] hover:bg-[#eaf3ff]"
                         >
                           View
                         </Link>
@@ -150,47 +254,84 @@ export default function ApplicationsPage() {
               </table>
             </div>
 
+            {/* Mobile cards */}
             <div className="flex flex-col gap-3 p-4 sm:hidden">
-              {data!.applications.map((item) => (
-                <div key={item.id} className="rounded-lg border border-gray-200 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-gray-900">{item.studentName}</p>
-                      <p className="text-xs text-gray-400">{item.studentEmail}</p>
-                    </div>
-                    <span className={`admin-badge ${STATUS_STYLES[item.status]}`}>
-                      {item.status.charAt(0) + item.status.slice(1).toLowerCase()}
+              {applications.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-[#d7e0ef] bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_100%)] p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3b6fb0] text-xs font-semibold text-white">
+                      {initials(item.studentName)}
                     </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-[#0b1c30]">
+                            {item.studentName}
+                          </p>
+                          <p className="truncate text-xs text-[#6b7280]">
+                            {item.studentEmail}
+                          </p>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[item.status]}`}
+                        >
+                          {item.status.charAt(0) + item.status.slice(1).toLowerCase()}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm font-semibold text-[#1e4f8c]">
+                        {item.projectTitle}
+                      </p>
+                      <p className="mt-1 text-xs text-[#7a94b3]">
+                        {item.projectTeamSizeLabel ||
+                          `${item.projectTeamSize} students`}
+                        {item.submittedAtLabel ? ` · ${item.submittedAtLabel}` : ""}
+                      </p>
+                      {item.contributions.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {item.contributions.map((contribution) => (
+                            <span
+                              key={contribution}
+                              className="rounded-full bg-[#eaf3ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#3b6fb0]"
+                            >
+                              {contribution}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-[#153a75]">{item.projectTitle}</p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Team: {item.projectTeamSizeLabel || `${item.projectTeamSize} students`}
-                  </p>
-                  <Link
-                    href={`/applications/${item.id}`}
-                    className="mt-3 inline-block text-sm font-medium text-[#153a75]"
-                  >
-                    View details →
-                  </Link>
+                  <div className="mt-3 border-t border-[#e8eef6] pt-3">
+                    <Link
+                      href={`/applications/${item.id}`}
+                      className="inline-flex cursor-pointer text-sm font-semibold text-[#3b6fb0] hover:underline"
+                    >
+                      View details →
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
 
-            {data && data.totalPages > 1 && (
-              <div className="border-t border-gray-200 p-4">
+            {data && data.total > 0 ? (
+              <div className="border-t border-[#e8eef6] bg-[#f7faff] px-4 py-3 sm:px-5">
                 <Pagination
                   currentPage={data.page}
                   totalPages={data.totalPages}
                   totalEntries={data.total}
                   pageSize={20}
                   entryLabel="applications"
-                  onPageChange={(page) => loadData(page, filter)}
+                  onPageChange={(page) => void loadData(page, filter)}
                 />
               </div>
+            ) : null}
+              </>
             )}
-          </>
+          </div>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

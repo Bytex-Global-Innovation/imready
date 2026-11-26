@@ -2,6 +2,11 @@
 
 import type { FoundationStepMissionConfig } from "@/lib/api";
 
+const fieldLabel =
+  "mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-[#5a7aa0]";
+const fieldControl =
+  "w-full rounded-xl border border-[#cfe0f5] bg-white px-3.5 py-2.5 text-sm text-[#0b1c30] shadow-sm outline-none transition-colors placeholder:text-[#9aa3b2] focus:border-[#3b6fb0] focus:ring-2 focus:ring-[#3b6fb0]/15";
+
 type SectionField = {
   key: string;
   label: string;
@@ -47,16 +52,12 @@ interface MissionSectionFieldsProps {
   onDraftChange: (next: FoundationStepMissionConfig) => void;
 }
 
-export default function MissionSectionFields({ draft, onDraftChange }: MissionSectionFieldsProps) {
+export default function MissionSectionFields({
+  draft,
+  onDraftChange,
+}: MissionSectionFieldsProps) {
   const fields = FIELDS_BY_MISSION[draft.missionId] ?? [];
-  if (fields.length === 0) {
-    return (
-      <p className="text-xs text-gray-500">
-        Missions 1–3 have no file or video upload. Evidence upload and video links are configured
-        on Mission 5 only.
-      </p>
-    );
-  }
+  if (fields.length === 0) return null;
 
   const evidenceConfig = draft.evidenceConfig ?? {};
 
@@ -68,29 +69,34 @@ export default function MissionSectionFields({ draft, onDraftChange }: MissionSe
   }
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3 rounded-2xl border border-[#e8eef6] bg-[#f7faff] p-4">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">Section titles &amp; descriptions</h3>
-        <p className="text-xs text-gray-500">
+        <h3 className="text-sm font-semibold text-[#1e4f8c]">
+          Section titles &amp; descriptions
+        </h3>
+        <p className="mt-0.5 text-xs text-[#7a94b3]">
           Headings and intro copy students see on the mission page.
         </p>
       </div>
-      <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50/60 p-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         {fields.map((field) => {
           const value = evidenceConfig[field.key] ?? "";
           return (
-            <label key={field.key} className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">{field.label}</span>
+            <label
+              key={field.key}
+              className={`block ${field.multiline ? "sm:col-span-2" : ""}`}
+            >
+              <span className={fieldLabel}>{field.label}</span>
               {field.multiline ? (
                 <textarea
-                  className="admin-input min-h-[72px] w-full resize-y"
+                  className={`${fieldControl} min-h-[72px] resize-y`}
                   value={value}
                   onChange={(e) => patchEvidence(field.key, e.target.value)}
                   placeholder={field.placeholder}
                 />
               ) : (
                 <input
-                  className="admin-input w-full"
+                  className={fieldControl}
                   value={value}
                   onChange={(e) => patchEvidence(field.key, e.target.value)}
                   placeholder={field.placeholder}

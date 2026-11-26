@@ -17,11 +17,13 @@ const dashboardAdminRoutes = require('@modules/dashboard/dashboard.admin.routes'
 const foundationStudentRoutes = require('@modules/foundation/foundation.student.routes');
 const foundationAdminRoutes = require('@modules/foundation/foundation.admin.routes');
 const healthRoutes = require('@modules/health/health.routes');
+const landingRoutes = require('@modules/landing/landing.routes');
 const targetDomainAdminRoutes = require('@modules/target-domain/target-domain.admin.routes');
 
 const router = express.Router();
 
 router.use('/health', healthRoutes);
+router.use('/landing', landingRoutes);
 router.use('/auth/admin', adminAuthRoutes);
 router.use('/auth/students', studentAuthRoutes);
 router.use('/admin/students', studentAdminRoutes);

@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "@/components/icons";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import {
+  CriteriaField,
+  ResourcesField,
+  TagListField,
+  type CriterionRow,
+  type ResourceRow,
+} from "@/components/ui/easy-list-fields";
 import Select from "@/components/ui/select";
 import {
   projectCategoriesApi,
@@ -20,27 +27,28 @@ interface ProjectFormProps {
   projectId?: string;
 }
 
-function linesToList(value: string) {
-  return value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+function newRowId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function listToLines(value?: string[]) {
-  return (value || []).join("\n");
-}
+const DEFAULT_GAIN = [
+  "Work on a real product problem",
+  "Build industry-relevant skills",
+  "Get verified proof of work",
+  "Potential opportunity for paid continuation (Stage 3)",
+];
 
-function csvToList(value: string) {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
+const DEFAULT_CRITERIA: CriterionRow[] = [
+  { id: "c-1", label: "Functionality", percent: "40" },
+  { id: "c-2", label: "Code quality", percent: "30" },
+  { id: "c-3", label: "Documentation", percent: "30" },
+];
 
-function listToCsv(value?: string[]) {
-  return (value || []).join(", ");
-}
+const LEVEL_OPTIONS = [
+  "Beginner Level",
+  "Intermediate Level",
+  "Advanced Level",
+];
 
 export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const router = useRouter();
@@ -58,22 +66,19 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [description, setDescription] = useState("");
   const [imageSrc, setImageSrc] = useState("");
   const [imageAlt, setImageAlt] = useState("");
-  const [requirementsText, setRequirementsText] = useState("");
-  const [techStackText, setTechStackText] = useState("");
+  const [requirements, setRequirements] = useState<string[]>([]);
+  const [techStack, setTechStack] = useState<string[]>([]);
   const [estimatedTime, setEstimatedTime] = useState("");
   const [level, setLevel] = useState("Intermediate Level");
   const [overview, setOverview] = useState("");
-  const [briefRequirementsText, setBriefRequirementsText] = useState("");
-  const [deliverablesText, setDeliverablesText] = useState("");
-  const [criteriaText, setCriteriaText] = useState(
-    "Functionality|40\nCode quality|30\nDocumentation|30",
-  );
-  const [resourcesText, setResourcesText] = useState("");
+  const [briefRequirements, setBriefRequirements] = useState<string[]>([]);
+  const [deliverables, setDeliverables] = useState<string[]>([]);
+  const [criteriaRows, setCriteriaRows] =
+    useState<CriterionRow[]>(DEFAULT_CRITERIA);
+  const [resourceRows, setResourceRows] = useState<ResourceRow[]>([]);
   const [resourceLabel, setResourceLabel] = useState("");
   const [teamSize, setTeamSize] = useState(1);
-  const [whatYouGainText, setWhatYouGainText] = useState(
-    "Work on a real product problem\nBuild industry-relevant skills\nGet verified proof of work\nPotential opportunity for paid continuation (Stage 3)",
-  );
+  const [whatYouGain, setWhatYouGain] = useState<string[]>(DEFAULT_GAIN);
   const [cohortStarts, setCohortStarts] = useState("");
   const [mentorshipLabel, setMentorshipLabel] = useState("Verified Industry Partner");
   const [teamFormationNote, setTeamFormationNote] = useState("");
@@ -120,37 +125,33 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           setDescription(project.description || "");
           setImageSrc(project.imageSrc || "");
           setImageAlt(project.imageAlt || "");
-          setRequirementsText(listToCsv(project.requirements));
-          setTechStackText(listToCsv(project.techStack));
+          setRequirements(project.requirements || []);
+          setTechStack(project.techStack || []);
           setEstimatedTime(project.estimatedTime || "");
           setLevel(project.level || "Intermediate Level");
           setOverview(project.overview || "");
-          setBriefRequirementsText(listToLines(project.briefRequirements));
-          setDeliverablesText(
-            (project.deliverables || []).map((d) => d.label).join("\n"),
+          setBriefRequirements(project.briefRequirements || []);
+          setDeliverables((project.deliverables || []).map((d) => d.label));
+          setCriteriaRows(
+            (project.evaluationCriteria || []).length > 0
+              ? (project.evaluationCriteria || []).map((c, index) => ({
+                  id: `c-${index}`,
+                  label: c.label,
+                  percent: String(c.percent ?? ""),
+                }))
+              : DEFAULT_CRITERIA,
           );
-          setCriteriaText(
-            (project.evaluationCriteria || [])
-              .map((c) => `${c.label}|${c.percent}`)
-              .join("\n"),
-          );
-          setResourcesText(
-            (project.resources || [])
-              .map((r) => `${r.label}|${r.type}|${r.href}`)
-              .join("\n"),
+          setResourceRows(
+            (project.resources || []).map((r, index) => ({
+              id: `r-${index}`,
+              label: r.label,
+              type: r.type === "zip" ? "zip" : "pdf",
+              href: r.href,
+            })),
           );
           setTeamSize(project.teamSize || 1);
-          setWhatYouGainText(
-            listToLines(
-              project.whatYouGain?.length
-                ? project.whatYouGain
-                : [
-                    "Work on a real product problem",
-                    "Build industry-relevant skills",
-                    "Get verified proof of work",
-                    "Potential opportunity for paid continuation (Stage 3)",
-                  ],
-            ),
+          setWhatYouGain(
+            project.whatYouGain?.length ? project.whatYouGain : DEFAULT_GAIN,
           );
           setCohortStarts(project.cohortStarts || "");
           setMentorshipLabel(project.mentorshipLabel || "Verified Industry Partner");
@@ -181,23 +182,20 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
   }, [isEdit, projectId]);
 
   function buildPayload(): ProjectInput {
-    const evaluationCriteria = linesToList(criteriaText).map((line) => {
-      const [label, percentRaw] = line.split("|").map((part) => part.trim());
-      return {
-        label: label || "Criterion",
-        percent: Number(percentRaw) || 0,
-      };
-    });
+    const evaluationCriteria = criteriaRows
+      .filter((row) => row.label.trim())
+      .map((row) => ({
+        label: row.label.trim(),
+        percent: Number(row.percent) || 0,
+      }));
 
-    const resources = linesToList(resourcesText).map((line) => {
-      const [label, typeRaw, href] = line.split("|").map((part) => part.trim());
-      const type = typeRaw === "zip" ? "zip" : "pdf";
-      return {
-        label: label || "Resource",
-        type: type as "pdf" | "zip",
-        href: href || "#",
-      };
-    });
+    const resources = resourceRows
+      .filter((row) => row.label.trim() || row.href.trim())
+      .map((row) => ({
+        label: row.label.trim() || "Resource",
+        type: row.type,
+        href: row.href.trim() || "#",
+      }));
 
     return {
       title: title.trim(),
@@ -213,19 +211,24 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
       description: description.trim(),
       imageSrc: imageSrc.trim(),
       imageAlt: imageAlt.trim() || title.trim(),
-      requirements: csvToList(requirementsText),
-      techStack: csvToList(techStackText),
+      requirements: requirements.map((item) => item.trim()).filter(Boolean),
+      techStack: techStack.map((item) => item.trim()).filter(Boolean),
       estimatedTime: estimatedTime.trim(),
       level: level.trim(),
       overview: overview.trim(),
-      briefRequirements: linesToList(briefRequirementsText),
-      deliverables: linesToList(deliverablesText).map((label, index) => ({
-        id: `d${index + 1}`,
-        label,
-      })),
+      briefRequirements: briefRequirements
+        .map((item) => item.trim())
+        .filter(Boolean),
+      deliverables: deliverables
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((label, index) => ({
+          id: `d${index + 1}`,
+          label,
+        })),
       evaluationCriteria,
       resources,
-      whatYouGain: linesToList(whatYouGainText),
+      whatYouGain: whatYouGain.map((item) => item.trim()).filter(Boolean),
       cohortStarts: cohortStarts.trim(),
       mentorshipLabel: mentorshipLabel.trim() || "Verified Industry Partner",
       teamFormationNote: teamFormationNote.trim(),
@@ -266,8 +269,15 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
         file.name.replace(/\.[^.]+$/, "") ||
         "Resource";
       const type = uploaded.type === "zip" ? "zip" : "pdf";
-      const line = `${label}|${type}|${uploaded.url}`;
-      setResourcesText((prev) => (prev.trim() ? `${prev.trim()}\n${line}` : line));
+      setResourceRows((prev) => [
+        ...prev,
+        {
+          id: newRowId("r"),
+          label,
+          type,
+          href: uploaded.url,
+        },
+      ]);
       setResourceLabel("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Resource upload failed.");
@@ -287,11 +297,11 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
       return;
     }
     if (!payload.requirements.length || !payload.techStack.length) {
-      setError("Add requirements and tech stack (comma-separated).");
+      setError("Add at least one requirement and one tech stack item.");
       return;
     }
     if (!payload.briefRequirements.length || !payload.deliverables.length) {
-      setError("Add brief requirements and deliverables (one per line).");
+      setError("Add at least one brief requirement and one deliverable.");
       return;
     }
 
@@ -310,40 +320,64 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
     }
   }
 
+  const fieldLabel =
+    "mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-[#5a7aa0]";
+  const fieldHint = "mt-1.5 block text-xs leading-5 text-[#7a94b3]";
+  const fieldControl =
+    "w-full rounded-xl border border-[#cfe0f5] bg-white px-3.5 py-2.5 text-sm text-[#0b1c30] shadow-sm outline-none transition-colors placeholder:text-[#9aa3b2] focus:border-[#3b6fb0] focus:ring-2 focus:ring-[#3b6fb0]/15";
+  const sectionCard =
+    "overflow-hidden rounded-2xl border border-[#d7e0ef] bg-white shadow-[0_10px_30px_-24px_rgba(15,35,70,0.35)]";
+  const sectionHeader =
+    "border-b border-[#e8eef6] bg-[#f7faff] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5a7aa0]";
+  const outlineBtn =
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#cfe0f5] bg-white px-4 py-2.5 text-sm font-semibold text-[#1e4f8c] transition-colors hover:bg-[#eaf3ff] disabled:cursor-not-allowed disabled:opacity-60";
+  const primaryBtn =
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#3b6fb0] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2f5f99] disabled:cursor-not-allowed disabled:opacity-60";
+
   if (isLoading) {
     return (
-      <div className="p-10 text-center text-sm text-gray-400 animate-pulse">
-        Loading project…
+      <div className="space-y-4">
+        <div className="admin-skeleton h-28 rounded-2xl" />
+        <div className="admin-skeleton h-64 rounded-2xl" />
+        <div className="admin-skeleton h-48 rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <>
+    <div className="space-y-5">
       <Breadcrumb items={breadcrumbs} />
-      <div className="mb-6">
-        <h1 className="admin-page-title">
-          {isEdit ? "Edit Project" : "New Project"}
-        </h1>
-        <p className="admin-page-subtitle">
-          Fill all details shown on the student projects catalog and brief page.
-        </p>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      <header className="relative overflow-hidden rounded-2xl border border-[#cfe0f5] bg-[linear-gradient(160deg,#f5f9ff_0%,#eaf3ff_50%,#dcecff_100%)] px-5 py-6 sm:px-6">
+        <div className="pointer-events-none absolute -right-12 -top-10 h-40 w-40 rounded-full bg-[#9ec5f0]/25" />
+        <div className="pointer-events-none absolute -bottom-14 left-16 h-32 w-32 rounded-full bg-[#b7d4f5]/35" />
+        <div className="relative z-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5a7aa0]">
+            Project editor
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1e4f8c] sm:text-[28px]">
+            {isEdit ? "Edit Project" : "New Project"}
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-[#5a7aa0]">
+            Fill all details shown on the student projects catalog and brief page.
+          </p>
+        </div>
+      </header>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
-        )}
+        ) : null}
 
-        <section className="admin-card space-y-4 p-5">
-          <p className="admin-section-label">Basic details</p>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <section className={sectionCard}>
+          <div className={sectionHeader}>Basic details</div>
+          <div className="grid gap-4 p-5 sm:grid-cols-2">
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-medium text-gray-700">Title</span>
+              <span className={fieldLabel}>Title</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -351,11 +385,9 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Company / partner name
-              </span>
+              <span className={fieldLabel}>Company / partner name</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g. ABC Technologies"
@@ -363,23 +395,21 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Card label overlay
-              </span>
+              <span className={fieldLabel}>Card label overlay</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={badge}
                 onChange={(e) => setBadge(e.target.value)}
                 placeholder="e.g. HEALTH-TECH, SMART CITIES, Sustainability"
               />
-              <span className="mt-1 block text-xs text-gray-500">
+              <span className={fieldHint}>
                 Shown on the project card image (and detail hero). Leave blank to use the
                 category name.
               </span>
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">Category</span>
+              <span className={fieldLabel}>Category</span>
               <Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -395,25 +425,29 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   ))
                 )}
               </Select>
-              {categories.length === 0 && (
-                <span className="mt-1 block text-xs text-amber-600">
+              {categories.length === 0 ? (
+                <span className="mt-1.5 block text-xs text-amber-600">
                   Create a category under Project Categories first.
                 </span>
-              )}
+              ) : null}
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">Level</span>
-              <input
-                className="admin-input w-full"
-                value={level}
+              <span className={fieldLabel}>Level</span>
+              <Select
+                value={LEVEL_OPTIONS.includes(level) ? level : "Intermediate Level"}
                 onChange={(e) => setLevel(e.target.value)}
-                placeholder="Intermediate Level"
-              />
+              >
+                {LEVEL_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">Status</span>
+              <span className={fieldLabel}>Status</span>
               <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ProjectStatus)}
@@ -426,7 +460,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">Access</span>
+              <span className={fieldLabel}>Access</span>
               <Select
                 value={isFree ? "FREE" : "PREMIUM"}
                 onChange={(e) => setIsFree(e.target.value === "FREE")}
@@ -438,11 +472,9 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
             {!isFree ? (
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block font-medium text-gray-700">
-                  Project value (INR)
-                </span>
+                <span className={fieldLabel}>Project value (INR)</span>
                 <input
-                  className="admin-input w-full max-w-xs"
+                  className={`${fieldControl} max-w-xs`}
                   type="number"
                   min={0}
                   step={1}
@@ -451,43 +483,40 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   onChange={(e) => setProjectPriceAmount(e.target.value)}
                   placeholder="e.g. 15000"
                 />
-                <span className="mt-1 block text-xs text-gray-500">
+                <span className={fieldHint}>
                   Optional. Shown to students on paid (premium) projects only.
                 </span>
               </label>
             ) : null}
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Estimated time (in months)
-              </span>
+              <span className={fieldLabel}>Duration shown to students</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={estimatedTime}
                 onChange={(e) => setEstimatedTime(e.target.value)}
-                placeholder="e.g. 2 months"
+                placeholder="e.g. Up to 30 days or 2 months"
               />
+              <span className={fieldHint}>
+                Use whatever wording students should see on the project card.
+              </span>
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Team size (optional)
-              </span>
+              <span className={fieldLabel}>Team size (optional)</span>
               <input
                 type="number"
                 min={1}
-                className="admin-input w-full"
+                className={fieldControl}
                 value={teamSize}
                 onChange={(e) => setTeamSize(Number(e.target.value) || 1)}
               />
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Cohort starts
-              </span>
+              <span className={fieldLabel}>Cohort starts</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={cohortStarts}
                 onChange={(e) => setCohortStarts(e.target.value)}
                 placeholder="e.g. Next Monday or 2026-04-01"
@@ -495,11 +524,9 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Mentorship label
-              </span>
+              <span className={fieldLabel}>Mentorship label</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={mentorshipLabel}
                 onChange={(e) => setMentorshipLabel(e.target.value)}
                 placeholder="Verified Industry Partner"
@@ -507,77 +534,65 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Apply opens on
-              </span>
+              <span className={fieldLabel}>Apply opens on</span>
               <input
                 type="date"
-                className="admin-input w-full"
+                className={fieldControl}
                 value={applyOpensAt}
                 onChange={(e) => setApplyOpensAt(e.target.value)}
               />
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Apply closes on
-              </span>
+              <span className={fieldLabel}>Apply closes on</span>
               <input
                 type="date"
-                className="admin-input w-full"
+                className={fieldControl}
                 value={applyClosesAt}
                 onChange={(e) => setApplyClosesAt(e.target.value)}
               />
             </label>
 
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Or apply window (days)
-              </span>
+              <span className={fieldLabel}>Or apply window (days)</span>
               <input
                 type="number"
                 min={1}
                 max={365}
-                className="admin-input w-full"
+                className={fieldControl}
                 value={applyWindowDays}
                 onChange={(e) => setApplyWindowDays(e.target.value)}
                 placeholder="e.g. 14"
               />
-              <span className="mt-1 block text-xs text-gray-500">
+              <span className={fieldHint}>
                 Used when close date is empty. Counts from open date.
               </span>
             </label>
 
-            <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-medium text-gray-700">
-                What you&apos;ll gain (one per line)
-              </span>
-              <textarea
-                className="admin-input w-full"
-                rows={4}
-                value={whatYouGainText}
-                onChange={(e) => setWhatYouGainText(e.target.value)}
+            <div className="sm:col-span-2">
+              <TagListField
+                label="What you'll gain"
+                hint="Add each benefit as a separate item. Press Add or Enter after typing."
+                values={whatYouGain}
+                onChange={setWhatYouGain}
+                placeholder="e.g. Mentor feedback"
               />
-            </label>
+            </div>
 
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-medium text-gray-700">
-                Team formation note (optional)
-              </span>
+              <span className={fieldLabel}>Team formation note (optional)</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={teamFormationNote}
                 onChange={(e) => setTeamFormationNote(e.target.value)}
-                placeholder="e.g. 3 students applied in the last 24 hours…"
+                placeholder="e.g. Apply, then form your team within the allowed size."
               />
             </label>
 
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-medium text-gray-700">
-                Short description
-              </span>
+              <span className={fieldLabel}>Short description</span>
               <textarea
-                className="admin-input w-full"
+                className={fieldControl}
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -585,13 +600,11 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
               />
             </label>
 
-            <div className="sm:col-span-2 space-y-2">
+            <div className="space-y-2 sm:col-span-2">
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-gray-700">
-                  Image URL / upload image
-                </span>
+                <span className={fieldLabel}>Image URL / upload image</span>
                 <input
-                  className="admin-input w-full"
+                  className={fieldControl}
                   value={imageSrc}
                   onChange={(e) => setImageSrc(e.target.value)}
                   placeholder="https://... or upload below"
@@ -607,7 +620,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 />
                 <button
                   type="button"
-                  className="admin-btn-outline gap-2"
+                  className={outlineBtn}
                   disabled={isUploadingImage}
                   onClick={() => imageInputRef.current?.click()}
                 >
@@ -615,7 +628,7 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   {isUploadingImage ? "Uploading…" : "Upload image"}
                 </button>
                 {imageSrc ? (
-                  <span className="truncate text-xs text-gray-500 max-w-sm">
+                  <span className="max-w-sm truncate text-xs text-[#7a94b3]">
                     {imageSrc}
                   </span>
                 ) : null}
@@ -623,11 +636,9 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </div>
 
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-medium text-gray-700">
-                Image alt text
-              </span>
+              <span className={fieldLabel}>Image alt text</span>
               <input
-                className="admin-input w-full"
+                className={fieldControl}
                 value={imageAlt}
                 onChange={(e) => setImageAlt(e.target.value)}
               />
@@ -635,143 +646,100 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           </div>
         </section>
 
-        <section className="admin-card space-y-4 p-5">
-          <p className="admin-section-label">Catalog chips</p>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">
-              Requirements (comma-separated)
-            </span>
-            <textarea
-              className="admin-input w-full"
-              rows={3}
-              value={requirementsText}
-              onChange={(e) => setRequirementsText(e.target.value)}
-              placeholder="Python, Basic Data Science, IoT Sensors"
-              required
+        <section className={sectionCard}>
+          <div className={sectionHeader}>Catalog chips</div>
+          <div className="space-y-4 p-5">
+            <TagListField
+              label="Requirements"
+              hint="Skills or background students should have. Add one at a time."
+              values={requirements}
+              onChange={setRequirements}
+              placeholder="e.g. Research"
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">
-              Tech stack (comma-separated)
-            </span>
-            <textarea
-              className="admin-input w-full"
-              rows={3}
-              value={techStackText}
-              onChange={(e) => setTechStackText(e.target.value)}
-              placeholder="TensorFlow, Scikit-learn, Raspberry Pi"
-              required
+            <TagListField
+              label="Tech stack"
+              hint="Tools students will use. Add one at a time."
+              values={techStack}
+              onChange={setTechStack}
+              placeholder="e.g. Figma"
             />
-          </label>
-        </section>
-
-        <section className="admin-card space-y-4 p-5">
-          <p className="admin-section-label">Project brief</p>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">Overview</span>
-            <textarea
-              className="admin-input w-full"
-              rows={5}
-              value={overview}
-              onChange={(e) => setOverview(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">
-              Brief requirements (one per line)
-            </span>
-            <textarea
-              className="admin-input w-full"
-              rows={4}
-              value={briefRequirementsText}
-              onChange={(e) => setBriefRequirementsText(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">
-              Deliverables (one per line)
-            </span>
-            <textarea
-              className="admin-input w-full"
-              rows={4}
-              value={deliverablesText}
-              onChange={(e) => setDeliverablesText(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-gray-700">
-              Evaluation criteria (`Label|Percent` per line)
-            </span>
-            <textarea
-              className="admin-input w-full"
-              rows={4}
-              value={criteriaText}
-              onChange={(e) => setCriteriaText(e.target.value)}
-              required
-            />
-          </label>
-
-          <div className="space-y-3">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-gray-700">
-                Resources (`Label|pdf|url` per line)
-              </span>
-              <textarea
-                className="admin-input w-full"
-                rows={3}
-                value={resourcesText}
-                onChange={(e) => setResourcesText(e.target.value)}
-                placeholder="Starter kit|pdf|/uploads/projects/resources/..."
-              />
-            </label>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <label className="block flex-1 text-sm">
-                <span className="mb-1 block font-medium text-gray-700">
-                  Resource label (for upload)
-                </span>
-                <input
-                  className="admin-input w-full"
-                  value={resourceLabel}
-                  onChange={(e) => setResourceLabel(e.target.value)}
-                  placeholder="Optional label"
-                />
-              </label>
-              <input
-                ref={resourceInputRef}
-                type="file"
-                accept=".pdf,.zip,application/pdf,application/zip"
-                className="hidden"
-                onChange={(e) =>
-                  handleResourceUpload(e.target.files?.[0] || null)
-                }
-              />
-              <button
-                type="button"
-                className="admin-btn-outline gap-2"
-                disabled={isUploadingResource}
-                onClick={() => resourceInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4" />
-                {isUploadingResource ? "Uploading…" : "Upload & attach"}
-              </button>
-            </div>
           </div>
         </section>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <section className={sectionCard}>
+          <div className={sectionHeader}>Project brief</div>
+          <div className="space-y-4 p-5">
+            <label className="block text-sm">
+              <span className={fieldLabel}>Overview</span>
+              <textarea
+                className={fieldControl}
+                rows={5}
+                value={overview}
+                onChange={(e) => setOverview(e.target.value)}
+                required
+              />
+            </label>
+            <TagListField
+              label="Brief requirements"
+              hint="What students need to do. Add each step separately."
+              values={briefRequirements}
+              onChange={setBriefRequirements}
+              placeholder="e.g. Map the current experience"
+            />
+            <TagListField
+              label="Deliverables"
+              hint="What students must submit. Add each deliverable separately."
+              values={deliverables}
+              onChange={setDeliverables}
+              placeholder="e.g. Problem brief"
+            />
+            <CriteriaField rows={criteriaRows} onChange={setCriteriaRows} />
+            <ResourcesField
+              rows={resourceRows}
+              onChange={setResourceRows}
+              uploadSlot={
+                <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    className={fieldControl}
+                    value={resourceLabel}
+                    onChange={(e) => setResourceLabel(e.target.value)}
+                    placeholder="Optional label for uploaded file"
+                  />
+                  <input
+                    ref={resourceInputRef}
+                    type="file"
+                    accept=".pdf,.zip,application/pdf,application/zip"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleResourceUpload(e.target.files?.[0] || null)
+                    }
+                  />
+                  <button
+                    type="button"
+                    className={outlineBtn}
+                    disabled={isUploadingResource}
+                    onClick={() => resourceInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isUploadingResource ? "Uploading…" : "Upload & attach"}
+                  </button>
+                </div>
+              }
+            />
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-[#d7e0ef] bg-[#f7faff] p-4 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className="admin-btn-outline"
+            className={outlineBtn}
             onClick={() => router.push("/projects")}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="admin-btn-primary"
+            className={primaryBtn}
             disabled={isSubmitting || categories.length === 0}
           >
             {isSubmitting
@@ -782,6 +750,6 @@ export default function ProjectForm({ mode, projectId }: ProjectFormProps) {
           </button>
         </div>
       </form>
-    </>
+    </div>
   );
 }

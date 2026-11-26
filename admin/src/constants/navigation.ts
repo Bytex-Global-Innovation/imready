@@ -6,7 +6,6 @@ import {
   Mail,
   Bell,
   Tags,
-  ClipboardList,
   ClipboardCheck,
   Target,
   Layers,
@@ -19,17 +18,48 @@ export interface NavItem {
   icon: LucideIcon;
 }
 
-export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard",           href: "/dashboard",           icon: LayoutDashboard },
-  { label: "Students",            href: "/students",            icon: Users           },
-  { label: "Projects",            href: "/projects",            icon: FolderKanban    },
-  { label: "Applications",        href: "/applications",        icon: Mail            },
-  { label: "Stage 2 Reviews",     href: "/project-reviews",     icon: ClipboardCheck  },
-  { label: "Notifications",       href: "/notifications",       icon: Bell            },
-  { label: "Project Categories",  href: "/project-categories",  icon: Tags            },
-  { label: "Target Domains",      href: "/target-domains",      icon: LayoutGrid      },
-  { label: "Assessments",         href: "/assessments",         icon: ClipboardList   },
-  { label: "Assessment Results",  href: "/assessment-results",  icon: ClipboardCheck  },
-  { label: "Foundation Progress",   href: "/foundation-progress", icon: Target          },
-  { label: "Foundation Step",       href: "/foundation-step",     icon: Layers          },
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "People & work",
+    items: [
+      { label: "Students", href: "/students", icon: Users },
+      { label: "Projects", href: "/projects", icon: FolderKanban },
+      { label: "Applications", href: "/applications", icon: Mail },
+      { label: "Stage 2 Reviews", href: "/project-reviews", icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: "Inbox",
+    items: [
+      { label: "Notifications", href: "/notifications", icon: Bell },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { label: "Project Categories", href: "/project-categories", icon: Tags },
+      { label: "Target Domains", href: "/target-domains", icon: LayoutGrid },
+    ],
+  },
+  {
+    label: "Foundation",
+    items: [
+      { label: "Foundation Progress", href: "/foundation-progress", icon: Target },
+      { label: "Foundation Step", href: "/foundation-step", icon: Layers },
+    ],
+  },
 ];
+
+/** Flat list kept for any consumers that still expect NAV_ITEMS. */
+export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
