@@ -32,10 +32,14 @@ function useHash() {
   const [hash, setHash] = useState("");
 
   useEffect(() => {
-    setHash(window.location.hash);
-    const onChange = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
+    const sync = () => setHash(window.location.hash);
+    sync();
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
   }, []);
 
   return [hash, setHash] as const;
@@ -72,23 +76,23 @@ export default function FounderLandingPage() {
   const whatsapp = whatsappUrl();
 
   useEffect(() => {
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
-      .matches
-      ? "auto"
-      : "smooth";
-
     if (shareMode) {
       window.scrollTo({ top: 0, behavior: "auto" });
       return;
     }
 
+    // Header nav handles click scrolling. This covers browser back/forward
+    // and direct hash loads without an instant jump.
     const id = hash.startsWith("#") ? hash.slice(1) : "";
-    if (id) {
-      document.getElementById(id)?.scrollIntoView({
-        behavior,
-        block: "start",
-      });
-    }
+    if (!id || id === SITE.shareProblemHash) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    document.getElementById(id)?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
   }, [hash, shareMode]);
 
   if (shareMode) {

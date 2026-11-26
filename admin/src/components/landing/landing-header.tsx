@@ -1,6 +1,37 @@
+"use client";
+
 import Link from "next/link";
 import { NAV_LINKS, SITE } from "@/constants/founder-landing";
 import ReserveCta from "@/components/landing/reserve-cta";
+
+function goToSection(href: string) {
+  const id = href.startsWith("#") ? href.slice(1) : href;
+  if (!id) return;
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+  const behavior: ScrollBehavior = reduceMotion ? "auto" : "smooth";
+  const targetHash = `#${id}`;
+
+  if (id === "top") {
+    window.scrollTo({ top: 0, behavior });
+  } else {
+    document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
+  }
+
+  if (window.location.hash !== targetHash) {
+    window.history.pushState(null, "", targetHash);
+  }
+}
+
+function onSectionClick(
+  event: React.MouseEvent<HTMLAnchorElement>,
+  href: string
+) {
+  event.preventDefault();
+  goToSection(href);
+}
 
 export default function LandingHeader() {
   return (
@@ -10,7 +41,11 @@ export default function LandingHeader() {
     >
       <div className="mx-auto w-full max-w-5xl">
         <div className="flex flex-nowrap items-center justify-between gap-2 rounded-full border border-[var(--landing-border)] bg-white/95 px-3 py-2 shadow-sm sm:gap-3 sm:px-5">
-          <a href="#top" className="shrink-0 leading-none">
+          <a
+            href="#top"
+            className="shrink-0 leading-none"
+            onClick={(event) => onSectionClick(event, "#top")}
+          >
             <span className="block font-[family-name:var(--font-landing-display)] text-xl font-medium tracking-tight text-[var(--landing-foreground)]">
               {SITE.name}
             </span>
@@ -25,6 +60,7 @@ export default function LandingHeader() {
                 key={link.href}
                 href={link.href}
                 className="whitespace-nowrap text-sm font-medium text-[var(--landing-foreground)]/80 underline-offset-4 transition-colors hover:text-[var(--landing-foreground)] hover:underline"
+                onClick={(event) => onSectionClick(event, link.href)}
               >
                 {link.label}
               </a>
@@ -55,6 +91,7 @@ export default function LandingHeader() {
               key={link.href}
               href={link.href}
               className="inline-flex h-11 items-center text-sm font-medium text-[var(--landing-foreground)]/80"
+              onClick={(event) => onSectionClick(event, link.href)}
             >
               {link.label}
             </a>

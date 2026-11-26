@@ -33,6 +33,11 @@
   color: var(--landing-foreground);
 }
 
+/* Smooth in-page section jumps while the landing page is mounted */
+html:has(.landing-root) {
+  scroll-behavior: smooth;
+}
+
 .landing-root section[id],
 .landing-root header[id],
 .landing-root form[id] {
@@ -48,6 +53,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html:has(.landing-root),
   .landing-root {
     scroll-behavior: auto;
   }
