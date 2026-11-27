@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import Image from "next/image";
 import { Menu, X } from "@/components/icons";
 import { NAV_LINKS, SITE } from "@/constants/founder-landing";
 import ReserveCta from "@/components/landing/reserve-cta";
@@ -72,12 +73,17 @@ export default function LandingHeader() {
         <div className="flex flex-nowrap items-center justify-between gap-3 rounded-full border border-[var(--landing-border)] bg-white/95 px-4 py-2 shadow-sm sm:gap-4 sm:px-6">
           <a
             href="#top"
-            className="shrink-0 leading-none"
+            className="shrink-0"
             onClick={(event) => onSectionClick(event, "#top")}
           >
-            <span className="block font-[family-name:var(--font-landing-display)] text-xl font-semibold tracking-tight text-[var(--landing-foreground)]">
-              {SITE.name}
-            </span>
+            <Image
+              src="/imready_logo.jpeg"
+              alt={`${SITE.name} logo`}
+              width={120}
+              height={40}
+              className="block h-8 w-auto object-contain sm:h-9"
+              priority
+            />
           </a>
 
           <nav

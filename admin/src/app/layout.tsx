@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Dashboard — ImReady Admin",
   description: "Administrative dashboard for the ImReady platform.",
   icons: {
-    icon: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
+    icon: [{ url: "/imready favicon.ico", type: "image/x-icon" }],
     apple: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
   },
 };
