@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     "ImReady connects college students to real industry projects, working mentors, and a verified portfolio — before Semester 3.",
   icons: {
-    icon: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
+    icon: [{ url: "/imready favicon.ico", type: "image/x-icon" }],
     apple: [{ url: "/imready_logo.jpeg", type: "image/jpeg" }],
   },
 };
